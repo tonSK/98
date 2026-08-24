@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>98 System</title>
-    <!-- โหลด Font Awesome สำหรับไอคอน และ Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -19,8 +18,6 @@
             align-items: center;
             position: relative;
         }
-
-        /* ปุ่ม Admin มุมบนขวา */
         .admin-toggle {
             position: absolute;
             top: 20px;
@@ -37,202 +34,134 @@
             gap: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             transition: all 0.3s;
+            z-index: 100;
         }
-        .admin-toggle:hover {
-            background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .admin-toggle.active {
-            background: #2c3e50;
-            color: white;
-            border-color: #2c3e50;
-        }
-
-        h1 {
-            color: #333;
-            margin-top: 10px;
-            margin-bottom: 25px;
-            font-weight: 600;
-        }
-
-        /* ปุ่มเปิดฟอร์มเพิ่มการ์ด (ซ่อนไว้ก่อนจนกว่าจะเข้าโหมด Admin) */
-        .btn-add {
-            background-color: #27AE60;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-family: 'Prompt', sans-serif;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: background 0.3s, transform 0.2s;
-            margin-bottom: 30px;
-            display: none;
-        }
-        .btn-add:hover {
-            background-color: #219653;
-            transform: translateY(-2px);
-        }
-
-        /* จัดระเบียบ Grid สูงสุด 4 คอลัมน์ต่อแถว */
-        .container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 25px;
-            max-width: 650px;
-            width: 100%;
-            justify-items: center;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* สไตล์ Card */
-        .icon-card {
-            background: white;
-            padding: 25px 15px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            text-decoration: none;
-            color: #333;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 110px;
-            position: relative;
-            cursor: pointer;
-        }
-        .icon-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.12);
-        }
+        .admin-toggle:hover { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .admin-toggle.active { background: #2c3e50; color: white; border-color: #2c3e50; }
         
-        .icon-card i, .icon-card img {
-            font-size: 42px;
-            width: 42px;
-            height: 42px;
-            margin-bottom: 12px;
-            object-fit: contain;
-        }
-
-        .icon-card span {
-            font-weight: 500;
-            font-size: 14px;
-            text-align: center;
-            word-break: break-word;
-        }
-
-        /* ปุ่มลบ/แก้ไข (แสดงเฉพาะตอนเปิดโหมด Admin) */
-        .card-actions {
-            position: absolute;
-            top: 5px;
-            right: 5px;
+        h1 { color: #333; margin-top: 10px; margin-bottom: 25px; font-weight: 600; }
+        
+        .admin-controls {
             display: none;
-            gap: 5px;
+            gap: 10px;
+            margin-bottom: 25px;
+            align-items: center;
         }
-        body.admin-mode .card-actions {
-            display: flex;
+        body.admin-mode .admin-controls { display: flex; }
+
+        .btn-action {
+            background-color: #27AE60; color: white; border: none;
+            padding: 10px 18px; border-radius: 10px; font-family: 'Prompt', sans-serif;
+            font-size: 15px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: background 0.3s, transform 0.2s;
         }
-        .card-actions button {
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 10px;
-            cursor: pointer;
+        .btn-action:hover { transform: translateY(-2px); }
+        .btn-add { background-color: #27AE60; }
+        .btn-edit-mode { background-color: #e67e22; }
+        .btn-edit-mode.active { background-color: #d35400; box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
+
+        .section-box {
+            width: 100%;
+            max-width: 650px;
+            margin-top: 30px;
+            display: none;
+            border-top: 2px dashed #bdc3c7;
+            padding-top: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            color: #c0392b;
+            font-weight: 600;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
+        }
+
+        .container {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px;
+            width: 100%; justify-items: center;
+        }
+        @media (max-width: 600px) { .container { grid-template-columns: repeat(2, 1fr); } }
+
+        .icon-card {
+            background: white; padding: 25px 15px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-decoration: none; color: #333;
+            transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex;
+            flex-direction: column; align-items: center; width: 110px; position: relative; cursor: pointer;
+        }
+        .icon-card:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.12); }
+        .icon-card i, .icon-card img { font-size: 42px; width: 42px; height: 42px; margin-bottom: 12px; object-fit: contain; }
+        .icon-card span { font-weight: 500; font-size: 14px; text-align: center; word-break: break-word; }
+
+        .hidden-card-container .icon-card {
+            background: #fff9f9;
+            border: 2px dashed #e74c3c;
+            opacity: 0.9;
+        }
+
+        .card-actions { position: absolute; top: 5px; right: 5px; display: none; gap: 4px; z-index: 10; }
+        body.admin-mode.edit-active .card-actions { display: flex; flex-direction: column; }
+        
+        .card-actions button {
+            background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%;
+            width: 22px; height: 22px; font-size: 10px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
         }
         .card-actions button.btn-del:hover { background: #e74c3c; }
         .card-actions button.btn-edit:hover { background: #f39c12; }
+        .card-actions button.btn-move:hover { background: #3498db; }
 
-        /* Modal ฟอร์ม */
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            width: 320px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            background: white; padding: 30px; border-radius: 20px; width: 320px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px;
         }
-        .modal-content h3 {
-            margin: 0 0 5px 0;
-            color: #333;
-            text-align: center;
-        }
-        .modal-content label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #666;
-        }
-        .modal-content input[type="text"] {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: 'Prompt', sans-serif;
-            font-size: 14px;
-        }
-        .modal-content input[type="color"] {
-            width: 100%;
-            height: 40px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            background: none;
-            padding: 2px;
-        }
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .modal-buttons button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-family: 'Prompt', sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-        }
+        .modal-content h3 { margin: 0 0 5px 0; color: #333; text-align: center; }
+        .modal-content label { font-size: 13px; font-weight: 500; color: #666; }
+        .modal-content input[type="text"] { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 14px; }
+        .modal-content input[type="color"] { width: 100%; height: 40px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; background: none; padding: 2px; }
+        .checkbox-container { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; margin-top: 5px; }
+        .checkbox-container input { width: 18px; height: 18px; cursor: pointer; }
+
+        .modal-buttons { display: flex; gap: 10px; margin-top: 10px; }
+        .modal-buttons button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-family: 'Prompt', sans-serif; font-weight: 500; cursor: pointer; }
         .btn-save { background: #27AE60; color: white; }
         .btn-cancel { background: #95a5a6; color: white; }
+
+        #loading { font-size: 14px; color: #666; margin-top: 20px; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- ปุ่ม Admin สำหรับกดปลดล็อก -->
     <button class="admin-toggle" id="adminToggleBtn" onclick="toggleAdminMode()">
         <i class="fa-solid fa-lock" id="adminLockIcon"></i> <span id="adminText">Admin Mode</span>
     </button>
 
     <h1>98 System</h1>
-    <button class="btn-add" id="btnAddMenu" onclick="openModal()">+ เพิ่มเมนูใหม่</button>
+    
+    <div class="admin-controls">
+        <button class="btn-action btn-add" onclick="openModal()">+ เพิ่มเมนูใหม่</button>
+        <button class="btn-action btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()">⚙️ เปิดโหมดจัดการเมนู</button>
+    </div>
 
-    <!-- พื้นที่แสดงผลการ์ด -->
-    <div class="container" id="cardContainer"></div>
+    <div id="loading">กำลังซิงค์ข้อมูลจาก Cloud...</div>
 
-    <!-- Modal ฟอร์มสำหรับเพิ่ม/แก้ไข -->
+    <!-- ส่วนเมนูทั่วไป -->
+    <div class="container" id="normalContainer" style="max-width: 650px;"></div>
+
+    <!-- ส่วนเมนูที่ซ่อนอยู่ (อ่านจากคอลัมน์ E) -->
+    <div class="section-box" id="hiddenSectionBox">
+        <div class="section-title">
+            <i class="fa-solid fa-eye-slash"></i> เมนูที่ซ่อนอยู่ (คอลัมน์ E เป็น TRUE)
+        </div>
+        <div class="container hidden-card-container" id="hiddenContainer"></div>
+    </div>
+
     <div class="modal" id="menuModal">
         <div class="modal-content">
             <h3 id="modalTitle">เพิ่มเมนูใหม่</h3>
@@ -241,7 +170,7 @@
             <label>ชื่อเมนู</label>
             <input type="text" id="menuName" placeholder="เช่น สรุปยอด, Google">
 
-            <label>ลิงก์ URL (ปลายทางเมื่อคลิก)</label>
+            <label>ลิงก์ URL</label>
             <input type="text" id="menuUrl" placeholder="https://...">
 
             <label>ลิงก์รูปภาพ หรือ Font Awesome Class</label>
@@ -249,6 +178,10 @@
 
             <label>สีของไอคอน</label>
             <input type="color" id="menuColor" value="#4A90E2">
+
+            <label class="checkbox-container">
+                <input type="checkbox" id="menuHidden"> ซ่อนเมนูนี้ (บันทึกเป็น TRUE ในคอลัมน์ E)
+            </label>
 
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
@@ -258,17 +191,16 @@
     </div>
 
     <script>
-        const ADMIN_PASSWORD = "1234";
-        let isAdmin = false;
+        const API_URL = "https://script.google.com/macros/s/AKfycbzDvftbLuDKUaoAadlx9npf5eOtw0UbOgZtufPRtjbazbRm6UTVAYT5Ykn91P38HQqt/exec"; 
+        const ADMIN_PASSWORD = "97857787";
 
-        let menus = JSON.parse(localStorage.getItem('launcher_menus')) || [
-            { name: "Random", url: "https://script.google.com/macros/s/AKfycbyGsD2UIHg3qFm2uwI4Es0uQsKOSCyOMXbHnXOqcPhOzcSK6CJCif1ggUobHMPct-3z/exec", icon: "fa-solid fa-shuffle", color: "#4A90E2" },
-            { name: "Lotto", url: "https://script.google.com/macros/s/AKfycbzY72LWVaJWMHvXoWMpPR2X3q9lvrelbArOCgxpHf8h7szGovPW0zGEYIDQRwvebngb/exec", icon: "fa-solid fa-ticket", color: "#E67E22" },
-            { name: "สรุปผลงาน", url: "https://docs.google.com/spreadsheets/d/1A0F-I9ZnOasOzpcmgczs_OClwxITvhXOac81FRKH5TQ/edit?gid=135397456#gid=135397456", icon: "fa-solid fa-chart-line", color: "#27AE60" },
-            { name: "IRR", url: "https://tonsk.github.io/IRR/", icon: "fa-solid fa-calculator", color: "#047dc2" }
-        ];
+        let menus = [];
+        let isAdmin = false; 
+        let isEditActive = false;
 
-        const container = document.getElementById('cardContainer');
+        const normalContainer = document.getElementById('normalContainer');
+        const hiddenContainer = document.getElementById('hiddenContainer');
+        const hiddenSectionBox = document.getElementById('hiddenSectionBox');
         const modal = document.getElementById('menuModal');
         const modalTitle = document.getElementById('modalTitle');
         const editIndexInput = document.getElementById('editIndex');
@@ -276,11 +208,49 @@
         const menuUrlInput = document.getElementById('menuUrl');
         const menuIconInput = document.getElementById('menuIcon');
         const menuColorInput = document.getElementById('menuColor');
+        const menuHiddenInput = document.getElementById('menuHidden');
+        const loadingEl = document.getElementById('loading');
         
         const adminToggleBtn = document.getElementById('adminToggleBtn');
         const adminLockIcon = document.getElementById('adminLockIcon');
         const adminText = document.getElementById('adminText');
-        const btnAddMenu = document.getElementById('btnAddMenu');
+        const editModeBtn = document.getElementById('editModeBtn');
+
+        function fetchMenus() {
+            loadingEl.style.display = "block";
+            fetch(API_URL + "?action=get")
+                .then(response => response.json())
+                .then(data => {
+                    menus = Array.isArray(data) ? data : [];
+                    loadingEl.style.display = "none";
+                    renderMenus();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingEl.style.display = "none";
+                    alert("โหลดข้อมูลไม่สำเร็จ");
+                });
+        }
+
+        function syncToCloud() {
+            loadingEl.innerText = "กำลังบันทึกข้อมูล...";
+            loadingEl.style.display = "block";
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "saveAll", menus: menus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingEl.style.display = "none";
+                renderMenus();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingEl.style.display = "none";
+                alert("บันทึกไม่สำเร็จ");
+            });
+        }
 
         function toggleAdminMode() {
             if (!isAdmin) {
@@ -291,32 +261,58 @@
                     adminToggleBtn.classList.add('active');
                     adminLockIcon.className = "fa-solid fa-lock-open";
                     adminText.innerText = "Exit Admin";
-                    btnAddMenu.style.display = "block";
                 } else if (pass !== null) {
                     alert("รหัสผ่านไม่ถูกต้อง!");
                 }
             } else {
                 isAdmin = false;
-                document.body.classList.remove('admin-mode');
+                isEditActive = false;
+                document.body.classList.remove('admin-mode', 'edit-active');
+                editModeBtn.classList.remove('active');
+                editModeBtn.innerText = "⚙️ เปิดโหมดจัดการเมนู";
                 adminToggleBtn.classList.remove('active');
                 adminLockIcon.className = "fa-solid fa-lock";
                 adminText.innerText = "Admin Mode";
-                btnAddMenu.style.display = "none";
+            }
+            renderMenus();
+        }
+
+        function toggleEditMode() {
+            isEditActive = !isEditActive;
+            if (isEditActive) {
+                document.body.classList.add('edit-active');
+                editModeBtn.classList.add('active');
+                editModeBtn.innerText = "✖ ปิดโหมดจัดการเมนู";
+            } else {
+                document.body.classList.remove('edit-active');
+                editModeBtn.classList.remove('active');
+                editModeBtn.innerText = "⚙️ เปิดโหมดจัดการเมนู";
             }
         }
 
         function renderMenus() {
-            container.innerHTML = '';
+            normalContainer.innerHTML = '';
+            hiddenContainer.innerHTML = '';
+            
+            let hasHidden = false;
+
             menus.forEach((menu, index) => {
+                const isHidden = menu.hidden === true || menu.hidden === "true" || menu.hidden === 1 || menu.hidden === "1";
+                
+                if (isHidden) hasHidden = true;
+
+                // ถ้าเมนูซ่อนอยู่ และไม่ได้อยู่ในโหมด Admin ให้ข้ามไป
+                if (isHidden && !isAdmin) return;
+
                 const card = document.createElement('div');
                 card.className = 'icon-card';
                 
                 let iconHTML = '';
                 const itemColor = menu.color || '#4A90E2';
-                if (menu.icon.startsWith('http') || menu.icon.includes('/')) {
+                if (menu.icon && (menu.icon.startsWith('http') || menu.icon.includes('/'))) {
                     iconHTML = `<img src="${menu.icon}" alt="${menu.name}">`;
                 } else {
-                    iconHTML = `<i class="${menu.icon}" style="color: ${itemColor};"></i>`;
+                    iconHTML = `<i class="${menu.icon || 'fa-solid fa-star'}" style="color: ${itemColor};"></i>`;
                 }
 
                 card.innerHTML = `
@@ -326,12 +322,35 @@
                     </a>
                     <div class="card-actions">
                         <button class="btn-edit" onclick="editMenu(${index})" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-move" onclick="moveMenu(${index}, -1)" title="เลื่อนซ้าย/ขึ้น"><i class="fa-solid fa-arrow-left"></i></button>
+                        <button class="btn-move" onclick="moveMenu(${index}, 1)" title="เลื่อนขวา/ลง"><i class="fa-solid fa-arrow-right"></i></button>
                         <button class="btn-del" onclick="deleteMenu(${index})" title="ลบ"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 `;
-                container.appendChild(card);
+
+                if (isHidden) {
+                    hiddenContainer.appendChild(card);
+                } else {
+                    normalContainer.appendChild(card);
+                }
             });
-            localStorage.setItem('launcher_menus', JSON.stringify(menus));
+
+            if (hasHidden && isAdmin) {
+                hiddenSectionBox.style.display = "block";
+            } else {
+                hiddenSectionBox.style.display = "none";
+            }
+        }
+
+        function moveMenu(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= menus.length) return;
+            
+            const temp = menus[index];
+            menus[index] = menus[targetIndex];
+            menus[targetIndex] = temp;
+            
+            syncToCloud();
         }
 
         function openModal() {
@@ -341,18 +360,18 @@
             menuUrlInput.value = "";
             menuIconInput.value = "";
             menuColorInput.value = "#4A90E2";
+            menuHiddenInput.checked = false;
             modal.style.display = "flex";
         }
 
-        function closeModal() {
-            modal.style.display = "none";
-        }
+        function closeModal() { modal.style.display = "none"; }
 
         function saveMenu() {
             const name = menuNameInput.value.trim();
             const url = menuUrlInput.value.trim();
             const icon = menuIconInput.value.trim() || "fa-solid fa-star";
             const color = menuColorInput.value;
+            const hidden = menuHiddenInput.checked;
             const index = editIndexInput.value;
 
             if (!name || !url) {
@@ -360,17 +379,16 @@
                 return;
             }
 
+            const menuData = { name, url, icon, color, hidden };
+
             if (index === "") {
-                menus.push({ name, url, icon, color });
+                menus.push(menuData);
             } else {
-                menus[index].name = name;
-                menus[index].url = url;
-                menus[index].icon = icon;
-                menus[index].color = color;
+                menus[index] = menuData;
             }
 
             closeModal();
-            renderMenus();
+            syncToCloud();
         }
 
         function editMenu(index) {
@@ -380,17 +398,18 @@
             menuUrlInput.value = menus[index].url;
             menuIconInput.value = menus[index].icon;
             menuColorInput.value = menus[index].color || "#4A90E2";
+            menuHiddenInput.checked = menus[index].hidden === true || menus[index].hidden === "true" || menus[index].hidden === 1;
             modal.style.display = "flex";
         }
 
         function deleteMenu(index) {
             if (confirm(`คุณต้องการลบเมนู "${menus[index].name}" ใช่หรือไม่?`)) {
                 menus.splice(index, 1);
-                renderMenus();
+                syncToCloud();
             }
         }
 
-        renderMenus();
+        fetchMenus();
     </script>
 </body>
 </html>
