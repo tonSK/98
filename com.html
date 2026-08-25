@@ -38,7 +38,6 @@
         
         td { vertical-align: middle; background-color: #ffffff !important; }
         
-        /* ปรับความกว้างคอลัมน์เงื่อนไขให้พอดีกับข้อความที่ยาวที่สุด */
         .col-condition {
             max-width: 105px;
             min-width: 105px;
@@ -47,7 +46,6 @@
             word-break: break-word;
         }
 
-        /* ปรับความกว้างคอลัมน์หมายเหตุให้พอดีกับคำว่า NO CREDIT (ประมาณ 85-90 พิกเซล) */
         .col-note {
             max-width: 90px;
             min-width: 90px;
@@ -59,10 +57,8 @@
             line-height: 1.2;
         }
         
-        /* สไตล์พิเศษสำหรับแถวที่มีเงื่อนไข Note (เปลี่ยนเฉพาะช่องที่ไม่ใช่คอมมิชชั่น, คอมพลัส, เครดิตผลงาน) */
         tr.row-no-credit td:not(.highlight-custom) { background-color: #f1f3f5 !important; }
         
-        /* ตัวหนังสือสีแดงเฉพาะรหัสและแบบประกัน */
         td.text-danger-custom { color: #dc3545 !important; font-weight: bold; }
         td.note-discount { font-style: italic; }
         
@@ -648,12 +644,21 @@
             let lastCode = '';
             let lastName = '';
 
+            // ฟังก์ชันสำหรับฟอร์แมตตัวเลขทั่วไป (เปลี่ยน 0 เป็น -)
             const formatNumber = (val) => {
                 if (val === '' || val === null || val === undefined) return '-';
                 const num = Number(String(val).replace(/,/g, ''));
                 if (isNaN(num)) return val;
                 if (num === 0) return '-';
                 return num.toLocaleString('en-US');
+            };
+
+            // ฟังก์ชันเฉพาะสำหรับคอลัมน์ "เริ่ม" (ถ้าเป็น 0 ให้แสดง 0)
+            const formatStartAge = (val) => {
+                if (val === '' || val === null || val === undefined) return '-';
+                const num = Number(String(val).replace(/,/g, ''));
+                if (isNaN(num)) return val;
+                return num.toLocaleString('en-US'); // ถ้าเป็น 0 จะคืนค่า 0 ตามปกติ
             };
 
             const colspanVal = isAdminLoggedIn ? 14 : 13;
@@ -711,7 +716,7 @@
                 rowsHtml += `<tr class="${rowClass.trim()}">
                     <td class="fw-bold text-nowrap${textDangerClass}">${displayCode}</td>
                     <td class="text-start${textDangerClass}">${displayName}</td>
-                    <td class="text-center">${formatNumber(row['พิกัดเริ่ม'])}</td>
+                    <td class="text-center">${formatStartAge(row['พิกัดเริ่ม'])}</td>
                     <td class="text-center">${formatNumber(row['พิกัดสุดท้าย'])}</td>
                     <td class="text-center text-nowrap col-condition">${formatNumber(row['ทุน'])}</td>
                     <td class="text-center highlight-custom">${formatNumber(row['คอม'])}</td>
