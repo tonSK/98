@@ -38,6 +38,15 @@
         
         td { vertical-align: middle; background-color: #ffffff !important; }
         
+        /* ปรับความกว้างคอลัมน์เงื่อนไขให้พอดีกับข้อความที่ยาวที่สุด */
+        .col-condition {
+            max-width: 105px;
+            min-width: 105px;
+            width: 105px;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
         /* ปรับความกว้างคอลัมน์หมายเหตุให้พอดีกับคำว่า NO CREDIT (ประมาณ 85-90 พิกเซล) */
         .col-note {
             max-width: 90px;
@@ -134,19 +143,19 @@
                                 <th rowspan="2">เงื่อนไข</th>
                                 <th colspan="2">ปี 1</th>
                                 <th colspan="4">ค่าพาหนะ</th>
-                                <th rowspan="2">เครดิด<br>ผลงาน</th>
+                                <th rowspan="2">ผลงาน</th>
                                 <th rowspan="2">หมายเหตุ</th>
                                 <th rowspan="2" id="th-action" class="d-none">จัดการ</th>
                             </tr>
                             <tr>
                                 <th>เริ่ม</th>
-                                <th>สิ้นสุด</th>
-                                <th>คอมมิชชั่น</th>
-                                <th>คอมพลัส</th>
-                                <th>ปี 2</th>
-                                <th>ปี 3</th>
-                                <th>ปี 4-9</th>
-                                <th>≥ ปี 10</th>
+                                <th>จบ</th>
+                                <th>Com</th>
+                                <th>Com+</th>
+                                <th>2</th>
+                                <th>3</th>
+                                <th>4-9</th>
+                                <th>≥10</th>
                             </tr>
                         </thead>
                         <tbody id="table-body">
@@ -702,7 +711,7 @@
                     <td class="text-start${textDangerClass}">${displayName}</td>
                     <td class="text-center">${formatNumber(row['พิกัดเริ่ม'])}</td>
                     <td class="text-center">${formatNumber(row['พิกัดสุดท้าย'])}</td>
-                    <td class="text-center text-nowrap">${formatNumber(row['ทุน'])}</td>
+                    <td class="text-center text-nowrap col-condition">${formatNumber(row['ทุน'])}</td>
                     <td class="text-center highlight-custom">${formatNumber(row['คอม'])}</td>
                     <td class="text-center highlight-custom">${formatNumber(row['คอมพลัส'])}</td>
                     <td class="text-center">${formatNumber(row['ปี 2'])}</td>
