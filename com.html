@@ -649,9 +649,11 @@
             let lastName = '';
 
             const formatNumber = (val) => {
-                if (val === '' || val === null || val === undefined) return '';
+                if (val === '' || val === null || val === undefined) return '-';
                 const num = Number(String(val).replace(/,/g, ''));
-                return isNaN(num) ? val : num.toLocaleString('en-US');
+                if (isNaN(num)) return val;
+                if (num === 0) return '-';
+                return num.toLocaleString('en-US');
             };
 
             const colspanVal = isAdminLoggedIn ? 14 : 13;
