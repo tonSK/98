@@ -41,9 +41,10 @@
                     <label class="block text-xs font-medium text-slate-500 mb-1">รหัสผ่าน</label>
                     <input type="password" id="login-pass" required placeholder="••••••••" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-[#253487]">
                 </div>
-                <button type="submit" class="w-full bg-[#0081C6] hover:bg-slate-800 text-white py-3 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100">
+                <button type="submit" id="login-submit-btn" disabled class="w-full bg-[#0081C6] hover:bg-slate-800 text-white py-3 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100 disabled:opacity-60 disabled:cursor-not-allowed">
                     เข้าสู่ระบบ
                 </button>
+                <p id="login-status-text" class="text-center text-xs text-slate-400">กำลังโหลดข้อมูลผู้ใช้งาน...</p>
             </form>
         </div>
     </div>
@@ -665,7 +666,7 @@
 
     <!-- Script ควบคุมระบบ -->
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyS4Yd-fqC0DEv2cXcSJ9d_C8EEKi5fKUpu3Pmaq_mPlxzk-X62msvzpyhr22rkDU2wLQ/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzNq2XQxhO1jdqd_M_3vAo22rh1XrmVSaE4jkVQfcPAMWDcrUgD3SpSonu9ioT-xaBPFQ/exec';
 
         let globalData = {};
         let systemUsers = [];
@@ -699,13 +700,66 @@
                 // แล้วค่อยซิงค์ข้อมูลจริงจากเซิร์ฟเวอร์ในพื้นหลัง (ไม่บล็อกหน้าจอ)
                 loadData();
             } else {
-                fetch(scriptURL + '?t=' + new Date().getTime())
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.users) systemUsers = data.users;
-                    }).catch(() => {});
+                // แสดง user ที่แคชไว้ก่อน (ถ้ามี) เพื่อให้ล็อกอินได้เร็วขึ้น แต่ยังคงรอข้อมูลล่าสุดจากเซิร์ฟเวอร์ก่อนปลดล็อกปุ่ม
+                const cachedUsers = getCachedUsers();
+                if (cachedUsers && cachedUsers.length) {
+                    systemUsers = cachedUsers;
+                }
+                loadSystemUsers();
             }
         });
+
+        function setLoginFormState(state, message) {
+            // state: 'loading' | 'ready' | 'error'
+            const btn = document.getElementById('login-submit-btn');
+            const statusText = document.getElementById('login-status-text');
+            if (!btn || !statusText) return;
+            if (state === 'loading') {
+                btn.disabled = true;
+                statusText.textContent = message || 'กำลังโหลดข้อมูลผู้ใช้งาน...';
+                statusText.className = 'text-center text-xs text-slate-400';
+            } else if (state === 'ready') {
+                btn.disabled = false;
+                statusText.textContent = '';
+            } else if (state === 'error') {
+                btn.disabled = false; // ให้กดลองใหม่ได้ ระบบจะดึงข้อมูลซ้ำให้อัตโนมัติตอนกด
+                statusText.textContent = message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่';
+                statusText.className = 'text-center text-xs text-[#E42113]';
+            }
+        }
+
+        function cacheUsers(users) {
+            try { localStorage.setItem('coop_users_cache_v1', JSON.stringify(users)); } catch (e) {}
+        }
+
+        function getCachedUsers() {
+            try {
+                const raw = localStorage.getItem('coop_users_cache_v1');
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+
+        function loadSystemUsers() {
+            setLoginFormState('loading');
+            // ใช้ endpoint แบบเบา (action=getUsers) ดึงเฉพาะชีต Users ไม่ต้องรอทั้งไฟล์ ทำให้ล็อกอินได้เร็วขึ้น
+            fetch(scriptURL + '?action=getUsers&t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    if (data.users) {
+                        systemUsers = data.users;
+                        cacheUsers(data.users);
+                    }
+                    setLoginFormState('ready');
+                })
+                .catch(() => {
+                    // ถ้ายังมี user จากแคชอยู่ ก็ยังพอให้ล็อกอินได้ระหว่างรอเชื่อมต่อใหม่
+                    if (systemUsers && systemUsers.length) {
+                        setLoginFormState('ready');
+                    } else {
+                        setLoginFormState('error');
+                    }
+                });
+        }
 
         function showLoading(text = 'กำลังบันทึกข้อมูล...') {
             document.getElementById('loading-text').textContent = text;
@@ -770,6 +824,14 @@
             e.preventDefault();
             const u = document.getElementById('login-user').value.trim();
             const p = document.getElementById('login-pass').value.trim();
+
+            // กันเหนียว: ถ้ายังไม่มีข้อมูลผู้ใช้งานเลย (เช่น โหลดล้มเหลว) ให้ลองดึงใหม่แทนที่จะฟันธงว่ารหัสผิด
+            if (!systemUsers || systemUsers.length === 0) {
+                showToast('กำลังเชื่อมต่อข้อมูลผู้ใช้งาน กรุณารอสักครู่แล้วลองใหม่', 'error');
+                loadSystemUsers();
+                return;
+            }
+
             const found = systemUsers.find(item => item.Username === u && item.Password === p);
             if (found) {
                 currentUser = { username: found.Username, password: found.Password, name: found.Name, role: found.Role.toLowerCase() };
