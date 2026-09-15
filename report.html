@@ -130,18 +130,25 @@
 </head>
 <body class="bg-gray-100 text-gray-800 flex min-h-screen relative overflow-x-hidden">
 
-    <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-4 left-4 z-50 bg-[#047dc2] text-white p-2 rounded-lg shadow-lg hover:bg-[#036096] transition">
+    <!-- ปุ่มเปิด Sidebar ที่มีพื้นหลังสี #007AC2 ตามต้องการ -->
+    <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-4 left-4 z-50 text-gray-700 p-1 rounded-lg shadow-lg hover:bg-gray-100 transition">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
     </button>
 
     <aside id="sidebar" class="bg-[#047dc2] p-4 shadow-md w-56 flex-shrink-0 min-h-screen sticky top-0 transition-all duration-300 z-30 flex flex-col justify-between">
         <div class="space-y-4">
             <div>
-                <div class="flex items-center gap-2">
-                    <div class="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center p-1 flex-shrink-0">
-                        <img src="https://i.ibb.co/wFGzSJWT/Logo98-New-Wh.png" alt="Logo" class="w-full h-full object-contain">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center p-1 flex-shrink-0">
+                            <img src="https://i.ibb.co/wFGzSJWT/Logo98-New-Wh.png" alt="Logo" class="w-full h-full object-contain">
+                        </div>
+                        <h1 class="font-bold text-white text-lg">Daily Report</h1>
                     </div>
-                    <h1 class="font-bold text-white text-lg">Daily Report</h1>
+                    <!-- ปุ่มซ่อน Sidebar ด้านใน -->
+                    <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg transition text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                    </button>
                 </div>
                 <p id="sidebar-date" class="font-semibold text-gray-300 text-xs mt-1">กำลังโหลด...</p>
             </div>
@@ -178,9 +185,6 @@
             <div class="bg-white p-5 rounded-xl shadow space-y-6 flex-1 flex flex-col">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pb-6 border-b border-gray-100">
                     <div class="relative flex flex-col items-center justify-center md:col-span-4 border-b md:border-b-0 md:border-r border-gray-100 pb-4 md:pb-0">
-                        <button onclick="toggleSidebar()" class="mr-auto p-1 hover:bg-gray-100 rounded-lg transition flex items-center justify-center text-gray-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-                        </button>
                         <h3 id="gauge-title-date" class="text-red-500 font-semibold text-xl mb-3">วันที่ -</h3>
                         <div class="relative w-full h-40 flex items-center justify-center">
                             <canvas id="gaugeChart" class="max-h-full"></canvas>
@@ -264,9 +268,6 @@
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print">
                     <div class="flex items-center gap-3">
-                        <button onclick="toggleSidebar()" class="p-1 hover:bg-gray-100 rounded-lg transition flex items-center justify-center text-gray-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-                        </button>
                         <div id="region-table-title" class="text-xl font-bold text-[#273482]">
                             สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                         </div>
@@ -289,9 +290,6 @@
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print">
                     <div class="flex items-center gap-3">
-                        <button onclick="toggleSidebar()" class="p-1 hover:bg-gray-100 rounded-lg transition flex items-center justify-center text-gray-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-                        </button>
                         <div id="alllevels-table-title" class="text-xl font-bold text-[#273482]">
                             สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                         </div>
@@ -320,6 +318,8 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const openBtn = document.getElementById('open-sidebar-btn');
+            
+            // สลับสถานะซ่อน/แสดง Sidebar และปุ่มเปิด
             if (sidebar.style.display === 'none') {
                 sidebar.style.display = 'flex';
                 openBtn.classList.add('hidden');
@@ -444,7 +444,6 @@
             let i2Val = cleanNumber(summary.i2);
             let j2Val = cleanNumber(summary.j2);
             
-            // ปรับปรุงการดึงค่า k2 ให้รองรับทั้งจาก summary และแถว "ฝ่าย" ใน rows โดยตรง (คอลัมน์ K คือ index 10)
             let summaryRowFromData = rows.find(r => r[0] === "ฝ่าย");
             let k2Val = cleanNumber(summary.k2);
             if (k2Val === 0 && summaryRowFromData && summaryRowFromData[10] !== undefined) {
