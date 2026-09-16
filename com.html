@@ -205,10 +205,10 @@
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label small fw-bold text-dark mb-1">Password</label>
+                    <label class="form-label small fw-bold text-dark mb-1">วันเกิด (ปี พ.ศ.)</label>
                     <div class="input-group-custom">
                         <i class="bi bi-lock input-icon"></i>
-                        <input type="password" id="main-pass-input" class="form-control" placeholder="Password">
+                        <input type="password" id="main-pass-input" class="form-control" placeholder="ddmmyyyy">
                     </div>
                 </div>
                 <button type="button" id="main-login-btn" class="btn btn-login-custom mb-3">เข้าสู่ระบบ</button>
@@ -323,18 +323,18 @@
                 </div>
                 <div class="modal-body">
                     <div class="card p-3 mb-4 bg-light border-0">
-                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-calendar-range me-1"></i>ช่วงวันที่หัวข้อ</h6>
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-calendar-range me-1"></i>วันที่</h6>
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold">วันที่เริ่มต้นหัวข้อ</label>
+                                <label class="form-label small fw-bold">เริ่มต้น</label>
                                 <input type="date" id="config-start-date" class="form-control">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold">วันที่สิ้นสุดหัวข้อ</label>
+                                <label class="form-label small fw-bold">สิ้นสุด</label>
                                 <input type="date" id="config-end-date" class="form-control">
                             </div>
                             <div class="col-md-4">
-                                <button type="button" id="save-date-btn" class="btn btn-info text-white w-100 fw-bold rounded-pill">บันทึกช่วงวันที่</button>
+                                <button type="button" id="save-date-btn" class="btn btn-info text-white w-100 fw-bold rounded-pill">บันทึก</button>
                             </div>
                         </div>
                     </div>
@@ -346,16 +346,16 @@
                                 <input type="text" id="new-user-input" class="form-control form-control-sm" placeholder="รหัสตัวแทน">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" id="new-pass-input" class="form-control form-control-sm" placeholder="Password">
+                                <input type="text" id="new-pass-input" class="form-control form-control-sm" placeholder="วันเกิด ddmmyyyy">
                             </div>
                             <div class="col-md-2">
                                 <select id="new-role-input" class="form-select form-select-sm">
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="user">user</option>
+                                    <option value="admin">admin</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <input type="text" id="new-note-input" class="form-control form-control-sm" placeholder="Note">
+                                <input type="text" id="new-note-input" class="form-control form-control-sm" placeholder="ชื่อ">
                             </div>
                             <div class="col-md-2">
                                 <button type="button" id="save-new-user-btn" class="btn btn-success btn-sm w-100 fw-bold">เพิ่ม</button>
@@ -367,11 +367,11 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>รหัสตัวแทน</th>
-                                    <th>Password</th>
+                                    <th>วันเกิด</th>
                                     <th>Role</th>
                                     <th>ล่าสุด</th>
                                     <th>ครั้ง</th>
-                                    <th>Note</th>
+                                    <th>ชื่อ</th>
                                     <th>จัดการ</th>
                                 </tr>
                             </thead>
@@ -734,10 +734,14 @@
                 const adminSession = currentSessionData && currentSessionData.session;
 
                 const email = toAuthEmail(user);
-                const { error: signUpError } = await supabaseClient.auth.signUp({ email, password: pass });
+                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password: pass });
                 if (signUpError) throw signUpError;
 
+                const newUid = signUpData && signUpData.user && signUpData.user.id;
+                if (!newUid) throw new Error('ไม่พบ UID ของผู้ใช้ที่สร้างใน Authentication');
+
                 const { error: insertError } = await supabaseClient.from(TABLE_USERS).insert({
+                    id: newUid,
                     username: user,
                     password: pass,
                     role: role,
