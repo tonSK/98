@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Font (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Prompt', sans-serif; }
     </style>
@@ -44,7 +46,7 @@
                 <button type="submit" id="login-submit-btn" disabled class="w-full bg-[#0081C6] hover:bg-slate-800 text-white py-3 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100 disabled:opacity-60 disabled:cursor-not-allowed">
                     เข้าสู่ระบบ
                 </button>
-                <p id="login-status-text" class="text-center text-xs text-slate-400">กำลังโหลดข้อมูลผู้ใช้งาน...</p>
+                <p id="login-status-text" class="text-center text-xs text-slate-400">กำลังเชื่อมต่อฐานข้อมูล...</p>
             </form>
         </div>
     </div>
@@ -85,7 +87,7 @@
                 <h1 id="page-title" class="text-xl font-semibold text-[#253487]">ภาพรวมบัญชีค่าใช้จ่าย</h1>
             </div>
             <div class="flex items-center gap-4">
-                <span id="sync-status" class="text-xs text-[#253487]">กำลังซิงค์ข้อมูล...</span>
+                <span id="sync-status" class="text-xs text-[#253487]">พร้อมใช้งาน</span>
             </div>
         </header>
 
@@ -414,6 +416,13 @@
                             <tbody id="transfers-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
                         </table>
                     </div>
+
+                    <!-- ส่วนปุ่ม "โอน" เพิ่มเติมด้านล่างเมื่อเลือกสถานะ รอโอน -->
+                    <div id="transfer-action-container" class="flex justify-end pt-2">
+                        <button id="btn-bulk-transfer" onclick="bulkExecuteTransfer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-2 cursor-pointer">
+                            <span>💸</span> โอนรายการทั้งหมด
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -649,8 +658,11 @@
                 <button onclick="closeUserModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
             </div>
             <form id="userForm" onsubmit="submitUserForm(event)" class="space-y-4">
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">ชื่อผู้ใช้งาน</label><input type="text" id="usr-username" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-[#253487]"></div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">รหัสผ่าน</label><input type="text" id="usr-password" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-[#253487]"></div>
+                <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
+                    ผู้ใช้งานใหม่ต้องสร้างบัญชีเข้าสู่ระบบใน Supabase Dashboard ก่อน (Authentication → Users → Add user) ด้วยอีเมล <code>ชื่อผู้ใช้@coop.local</code> แล้วคัดลอก UUID มาวางด้านล่าง
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">ชื่อผู้ใช้งาน (Username)</label><input type="text" id="usr-username" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-[#253487]"></div>
+                <div id="usr-id-container"><label class="block text-xs font-medium text-slate-500 mb-1">Auth User ID (UUID จาก Supabase Dashboard)</label><input type="text" id="usr-id" placeholder="เช่น 3fa85f64-5717-4562-b3fc-2c963f66afa6" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-[#253487]"></div>
                 <div><label class="block text-xs font-medium text-slate-500 mb-1">ชื่อ</label><input type="text" id="usr-name" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-[#253487]"></div>
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1">สิทธิ์การใช้งาน</label>
@@ -664,14 +676,19 @@
         </div>
     </div>
 
-    <!-- Script ควบคุมระบบ -->
+    <!-- Script ควบคุมระบบ (Supabase Integration) -->
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzNq2XQxhO1jdqd_M_3vAo22rh1XrmVSaE4jkVQfcPAMWDcrUgD3SpSonu9ioT-xaBPFQ/exec';
+        var SUPABASE_URL = 'https://cnykwsjjigpfbrsczmoe.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNueWt3c2pqaWdwZmJyc2N6bW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0ODk5NjEsImV4cCI6MjEwNTA2NTk2MX0.Hn9vVL60TkdfP1XTB51tmc9vjOsVVeLwoUbM1YzZuHs';
 
-        let globalData = {};
-        let systemUsers = [];
-        let currentUser = JSON.parse(sessionStorage.getItem('coop_current_user')) || null;
-        const CACHE_KEY = 'coop_data_cache_v1';
+        var supabase = (window.supabaseClientInstance) ? window.supabaseClientInstance : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClientInstance = supabase;
+
+        var globalData = { transactions: [], budgets: [], withdrawals: [], transfers: [], accounts: [] };
+        var systemUsers = [];
+        var currentUser = null;
+        var CACHE_KEY = 'coop_data_cache_v2';
+        var AUTH_EMAIL_DOMAIN = 'coop.local';
 
         function cacheData(data) {
             try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
@@ -684,81 +701,81 @@
             } catch (e) { return null; }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (currentUser) {
-                document.getElementById('login-overlay').classList.add('hidden');
-                applyUserSession();
-
-                // แสดงข้อมูลล่าสุดที่แคชไว้ทันที ไม่ต้องรอเซิร์ฟเวอร์ (แสดงผลเร็วขึ้นมาก)
-                const cached = getCachedData();
-                if (cached) {
-                    globalData = cached;
-                    if (cached.users) systemUsers = cached.users;
-                    document.getElementById('sync-status').textContent = 'กำลังอัปเดตข้อมูลล่าสุด...';
-                    renderAllData(cached);
-                }
-                // แล้วค่อยซิงค์ข้อมูลจริงจากเซิร์ฟเวอร์ในพื้นหลัง (ไม่บล็อกหน้าจอ)
-                loadData();
-            } else {
-                // แสดง user ที่แคชไว้ก่อน (ถ้ามี) เพื่อให้ล็อกอินได้เร็วขึ้น แต่ยังคงรอข้อมูลล่าสุดจากเซิร์ฟเวอร์ก่อนปลดล็อกปุ่ม
-                const cachedUsers = getCachedUsers();
-                if (cachedUsers && cachedUsers.length) {
-                    systemUsers = cachedUsers;
-                }
-                loadSystemUsers();
+        async function restoreSessionAndLoad(authUser) {
+            const { data: profile, error } = await supabase.from('Users').select('*').eq('id', authUser.id).single();
+            if (error || !profile) {
+                showToast('ไม่พบข้อมูลผู้ใช้งานนี้ในระบบ กรุณาติดต่อผู้ดูแลระบบ', 'error');
+                await supabase.auth.signOut();
+                currentUser = null;
+                return false;
             }
+            currentUser = { id: authUser.id, username: profile.Username, name: profile.Name, role: (profile.Role || '').toLowerCase() };
+            document.getElementById('login-overlay').classList.add('hidden');
+            applyUserSession();
+            const cached = getCachedData();
+            if (cached) { globalData = cached; renderAllData(cached); }
+            loadDataFromSupabase();
+            return true;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            setLoginFormState('loading', 'กำลังตรวจสอบสถานะการเข้าสู่ระบบ...');
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session && session.user) {
+                    await restoreSessionAndLoad(session.user);
+                }
+            } catch (err) {
+                console.error('session check error', err);
+            }
+            setLoginFormState('ready');
         });
 
         function setLoginFormState(state, message) {
-            // state: 'loading' | 'ready' | 'error'
             const btn = document.getElementById('login-submit-btn');
             const statusText = document.getElementById('login-status-text');
             if (!btn || !statusText) return;
             if (state === 'loading') {
                 btn.disabled = true;
-                statusText.textContent = message || 'กำลังโหลดข้อมูลผู้ใช้งาน...';
+                statusText.textContent = message || 'กำลังเชื่อมต่อฐานข้อมูล...';
                 statusText.className = 'text-center text-xs text-slate-400';
             } else if (state === 'ready') {
                 btn.disabled = false;
                 statusText.textContent = '';
             } else if (state === 'error') {
-                btn.disabled = false; // ให้กดลองใหม่ได้ ระบบจะดึงข้อมูลซ้ำให้อัตโนมัติตอนกด
+                btn.disabled = false;
                 statusText.textContent = message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่';
                 statusText.className = 'text-center text-xs text-[#E42113]';
             }
         }
 
-        function cacheUsers(users) {
-            try { localStorage.setItem('coop_users_cache_v1', JSON.stringify(users)); } catch (e) {}
-        }
-
-        function getCachedUsers() {
+        async function loadDataFromSupabase() {
+            document.getElementById('sync-status').textContent = 'กำลังซิงค์ข้อมูล...';
             try {
-                const raw = localStorage.getItem('coop_users_cache_v1');
-                return raw ? JSON.parse(raw) : null;
-            } catch (e) { return null; }
-        }
+                const [txRes, bgRes, wdRes, trRes, usrRes, accRes] = await Promise.all([
+                    supabase.from('Transactions').select('*'),
+                    supabase.from('Budgets').select('*'),
+                    supabase.from('Budget_Withdrawals').select('*'),
+                    supabase.from('Transfers').select('*'),
+                    supabase.from('Users').select('*'),
+                    supabase.from('Accounts').select('*')
+                ]);
 
-        function loadSystemUsers() {
-            setLoginFormState('loading');
-            // ใช้ endpoint แบบเบา (action=getUsers) ดึงเฉพาะชีต Users ไม่ต้องรอทั้งไฟล์ ทำให้ล็อกอินได้เร็วขึ้น
-            fetch(scriptURL + '?action=getUsers&t=' + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
-                    if (data.users) {
-                        systemUsers = data.users;
-                        cacheUsers(data.users);
-                    }
-                    setLoginFormState('ready');
-                })
-                .catch(() => {
-                    // ถ้ายังมี user จากแคชอยู่ ก็ยังพอให้ล็อกอินได้ระหว่างรอเชื่อมต่อใหม่
-                    if (systemUsers && systemUsers.length) {
-                        setLoginFormState('ready');
-                    } else {
-                        setLoginFormState('error');
-                    }
-                });
+                globalData = {
+                    transactions: txRes.data || [],
+                    budgets: bgRes.data || [],
+                    withdrawals: wdRes.data || [],
+                    transfers: trRes.data || [],
+                    accounts: accRes.data || []
+                };
+                systemUsers = usrRes.data || [];
+
+                cacheData(globalData);
+                renderAllData(globalData);
+                document.getElementById('sync-status').textContent = 'ซิงค์ข้อมูลสำเร็จ';
+            } catch (err) {
+                document.getElementById('sync-status').textContent = 'เชื่อมต่อล้มเหลว (แสดงข้อมูลออฟไลน์)';
+            }
         }
 
         function showLoading(text = 'กำลังบันทึกข้อมูล...') {
@@ -820,32 +837,32 @@
             }, 3500);
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('login-user').value.trim();
             const p = document.getElementById('login-pass').value.trim();
+            if (!u || !p) return;
 
-            // กันเหนียว: ถ้ายังไม่มีข้อมูลผู้ใช้งานเลย (เช่น โหลดล้มเหลว) ให้ลองดึงใหม่แทนที่จะฟันธงว่ารหัสผิด
-            if (!systemUsers || systemUsers.length === 0) {
-                showToast('กำลังเชื่อมต่อข้อมูลผู้ใช้งาน กรุณารอสักครู่แล้วลองใหม่', 'error');
-                loadSystemUsers();
+            setLoginFormState('loading', 'กำลังเข้าสู่ระบบ...');
+            const email = u.includes('@') ? u : `${u}@${AUTH_EMAIL_DOMAIN}`;
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password: p });
+
+            if (error || !data.user) {
+                setLoginFormState('error', 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง!');
                 return;
             }
-
-            const found = systemUsers.find(item => item.Username === u && item.Password === p);
-            if (found) {
-                currentUser = { username: found.Username, password: found.Password, name: found.Name, role: found.Role.toLowerCase() };
-                sessionStorage.setItem('coop_current_user', JSON.stringify(currentUser));
-                document.getElementById('login-overlay').classList.add('hidden');
-                applyUserSession();
-                loadData();
-                //showToast('เข้าสู่ระบบสำเร็จ', 'success');
-            } else {
-                showToast('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง!', 'error');
+            const ok = await restoreSessionAndLoad(data.user);
+            setLoginFormState('ready');
+            if (!ok) {
+                document.getElementById('login-overlay').classList.remove('hidden');
             }
         }
 
-        function logout() { sessionStorage.removeItem('coop_current_user'); currentUser = null; window.location.reload(); }
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            window.location.reload();
+        }
 
         function applyUserSession() {
             if (!currentUser) return;
@@ -891,12 +908,6 @@
             return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
-        function formatToThaiYear(yearVal) {
-            if (!yearVal) return '-';
-            let yNum = parseInt(yearVal, 10);
-            return isNaN(yNum) ? yearVal : (yNum < 2400 ? yNum + 543 : yNum);
-        }
-
         function switchTab(tabId) {
             if (currentUser && currentUser.role === 'user' && tabId !== 'fund_center') {
                 showToast('คุณมีสิทธิ์เข้าถึงเฉพาะกองทุนศูนย์เท่านั้น', 'error');
@@ -921,1279 +932,844 @@
             document.getElementById('page-title').textContent = titles[tabId];
         }
 
-        function openModalForAccount(accountName) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('บัญชีของคุณมีสิทธิ์เข้าชมเท่านั้น', 'error'); return; }
-            document.getElementById('transactionModal').classList.remove('hidden');
-            document.getElementById('modal-title-text').textContent = 'บันทึกรายการใหม่';
-            document.getElementById('modal-delete-btn').classList.add('hidden');
-            document.getElementById('transactionForm').reset();
-            document.getElementById('tx-row-index').value = '';
-            document.getElementById('tx-account-name').value = accountName;
-            document.getElementById('tx-amount').value = '';
-            document.getElementById('tx-amount-raw').value = '';
-            document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('tx-type').value = 'รายจ่าย';
-            document.getElementById('tx-category').value = 'อาหาร/เครื่องดื่ม';
-        }
+        async function generateNextTransactionID() {
+            try {
+                const { data, error } = await supabase
+                    .from('Transactions')
+                    .select('Transaction_ID')
+                    .order('Transaction_ID', { ascending: false })
+                    .limit(1);
 
-        function openEditTransactionModal(rowIndex) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('บัญชีของคุณมีสิทธิ์เข้าชมเท่านั้น', 'error'); return; }
-            const tx = (globalData.transactions || []).find(t => t.Row_Index == rowIndex);
-            if (!tx) return;
-            document.getElementById('transactionModal').classList.remove('hidden');
-            document.getElementById('modal-title-text').textContent = 'แก้ไข / ลบรายการ';
-            document.getElementById('modal-delete-btn').classList.remove('hidden');
-            document.getElementById('tx-row-index').value = tx.Row_Index;
-            document.getElementById('tx-account-name').value = tx.Account_Name;
-            document.getElementById('tx-date').value = formatDateForInput(tx.Date);
-            document.getElementById('tx-type').value = tx.Type || 'รายจ่าย';
-            document.getElementById('tx-category').value = tx.Category || 'อาหาร/เครื่องดื่ม';
-            
-            let rawAmt = tx.Amount || '';
-            document.getElementById('tx-amount-raw').value = rawAmt;
-            if (rawAmt !== '') {
-                let parts = String(rawAmt).split('.');
-                parts[0] = Number(parts[0]).toLocaleString('en-US');
-                document.getElementById('tx-amount').value = parts.join('.');
-            } else {
-                document.getElementById('tx-amount').value = '';
+                if (error || !data || data.length === 0 || !data[0].Transaction_ID) {
+                    return 'TR0001';
+                }
+
+                let lastId = data[0].Transaction_ID;
+                let numPart = parseInt(lastId.replace(/\D/g, '')) || 0;
+                let nextNum = numPart + 1;
+                return 'TR' + String(nextNum).padStart(4, '0');
+            } catch (err) {
+                console.error('Error generating Transaction_ID:', err);
+                return 'TR' + String(Math.floor(Math.random() * 9000) + 1000);
             }
-
-            document.getElementById('tx-desc').value = tx.Description || '';
         }
 
-        function closeModal() { document.getElementById('transactionModal').classList.add('hidden'); }
+        async function generateNextTransferID() {
+            try {
+                const { data, error } = await supabase
+                    .from('Transfers')
+                    .select('ID')
+                    .order('ID', { ascending: false })
+                    .limit(1);
 
-        function openTransferModal(editIndex = null) {
+                if (error || !data || data.length === 0 || !data[0].ID) {
+                    return 'TF0001';
+                }
+
+                let lastId = data[0].ID;
+                let numPart = parseInt(lastId.replace(/\D/g, '')) || 0;
+                let nextNum = numPart + 1;
+                return 'TF' + String(nextNum).padStart(4, '0');
+            } catch (err) {
+                console.error('Error generating Transfer ID:', err);
+                return 'TF' + String(Math.floor(Math.random() * 9000) + 1000);
+            }
+        }
+
+        async function generateNextWithdrawalID() {
+            try {
+                const { data, error } = await supabase
+                    .from('Budget_Withdrawals')
+                    .select('Withdrawal_ID')
+                    .order('Withdrawal_ID', { ascending: false })
+                    .limit(1);
+
+                if (error || !data || data.length === 0 || !data[0].Withdrawal_ID) {
+                    return 'W0001';
+                }
+
+                let lastId = data[0].Withdrawal_ID;
+                let numPart = parseInt(lastId.replace(/\D/g, '')) || 0;
+                let nextNum = numPart + 1;
+                return 'W' + String(nextNum).padStart(4, '0');
+            } catch (err) {
+                console.error('Error generating Withdrawal_ID:', err);
+                return 'W' + String(Math.floor(Math.random() * 9000) + 1000);
+            }
+        }
+
+        async function submitTransaction(e) {
+            e.preventDefault();
             if (currentUser && currentUser.role !== 'admin') { showToast('บัญชีของคุณมีสิทธิ์เข้าชมเท่านั้น', 'error'); return; }
-            document.getElementById('transferModal').classList.remove('hidden');
-            document.getElementById('transferForm').reset();
-            document.getElementById('tr-row-index').value = '';
-            document.getElementById('tr-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('tr-category').value = 'ค่าบำเหน็จ/ค่าพาหนะ';
-            document.getElementById('tr-other-container').classList.add('hidden');
-            document.getElementById('transfer-delete-btn').classList.add('hidden');
-            document.getElementById('transfer-modal-title').textContent = 'บันทึกผลประโยชน์';
+            
+            const rowIndex = document.getElementById('tx-row-index').value;
+            const accountName = document.getElementById('tx-account-name').value;
+            const date = document.getElementById('tx-date').value;
+            const type = document.getElementById('tx-type').value;
+            const category = document.getElementById('tx-category').value;
+            const amount = parseFloat(document.getElementById('tx-amount-raw').value || 0);
+            const description = document.getElementById('tx-desc').value;
 
-            if (editIndex !== null) {
-                document.getElementById('transfer-modal-title').textContent = 'แก้ไขรายการผลประโยชน์';
-                document.getElementById('transfer-delete-btn').classList.remove('hidden');
-                document.getElementById('tr-row-index').value = editIndex;
-                const tr = (globalData.transfers || [])[editIndex];
-                if (tr) {
-                    document.getElementById('tr-date').value = formatDateForInput(tr.Date);
-                    const cats = ["ค่าบำเหน็จ/ค่าพาหนะ", "ค่าจัดงาน", "Com Plus"];
-                    if (cats.includes(tr.Note)) {
-                        document.getElementById('tr-category').value = tr.Note;
-                        document.getElementById('tr-other-container').classList.add('hidden');
-                    } else {
-                        document.getElementById('tr-category').value = 'อื่น ๆ';
-                        document.getElementById('tr-other-container').classList.remove('hidden');
-                        document.getElementById('tr-other-text').value = tr.Note || '';
-                    }
-                    setDisplayCurrency('tr-amount-display', tr.Amount);
+            closeModal();
+            showLoading('กำลังบันทึกข้อมูล...');
+
+            if (rowIndex) {
+                const payload = {
+                    Account_Name: accountName,
+                    Date: date,
+                    Type: type,
+                    Category: category,
+                    Amount: amount,
+                    Description: description
+                };
+                const { error } = await supabase.from('Transactions').update(payload).eq('Transaction_ID', rowIndex);
+                if (!error) {
+                    showToast('แก้ไขรายการสำเร็จ', 'success');
+                    loadDataFromSupabase();
+                } else {
+                    showToast('เกิดข้อผิดพลาดในการแก้ไข', 'error');
+                }
+            } else {
+                const newTransactionId = await generateNextTransactionID();
+                const payload = {
+                    Transaction_ID: newTransactionId,
+                    Account_Name: accountName,
+                    Date: date,
+                    Type: type,
+                    Category: category,
+                    Amount: amount,
+                    Description: description
+                };
+                const { error } = await supabase.from('Transactions').insert([payload]);
+                if (!error) {
+                    showToast('บันทึกรายการสำเร็จ (' + newTransactionId + ')', 'success');
+                    loadDataFromSupabase();
+                } else {
+                    showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
                 }
             }
+            hideLoading();
         }
 
-        function closeTransferModal() { document.getElementById('transferModal').classList.add('hidden'); }
+        function money(n) {
+            n = parseFloat(n) || 0;
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
-        function handleTransferCategoryChange() {
-            const cat = document.getElementById('tr-category').value;
-            const otherContainer = document.getElementById('tr-other-container');
-            if (cat === 'อื่น ๆ') {
-                otherContainer.classList.remove('hidden');
-                document.getElementById('tr-other-text').required = true;
+        function toBuddhistYear(y) {
+            return parseInt(y) + 543;
+        }
+
+        function toGregorianYear(y) {
+            return parseInt(y) - 543;
+        }
+
+        function getYearFromDate(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return null;
+            return d.getFullYear();
+        }
+
+        function getAllYears() {
+            const years = new Set();
+            (globalData.transactions || []).forEach(t => { const y = getYearFromDate(t.Date); if (y) years.add(y); });
+            (globalData.budgets || []).forEach(b => { const y = parseInt(b.Year); if (y) years.add(y); });
+            (globalData.transfers || []).forEach(t => { const y = getYearFromDate(t.Date); if (y) years.add(y); });
+            (globalData.withdrawals || []).forEach(w => { const y = getYearFromDate(w.Event_Date); if (y) years.add(y); });
+            years.add(new Date().getFullYear());
+            let arr = Array.from(years).sort((a, b) => b - a);
+            return arr;
+        }
+
+        function populateYearSelect(selectId, years) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            const currentYear = new Date().getFullYear();
+            const prevValue = sel.value;
+            const hadPrev = sel.options.length > 0 && prevValue;
+            sel.innerHTML = years.map(y => `<option value="${y}">${toBuddhistYear(y)}</option>`).join('');
+            if (hadPrev && years.map(String).includes(String(prevValue))) {
+                sel.value = prevValue;
+            } else if (years.map(String).includes(String(currentYear))) {
+                sel.value = String(currentYear);
             } else {
-                otherContainer.classList.add('hidden');
-                document.getElementById('tr-other-text').required = false;
+                sel.value = years[0];
             }
         }
 
-        function submitTransferForm(e) {
-            e.preventDefault();
-            closeTransferModal();
+        function getAccountInitialBalance(accountName) {
+            const acc = (globalData.accounts || []).find(a => a.Account_Name === accountName);
+            return acc ? (parseFloat(acc.Initial_Balance) || 0) : 0;
+        }
 
-            const editIndex = document.getElementById('tr-row-index').value;
-            const isEdit = editIndex !== '';
-            const cat = document.getElementById('tr-category').value;
-            let noteVal = cat;
-            if (cat === 'อื่น ๆ') {
-                noteVal = document.getElementById('tr-other-text').value.trim();
+        function getAccountTransactions(accountName, year) {
+            return (globalData.transactions || []).filter(t => t.Account_Name === accountName && (!year || getYearFromDate(t.Date) === year));
+        }
+
+        function getAccountBalance(accountName) {
+            let bal = getAccountInitialBalance(accountName);
+            (globalData.transactions || []).forEach(t => {
+                if (t.Account_Name !== accountName) return;
+                const amt = parseFloat(t.Amount) || 0;
+                bal += (t.Type === 'รายรับ') ? amt : -amt;
+            });
+            return bal;
+        }
+
+        function renderAllData(data) {
+            try {
+                renderDashboard();
+                ['กองทุนศูนย์', 'ตัวแทนมาตรฐาน', 'ประชุมศูนย์ภาค', 'งบส่วนตัวฝ่าย'].forEach(acc => renderAccountPage(acc));
+                renderBudgetLedger();
+                renderTransfersTable();
+                if (currentUser && currentUser.role === 'admin') renderUserManagementTable();
+            } catch (err) {
+                console.error('renderAllData error:', err);
+            }
+        }
+
+        function renderDashboard() {
+            const ACCOUNT_NAMES = ['กองทุนศูนย์', 'ตัวแทนมาตรฐาน', 'ประชุมศูนย์ภาค', 'งบส่วนตัวฝ่าย'];
+            const grid = document.getElementById('accounts-grid');
+            if (grid) {
+                grid.innerHTML = ACCOUNT_NAMES.map(name => {
+                    const bal = getAccountBalance(name);
+                    return `<div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <p class="text-xs text-slate-500 font-medium">${name}</p>
+                        <h3 class="text-xl font-bold text-[#253487] mt-3">${money(bal)} <span class="text-xs font-normal text-slate-400">บาท</span></h3>
+                    </div>`;
+                }).join('');
             }
 
-            const payload = {
-                action: isEdit ? 'editTransfer' : 'addTransfer',
-                Row_Index: isEdit ? globalData.transfers[editIndex].Row_Index : undefined,
-                ID: isEdit ? globalData.transfers[editIndex].ID : undefined,
-                Date: document.getElementById('tr-date').value,
-                Note: noteVal,
-                Amount: document.getElementById('tr-amount').value,
-                Transfer: isEdit ? (globalData.transfers[editIndex].Transfer || 'รอโอน') : 'รอโอน'
+            const elFund = document.getElementById('lbl-summary-fund-center');
+            if (elFund) elFund.innerHTML = `${money(getAccountBalance('กองทุนศูนย์'))} <span class="text-xs font-normal text-slate-400">บาท</span>`;
+
+            const budgetCombined = getAccountBalance('ตัวแทนมาตรฐาน') + getAccountBalance('ประชุมศูนย์ภาค') + getAccountBalance('งบส่วนตัวฝ่าย');
+            const elCombined = document.getElementById('lbl-summary-budget-combined');
+            if (elCombined) elCombined.innerHTML = `${money(budgetCombined)} <span class="text-xs font-normal text-slate-400">บาท</span>`;
+
+            const totalTransferred = (globalData.transfers || []).filter(t => t.Transfer).reduce((s, t) => s + (parseFloat(t.Amount) || 0), 0);
+            const elTransferred = document.getElementById('lbl-summary-total-transferred');
+            if (elTransferred) elTransferred.innerHTML = `${money(totalTransferred)} <span class="text-xs font-normal text-slate-400">บาท</span>`;
+
+            const years = getAllYears();
+            populateYearSelect('filter-year-dashboard-global', years);
+            const yearSel = document.getElementById('filter-year-dashboard-global');
+            const selYear = parseInt(yearSel ? yearSel.value : years[0]) || years[0];
+
+            const catMap = {};
+            (globalData.transactions || []).forEach(t => {
+                if (getYearFromDate(t.Date) !== selYear) return;
+                const cat = t.Category || 'อื่นๆ';
+                if (!catMap[cat]) catMap[cat] = { income: 0, expense: 0 };
+                const amt = parseFloat(t.Amount) || 0;
+                if (t.Type === 'รายรับ') catMap[cat].income += amt; else catMap[cat].expense += amt;
+            });
+            const totalExpenseAll = Object.values(catMap).reduce((s, c) => s + c.expense, 0) || 1;
+            const catBody = document.getElementById('dashboard-category-summary-body');
+            if (catBody) {
+                const catRows = Object.entries(catMap).sort((a, b) => b[1].expense - a[1].expense);
+                catBody.innerHTML = catRows.length ? catRows.map(([cat, v]) => {
+                    const net = v.income - v.expense;
+                    const pct = ((v.expense / totalExpenseAll) * 100).toFixed(1);
+                    return `<tr>
+                        <td class="py-2.5">${cat}</td>
+                        <td class="py-2.5 text-right text-[#007AC2]">${money(v.income)}</td>
+                        <td class="py-2.5 text-right text-[#E42113]">${money(v.expense)}</td>
+                        <td class="py-2.5 text-right">
+                            <span class="${net >= 0 ? 'text-[#007AC2]' : 'text-[#E42113]'} font-semibold">${money(net)}</span>
+                            <span class="text-xs text-slate-400 ml-1">(${pct}%)</span>
+                        </td>
+                    </tr>`;
+                }).join('') : `<tr><td colspan="4" class="py-6 text-center text-slate-400">ไม่มีข้อมูลในปีนี้</td></tr>`;
+            }
+
+            const budgetContainer = document.getElementById('dashboard-budget-container');
+            if (budgetContainer) {
+                const budgetRow = (globalData.budgets || []).find(b => String(b.Year) === String(selYear));
+                const budgetDefs = [
+                    { label: 'งบตัวแทนมาตรฐาน', name: 'งบตัวแทนมาตรฐาน', total: budgetRow ? (parseFloat(budgetRow.Budget1) || 0) : 0 },
+                    { label: 'งบประชุมศูนย์ภาค', name: 'งบประชุมศูนย์ภาค', total: budgetRow ? (parseFloat(budgetRow.Budget2) || 0) : 0 }
+                ];
+                budgetContainer.innerHTML = budgetDefs.map(b => {
+                    const spent = (globalData.withdrawals || []).filter(w => w.Budget_Name === b.name && getYearFromDate(w.Event_Date) === selYear)
+                        .reduce((s, w) => s + (parseFloat(w.Amount) || 0), 0);
+                    const pct = b.total > 0 ? Math.min(100, (spent / b.total) * 100) : 0;
+                    return `<div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-medium text-slate-600">${b.label}</span>
+                            <span class="text-slate-400">${money(spent)} / ${money(b.total)} บาท</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2">
+                            <div class="bg-[#007AC2] h-2 rounded-full" style="width:${pct}%"></div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        function renderDashboardYearChange() { renderDashboard(); }
+
+        function renderAccountPage(accountName) {
+            const yearSelectId = `filter-year-${accountName}`;
+            const years = getAllYears();
+            populateYearSelect(yearSelectId, years);
+            const yearSel = document.getElementById(yearSelectId);
+            if (!yearSel) return;
+            const selYear = parseInt(yearSel.value) || years[0];
+
+            const txs = getAccountTransactions(accountName, selYear).slice().sort((a, b) => new Date(a.Date) - new Date(b.Date));
+            let income = 0, expense = 0;
+            txs.forEach(t => { const amt = parseFloat(t.Amount) || 0; if (t.Type === 'รายรับ') income += amt; else expense += amt; });
+
+            const elIncome = document.getElementById(`lbl-income-${accountName}`);
+            const elExpense = document.getElementById(`lbl-expense-${accountName}`);
+            const elBalance = document.getElementById(`lbl-balance-${accountName}`);
+            if (elIncome) elIncome.textContent = `${money(income)} บาท`;
+            if (elExpense) elExpense.textContent = `${money(expense)} บาท`;
+            if (elBalance) elBalance.textContent = `${money(getAccountBalance(accountName))} บาท`;
+
+            const tbody = document.getElementById(`tbody-${accountName}`);
+            if (!tbody) return;
+            const canEdit = currentUser && currentUser.role === 'admin';
+
+            const allSorted = (globalData.transactions || []).filter(t => t.Account_Name === accountName).slice().sort((a, b) => new Date(a.Date) - new Date(b.Date));
+            const runningMap = {};
+            let bal = getAccountInitialBalance(accountName);
+            allSorted.forEach(t => {
+                const amt = parseFloat(t.Amount) || 0;
+                bal += (t.Type === 'รายรับ') ? amt : -amt;
+                runningMap[t.Transaction_ID] = bal;
+            });
+
+            tbody.innerHTML = txs.length ? txs.map(t => {
+                const amt = parseFloat(t.Amount) || 0;
+                return `<tr>
+                    <td class="py-2.5">${formatThaiDate(t.Date)}</td>
+                    <td class="py-2.5">${t.Category || ''}</td>
+                    <td class="py-2.5">${t.Description || ''}</td>
+                    <td class="py-2.5 text-right text-[#007AC2]">${t.Type === 'รายรับ' ? money(amt) : ''}</td>
+                    <td class="py-2.5 text-right text-[#E42113]">${t.Type === 'รายจ่าย' ? money(amt) : ''}</td>
+                    <td class="py-2.5 text-right font-medium">${money(runningMap[t.Transaction_ID] ?? 0)}</td>
+                    <td class="py-2.5 text-center">${canEdit ? `<button onclick="openModalForAccount('${accountName}','${t.Transaction_ID}')" class="text-[#253487] hover:underline text-xs">แก้ไข</button>` : '-'}</td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="7" class="py-6 text-center text-slate-400">ไม่มีรายการในปีนี้</td></tr>`;
+        }
+
+        function openModalForAccount(accountName, transactionId) {
+            document.getElementById('transactionForm').reset();
+            document.getElementById('tx-account-name').value = accountName;
+            document.getElementById('tx-row-index').value = '';
+            document.getElementById('modal-delete-btn').classList.add('hidden');
+            document.getElementById('modal-title-text').textContent = 'บันทึกรายการใหม่: ' + accountName;
+            if (transactionId) {
+                const t = (globalData.transactions || []).find(x => String(x.Transaction_ID) === String(transactionId));
+                if (t) {
+                    document.getElementById('tx-row-index').value = t.Transaction_ID;
+                    document.getElementById('tx-date').value = formatDateForInput(t.Date);
+                    document.getElementById('tx-type').value = t.Type;
+                    document.getElementById('tx-category').value = t.Category;
+                    const amt = parseFloat(t.Amount) || 0;
+                    document.getElementById('tx-amount').value = amt.toLocaleString('en-US');
+                    document.getElementById('tx-amount-raw').value = amt;
+                    document.getElementById('tx-desc').value = t.Description || '';
+                    document.getElementById('modal-title-text').textContent = 'แก้ไขรายการ: ' + accountName;
+                    document.getElementById('modal-delete-btn').classList.remove('hidden');
+                }
+            }
+            document.getElementById('transactionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').classList.add('hidden');
+            document.getElementById('transactionForm').reset();
+        }
+
+        function confirmDeleteTransaction() {
+            const id = document.getElementById('tx-row-index').value;
+            if (!id) return;
+            document.getElementById('confirm-msg').textContent = 'คุณต้องการลบรายการนี้ใช่หรือไม่?';
+            document.getElementById('confirm-action-btn').onclick = async () => {
+                closeConfirmModal();
+                closeModal();
+                showLoading('กำลังลบข้อมูล...');
+                const { error } = await supabase.from('Transactions').delete().eq('Transaction_ID', id);
+                hideLoading();
+                if (!error) { showToast('ลบรายการสำเร็จ', 'success'); loadDataFromSupabase(); }
+                else { showToast('เกิดข้อผิดพลาดในการลบ', 'error'); }
             };
-
-            if (!globalData.transfers) globalData.transfers = [];
-
-            if (isEdit) {
-                const backup = { ...globalData.transfers[editIndex] };
-                globalData.transfers[editIndex] = { ...globalData.transfers[editIndex], ...payload };
-                renderAllData(globalData);
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        cacheData(globalData);
-                        showToast('บันทึกข้อมูลเรียบร้อย', 'success');
-                    } else {
-                        globalData.transfers[editIndex] = backup;
-                        renderAllData(globalData);
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    globalData.transfers[editIndex] = backup;
-                    renderAllData(globalData);
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
-            } else {
-                const tempId = 'tmp_' + Date.now();
-                const optimisticTr = { Date: payload.Date, Note: payload.Note, Amount: payload.Amount, Transfer: payload.Transfer, Row_Index: tempId };
-                globalData.transfers.push(optimisticTr);
-                renderAllData(globalData);
-                showToast('บันทึกข้อมูลเรียบร้อย', 'success');
-
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        loadData();
-                    } else {
-                        globalData.transfers = globalData.transfers.filter(t => t.Row_Index !== tempId);
-                        renderAllData(globalData);
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    globalData.transfers = globalData.transfers.filter(t => t.Row_Index !== tempId);
-                    renderAllData(globalData);
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
-            }
-        }
-
-        function confirmDeleteTransfer() {
-            const idx = document.getElementById('tr-row-index').value;
-            if (idx === '') return;
-            const tr = globalData.transfers[idx];
-            document.getElementById('confirm-msg').textContent = 'คุณต้องการลบรายการโอนผลประโยชน์นี้ใช่หรือไม่?';
-            document.getElementById('confirm-action-btn').onclick = () => { closeConfirmModal(); closeTransferModal(); deleteTransfer(tr.Row_Index); };
             document.getElementById('confirmModal').classList.remove('hidden');
         }
 
-        function deleteTransfer(rowIndex) {
-            const backupList = [...(globalData.transfers || [])];
-            globalData.transfers = (globalData.transfers || []).filter(t => t.Row_Index != rowIndex);
-            renderAllData(globalData);
-            showToast('ลบสำเร็จ', 'success');
-            fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteTransfer', Row_Index: rowIndex }) })
-            .then(res => res.json()).then(() => { 
-                cacheData(globalData);
-            }).catch(() => {
-                globalData.transfers = backupList;
-                renderAllData(globalData);
-                showToast('เกิดข้อผิดพลาด', 'error');
-            });
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
         }
 
-        async function executeTransferAll(filteredIndices) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('บัญชีของคุณมีสิทธิ์เข้าชมเท่านั้น', 'error'); return; }
-            if (filteredIndices.length === 0) return;
+        var selectedBudgetTab = 'ทั้งหมด';
 
-            showLoading('กำลังดำเนินการโอนผลประโยชน์... (0/' + filteredIndices.length + ')');
+        function renderBudgetLedger() {
+            const years = getAllYears();
+            populateYearSelect('filter-year', years);
+            const yearSel = document.getElementById('filter-year');
+            if (!yearSel) return;
+            const selYear = parseInt(yearSel.value) || years[0];
 
-            const todayStr = new Date().toISOString().split('T')[0];
-            const backupList = [...globalData.transfers];
+            const budgetRow = (globalData.budgets || []).find(b => String(b.Year) === String(selYear));
+            const b1total = budgetRow ? (parseFloat(budgetRow.Budget1) || 0) : 0;
+            const b2total = budgetRow ? (parseFloat(budgetRow.Budget2) || 0) : 0;
 
-            let successCount = 0;
-            let failedItems = [];
+            const b1spent = (globalData.withdrawals || []).filter(w => w.Budget_Name === 'งบตัวแทนมาตรฐาน' && getYearFromDate(w.Event_Date) === selYear).reduce((s, w) => s + (parseFloat(w.Amount) || 0), 0);
+            const b2spent = (globalData.withdrawals || []).filter(w => w.Budget_Name === 'งบประชุมศูนย์ภาค' && getYearFromDate(w.Event_Date) === selYear).reduce((s, w) => s + (parseFloat(w.Amount) || 0), 0);
 
-            // สำคัญ: ยิงทีละรายการ (ไม่ใช้ Promise.all/พร้อมกัน) เพราะการยิงพร้อมกันหลายรายการ
-            // ไปยัง Google Apps Script ตัวเดียวกัน ทำให้เกิดการชนกัน (concurrent write)
-            // และบางแถวบันทึกวันที่ในคอลัมน์ E ไม่สำเร็จ โดยที่หน้าเว็บไม่รู้ตัว
-            for (let i = 0; i < filteredIndices.length; i++) {
-                const origIdx = filteredIndices[i];
-                const tr = backupList[origIdx];
-                const payload = {
-                    action: 'editTransfer',
-                    Row_Index: tr.Row_Index,
-                    ID: tr.ID,
-                    Date: tr.Date,
-                    Note: tr.Note,
-                    Amount: tr.Amount,
-                    Transfer: todayStr
-                };
+            document.getElementById('card-b1-total').textContent = money(b1total) + ' บาท';
+            document.getElementById('card-b1-spent').textContent = money(b1spent) + ' บาท';
+            document.getElementById('card-b1-remaining').textContent = money(b1total - b1spent) + ' บาท';
+            document.getElementById('card-b2-total').textContent = money(b2total) + ' บาท';
+            document.getElementById('card-b2-spent').textContent = money(b2spent) + ' บาท';
+            document.getElementById('card-b2-remaining').textContent = money(b2total - b2spent) + ' บาท';
 
-                showLoading('กำลังดำเนินการโอนผลประโยชน์... (' + (i + 1) + '/' + filteredIndices.length + ')');
+            const tabsContainer = document.getElementById('budget-category-tabs');
+            const tabOptions = ['ทั้งหมด', 'งบตัวแทนมาตรฐาน', 'งบประชุมศูนย์ภาค'];
+            tabsContainer.innerHTML = tabOptions.map(t => `
+                <button onclick="setBudgetTab('${t}')" class="px-3 py-1.5 rounded-xl text-xs font-medium transition ${selectedBudgetTab === t ? 'bg-[#253487] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${t}</button>
+            `).join('');
 
-                try {
-                    const res = await fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-                    const result = await res.json();
-                    // ตรวจผลลัพธ์จริงจาก server ก่อน ไม่ใช่ถือว่าสำเร็จเสมอ
-                    if (result && result.result === 'success') {
-                        globalData.transfers[origIdx] = { ...tr, Transfer: todayStr };
-                        successCount++;
-                    } else {
-                        failedItems.push(tr);
-                    }
-                } catch (err) {
-                    failedItems.push(tr);
-                }
-            }
+            let filtered = (globalData.withdrawals || []).filter(w => getYearFromDate(w.Event_Date) === selYear);
+            if (selectedBudgetTab !== 'ทั้งหมด') filtered = filtered.filter(w => w.Budget_Name === selectedBudgetTab);
+            filtered = filtered.slice().sort((a, b) => new Date(a.Event_Date) - new Date(b.Event_Date));
 
-            renderAllData(globalData);
-            hideLoading();
+            const totalBudgetForFilter = selectedBudgetTab === 'งบตัวแทนมาตรฐาน' ? b1total : selectedBudgetTab === 'งบประชุมศูนย์ภาค' ? b2total : (b1total + b2total);
+            let cumulative = 0;
+            const canEdit = currentUser && currentUser.role === 'admin';
+            const tbody = document.getElementById('budget-ledger-tbody');
+            tbody.innerHTML = filtered.length ? filtered.map((w, idx) => {
+                const amt = parseFloat(w.Amount) || 0;
+                cumulative += amt;
+                const remaining = totalBudgetForFilter - cumulative;
+                const statusClass = w.Status === 'เบิกแล้ว' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600';
+                return `<tr>
+                    <td class="py-2.5">${idx + 1}</td>
+                    <td class="py-2.5">${formatThaiDate(w.Event_Date)}</td>
+                    <td class="py-2.5">${formatThaiDate(w.Actual_Date)}</td>
+                    <td class="py-2.5">${w.Description || ''}</td>
+                    <td class="py-2.5 text-right">${money(amt)}</td>
+                    <td class="py-2.5 text-right">${money(cumulative)}</td>
+                    <td class="py-2.5 text-right">${money(remaining)}</td>
+                    <td class="py-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-xs ${statusClass}">${w.Status || ''}</span></td>
+                    <td class="py-2.5 text-center">${canEdit ? `<button onclick="openWithdrawalModal('${w.Withdrawal_ID}')" class="text-[#253487] hover:underline text-xs">แก้ไข</button>` : '-'}</td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="9" class="py-6 text-center text-slate-400">ไม่มีรายการ</td></tr>`;
 
-            if (failedItems.length === 0) {
-                showToast('โอนผลประโยชน์สำเร็จทั้งหมด ' + successCount + ' รายการ', 'success');
-                cacheData(globalData);
-            } else {
-                showToast('โอนสำเร็จ ' + successCount + ' รายการ, ล้มเหลว ' + failedItems.length + ' รายการ กรุณากดโอนอีกครั้งสำหรับรายการที่เหลือ', 'error');
-                cacheData(globalData);
-            }
+            const totalWithdrawnActual = filtered.filter(w => w.Status === 'เบิกแล้ว').reduce((s, w) => s + (parseFloat(w.Amount) || 0), 0);
+            const totalPending = filtered.filter(w => w.Status === 'รอเบิก').reduce((s, w) => s + (parseFloat(w.Amount) || 0), 0);
+            document.getElementById('lbl-total-budget').textContent = money(totalBudgetForFilter) + ' บาท';
+            document.getElementById('lbl-total-withdrawn-actual').textContent = money(totalWithdrawnActual) + ' บาท';
+            document.getElementById('lbl-total-pending').textContent = money(totalPending) + ' บาท';
+            document.getElementById('lbl-total-available').textContent = money(totalBudgetForFilter - totalWithdrawnActual - totalPending) + ' บาท';
         }
 
-        function initTransferYearDropdown(transfers) {
-            const yearSelect = document.getElementById('filter-year-transfers');
-            if (!yearSelect) return;
-            let yearsSet = new Set();
-            let currentYearTh = (new Date().getFullYear() + 543).toString();
-            yearsSet.add(currentYearTh);
-
-            transfers.forEach(tr => {
-                if (tr.Date) {
-                    let d = new Date(tr.Date);
-                    if (!isNaN(d.getTime())) yearsSet.add((d.getFullYear() + 543).toString());
-                }
-            });
-
-            let currentVal = yearSelect.value || currentYearTh;
-            yearSelect.innerHTML = '';
-            Array.from(yearsSet).sort().forEach(y => {
-                let opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                if (y === currentVal) opt.selected = true;
-                yearSelect.appendChild(opt);
-            });
-            if (!yearSelect.value && yearSelect.options.length > 0) yearSelect.selectedIndex = 0;
-        }
-
-        function renderTransfersTable() {
-            const transfers = globalData.transfers || [];
-            initTransferYearDropdown(transfers);
-
-            const yearSelect = document.getElementById('filter-year-transfers');
-            const selectedYearTh = yearSelect ? yearSelect.value : (new Date().getFullYear() + 543).toString();
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const filterStatus = document.getElementById('filter-transfer-status').value;
-            const tbody = document.getElementById('transfers-tbody');
-            if (tbody) tbody.innerHTML = '';
-
-            const yearFiltered = transfers.filter(tr => {
-                if (!tr.Date) return false;
-                let d = new Date(tr.Date);
-                return !isNaN(d.getTime()) && d.getFullYear() === selectedYearAd;
-            });
-
-            const filtered = yearFiltered.filter(tr => {
-                let transferVal = tr.Transfer !== undefined && tr.Transfer !== null && String(tr.Transfer).trim() !== '' ? String(tr.Transfer).trim() : 'รอโอน';
-                let isDateVal = !isNaN(new Date(transferVal).getTime()) && transferVal.includes('-');
-                let normalizedStatus = isDateVal ? 'โอนแล้ว' : transferVal;
-
-                if (filterStatus === 'ทั้งหมด') return true;
-                return normalizedStatus === filterStatus;
-            });
-
-            let sumCat1 = 0, sumCat2 = 0, sumCat3 = 0, sumCat4 = 0; 
-
-            filtered.forEach(tr => {
-                let amt = parseFloat(tr.Amount || 0);
-                let note = tr.Note || '';
-                if (note === 'ค่าบำเหน็จ/ค่าพาหนะ') sumCat1 += amt;
-                else if (note === 'ค่าจัดงาน') sumCat2 += amt;
-                else if (note === 'Com Plus') sumCat3 += amt;
-                else sumCat4 += amt;
-            });
-
-            let sumTotalAll = sumCat1 + sumCat2 + sumCat3 + sumCat4;
-
-            const elCat1 = document.getElementById('lbl-transfer-cat-1');
-            const elCat2 = document.getElementById('lbl-transfer-cat-2');
-            const elCat3 = document.getElementById('lbl-transfer-cat-3');
-            const elCat4 = document.getElementById('lbl-transfer-cat-4');
-            const elCatTotal = document.getElementById('lbl-transfer-cat-total');
-
-            if (elCat1) {
-                elCat1.textContent = sumCat1.toLocaleString() + ' บาท';
-                elCat1.className = `text-base sm:text-lg font-medium ${sumCat1 < 0 ? 'text-sky-500' : 'text-[#E42113]'}`;
-            }
-            if (elCat2) {
-                elCat2.textContent = sumCat2.toLocaleString() + ' บาท';
-                elCat2.className = `text-base sm:text-lg font-medium ${sumCat2 < 0 ? 'text-sky-500' : 'text-[#E42113]'}`;
-            }
-            if (elCat3) {
-                elCat3.textContent = sumCat3.toLocaleString() + ' บาท';
-                elCat3.className = `text-base sm:text-lg font-medium ${sumCat3 < 0 ? 'text-sky-500' : 'text-[#E42113]'}`;
-            }
-            if (elCat4) {
-                elCat4.textContent = sumCat4.toLocaleString() + ' บาท';
-                elCat4.className = `text-base sm:text-lg font-medium ${sumCat4 < 0 ? 'text-sky-500' : 'text-[#E42113]'}`;
-            }
-            if (elCatTotal) {
-                elCatTotal.textContent = sumTotalAll.toLocaleString() + ' บาท';
-                elCatTotal.className = `text-base sm:text-lg font-bold ${sumTotalAll < 0 ? 'text-sky-500' : 'text-[#E42113]'}`;
-            }
-
-            if (!tbody) return;
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 text-sm">ไม่พบรายการผลประโยชน์ในปี พ.ศ. ${selectedYearTh} ตามสถานะนี้</td></tr>`;
-                return;
-            }
-
-            let sumBenefit = 0;
-            let filteredOriginalIndices = [];
-            filtered.forEach(tr => {
-                sumBenefit += parseFloat(tr.Amount || 0);
-                filteredOriginalIndices.push(transfers.indexOf(tr));
-            });
-
-            filtered.forEach(tr => {
-                let originalIndex = transfers.indexOf(tr);
-                let amt = parseFloat(tr.Amount || 0);
-
-                let rawTransfer = tr.Transfer !== undefined && tr.Transfer !== null ? String(tr.Transfer).trim() : '';
-                let displayTransfer = rawTransfer === '' ? 'รอโอน' : rawTransfer;
-        
-                let parsedDate = new Date(rawTransfer);
-                if (rawTransfer !== '' && !isNaN(parsedDate.getTime())) {
-                    displayTransfer = formatThaiDate(rawTransfer);
-                }
-
-                let isTransferred = (displayTransfer !== 'รอโอน');
-                let amountColorClass = amt < 0 ? 'text-sky-500' : 'text-[#E42113]';
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="py-3 text-slate-600">${formatThaiDate(tr.Date)}</td>
-                        <td class="py-3 font-medium text-slate-800">${tr.Note || '-'}</td>
-                        <td class="py-3 text-right font-medium ${amountColorClass}">${amt.toLocaleString()} บาท</td>
-                        <td class="py-3 text-center"><span class="transfer-status-badge px-2.5 py-1 rounded-full text-xs font-medium ${isTransferred ? 'bg-sky-50 text-[#007AC2]' : 'bg-rose-50 text-[#E42113]'}">${displayTransfer}</span></td>
-                        <td class="py-3 text-center"><button onclick="openTransferModal(${originalIndex})" class="text-xs text-[#253487] bg-indigo-50 px-2.5 py-1 rounded-full font-medium hover:bg-indigo-100">แก้ไข</button></td>
-                    </tr>
-                `;
-            });
-
-            let indicesJson = JSON.stringify(filteredOriginalIndices);
-            let actionButtonHtml = '';
-            if (filterStatus === 'รอโอน') {
-                actionButtonHtml = `
-                    <button id="btn-execute-transfer" onclick='executeTransferAll(${indicesJson})' class="bg-[#007AC2] hover:bg-[#253487] text-white px-4 py-1.5 rounded-xl text-xs font-medium transition shadow-sm cursor-pointer">
-                        🚀 โอน
-                    </button>
-                `;
-            }
-
-            let sumTotalColorClass = sumBenefit < 0 ? 'text-sky-500' : 'text-[#E42113]';
-
-            tbody.innerHTML += `
-                <tr class="bg-slate-100 font-bold border-t-2 border-slate-200">
-                    <td class="py-3 text-slate-800" colspan="2">ยอดรวม</td>
-                    <td class="py-3 text-right text-xl ${sumTotalColorClass}">${sumBenefit.toLocaleString()} บาท</td>
-                    <td class="py-3 text-center" colspan="2">
-                        ${actionButtonHtml}
-                    </td>
-                </tr>
-            `;
+        function setBudgetTab(tab) {
+            selectedBudgetTab = tab;
+            renderBudgetLedger();
         }
 
         function openBudgetModalForCurrentYear() {
-            if (currentUser && currentUser.role !== 'admin') { showToast('บัญชีของคุณมีสิทธิ์เข้าชมเท่านั้น', 'error'); return; }
-            const yearSelect = document.getElementById('filter-year');
-            const selectedYearTh = yearSelect ? yearSelect.value : (new Date().getFullYear() + 543).toString();
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const existing = (globalData.budgets || []).find(b => {
-                let bYearAd = parseInt(b.Year, 10);
-                if (bYearAd > 2400) bYearAd -= 543;
-                return bYearAd === selectedYearAd;
-            });
-
-            document.getElementById('budgetModal').classList.remove('hidden');
+            const yearSel = document.getElementById('filter-year');
+            const selYear = yearSel ? yearSel.value : new Date().getFullYear();
+            const existing = (globalData.budgets || []).find(b => String(b.Year) === String(selYear));
+            document.getElementById('budgetForm').reset();
+            document.getElementById('b-year').value = toBuddhistYear(selYear);
             if (existing) {
-                document.getElementById('budget-modal-title').textContent = `แก้ไขงบประมาณประจำปี ${selectedYearTh}`;
-                document.getElementById('b-edit-id').value = existing.Budget_ID;
-                document.getElementById('b-id').value = existing.Budget_ID;
-                setDisplayCurrency('b-budget1-display', existing.Budget1 || existing.Total_Budget || '');
-                setDisplayCurrency('b-budget2-display', existing.Budget2 || '');
-                document.getElementById('b-year').value = selectedYearTh;
+                document.getElementById('b-edit-id').value = existing.Year;
+                document.getElementById('b-budget1').value = existing.Budget1;
+                document.getElementById('b-budget1-display').value = (parseFloat(existing.Budget1) || 0).toLocaleString('en-US');
+                document.getElementById('b-budget2').value = existing.Budget2;
+                document.getElementById('b-budget2-display').value = (parseFloat(existing.Budget2) || 0).toLocaleString('en-US');
+                document.getElementById('budget-modal-title').textContent = 'แก้ไขงบประมาณปี ' + selYear;
             } else {
-                document.getElementById('budget-modal-title').textContent = `จัดสรรงบประมาณใหม่ประจำปี ${selectedYearTh}`;
-                document.getElementById('budgetForm').reset();
                 document.getElementById('b-edit-id').value = '';
-                document.getElementById('b-budget1').value = '';
-                document.getElementById('b-budget2').value = '';
-                let nextId = Math.max(...(globalData.budgets || []).map(b => parseInt((b.Budget_ID || '').match(/\d+/) || 0)), 0) + 1;
-                document.getElementById('b-id').value = 'BUD' + String(nextId).padStart(2, '0');
-                document.getElementById('b-year').value = selectedYearTh;
+                document.getElementById('budget-modal-title').textContent = 'จัดสรรงบประมาณใหม่';
             }
+            document.getElementById('budgetModal').classList.remove('hidden');
         }
 
-        function closeBudgetModal() { document.getElementById('budgetModal').classList.add('hidden'); }
-        function checkWithdrawalStatus() { document.getElementById('w-actual-date').required = (document.getElementById('w-status').value === 'เบิกแล้ว'); }
+        function closeBudgetModal() {
+            document.getElementById('budgetModal').classList.add('hidden');
+        }
 
-        function openWithdrawalModal(withdrawalIndex = null) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('บัญชีของคุณมีสิทธิ์เข้าชมเท่านั้น', 'error'); return; }
-            document.getElementById('withdrawalModal').classList.remove('hidden');
+        async function submitBudgetForm(e) {
+            e.preventDefault();
+            if (currentUser && currentUser.role !== 'admin') { showToast('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error'); return; }
+            const editId = document.getElementById('b-edit-id').value;
+            const yearInput = document.getElementById('b-year').value.trim();
+            const year = String(toGregorianYear(yearInput));
+            const budget1 = parseFloat(document.getElementById('b-budget1').value || 0);
+            const budget2 = parseFloat(document.getElementById('b-budget2').value || 0);
+            closeBudgetModal();
+            showLoading('กำลังบันทึกงบประมาณ...');
+            const payload = { Year: year, Budget1: budget1, Budget2: budget2 };
+            let error;
+            if (editId) {
+                ({ error } = await supabase.from('Budgets').update(payload).eq('Year', editId));
+            } else {
+                ({ error } = await supabase.from('Budgets').insert([payload]));
+            }
+            hideLoading();
+            if (!error) { showToast('บันทึกงบประมาณสำเร็จ', 'success'); loadDataFromSupabase(); }
+            else { showToast('เกิดข้อผิดพลาดในการบันทึก', 'error'); }
+        }
+
+        function openWithdrawalModal(withdrawalId) {
             document.getElementById('withdrawalForm').reset();
-            document.getElementById('w-budget-name').value = 'งบตัวแทนมาตรฐาน';
-            document.getElementById('w-status').value = 'รอเบิก';
-            document.getElementById('w-amount').value = '';
-            document.getElementById('w-event-date').value = new Date().toISOString().split('T')[0];
-            checkWithdrawalStatus();
-
-            if (withdrawalIndex !== null) {
-                document.getElementById('withdrawal-modal-title').textContent = 'แก้ไขรายการเบิกงบประมาณ';
-                document.getElementById('withdrawal-delete-btn').classList.remove('hidden');
-                document.getElementById('w-edit-index').value = withdrawalIndex;
-                const w = (globalData.withdrawals || [])[withdrawalIndex];
+            document.getElementById('w-edit-index').value = '';
+            document.getElementById('withdrawal-delete-btn').classList.add('hidden');
+            document.getElementById('withdrawal-modal-title').textContent = 'บันทึกรายการเบิกงบประมาณ';
+            if (withdrawalId) {
+                const w = (globalData.withdrawals || []).find(x => String(x.Withdrawal_ID) === String(withdrawalId));
                 if (w) {
-                    document.getElementById('w-budget-name').value = w.Budget_Name || 'งบตัวแทนมาตรฐาน';
+                    document.getElementById('w-edit-index').value = w.Withdrawal_ID;
+                    document.getElementById('w-budget-name').value = w.Budget_Name;
                     document.getElementById('w-event-date').value = formatDateForInput(w.Event_Date);
                     document.getElementById('w-actual-date').value = formatDateForInput(w.Actual_Date);
-                    setDisplayCurrency('w-amount-display', w.Amount);
-                    document.getElementById('w-status').value = w.Status || 'รอเบิก';
+                    const amt = parseFloat(w.Amount) || 0;
+                    document.getElementById('w-amount-display').value = amt.toLocaleString('en-US');
+                    document.getElementById('w-amount').value = amt;
+                    document.getElementById('w-status').value = w.Status;
                     document.getElementById('w-desc').value = w.Description || '';
-                    checkWithdrawalStatus();
+                    document.getElementById('withdrawal-modal-title').textContent = 'แก้ไขรายการเบิกงบประมาณ';
+                    document.getElementById('withdrawal-delete-btn').classList.remove('hidden');
                 }
-            } else {
-                document.getElementById('withdrawal-modal-title').textContent = 'บันทึกรายการเบิกงบประมาณ';
-                document.getElementById('withdrawal-delete-btn').classList.add('hidden');
-                document.getElementById('w-edit-index').value = '';
+            }
+            document.getElementById('withdrawalModal').classList.remove('hidden');
+        }
+
+        function closeWithdrawalModal() {
+            document.getElementById('withdrawalModal').classList.add('hidden');
+        }
+
+        function checkWithdrawalStatus() {
+            const status = document.getElementById('w-status').value;
+            const actualDateInput = document.getElementById('w-actual-date');
+            if (status === 'เบิกแล้ว' && !actualDateInput.value) {
+                actualDateInput.value = new Date().toISOString().slice(0, 10);
             }
         }
 
-        function closeWithdrawalModal() { document.getElementById('withdrawalModal').classList.add('hidden'); }
-
-        function submitBudgetForm(e) {
+        async function submitWithdrawalForm(e) {
             e.preventDefault();
-            const b1 = document.getElementById('b-budget1').value.trim();
-            const b2 = document.getElementById('b-budget2').value.trim();
-            const y = document.getElementById('b-year').value.trim();
-            if (!b1 || !b2 || !y) { showToast('กรุณากรอกข้อมูลให้ครบทุกช่อง', 'error'); return; }
-
-            closeBudgetModal();
-
-            let yNum = parseInt(y, 10);
-            if (yNum > 2400) yNum -= 543;
-
-            const editId = document.getElementById('b-edit-id').value;
-            const isEdit = !!editId;
-            const budgetId = editId || document.getElementById('b-id').value;
-            const payload = {
-                action: isEdit ? 'editBudget' : 'addBudget',
-                Budget_ID: budgetId,
-                Budget1: b1, Budget2: b2, Year: yNum
-            };
-
-            if (!globalData.budgets) globalData.budgets = [];
-
-            if (isEdit) {
-                const idx = globalData.budgets.findIndex(bg => bg.Budget_ID === budgetId);
-                const backup = idx !== -1 ? { ...globalData.budgets[idx] } : null;
-                if (idx !== -1) {
-                    globalData.budgets[idx] = { ...globalData.budgets[idx], Budget1: b1, Budget2: b2, Year: yNum };
-                    renderAllData(globalData);
-                }
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        cacheData(globalData);
-                        showToast('บันทึกงบประมาณสำเร็จ', 'success');
-                    } else {
-                        if (backup) { globalData.budgets[idx] = backup; renderAllData(globalData); }
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    if (backup) { globalData.budgets[idx] = backup; renderAllData(globalData); }
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
-            } else {
-                globalData.budgets.push({ Budget_ID: budgetId, Budget1: b1, Budget2: b2, Year: yNum });
-                renderAllData(globalData);
-                showToast('บันทึกงบประมาณสำเร็จ', 'success');
-
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        loadData();
-                    } else {
-                        globalData.budgets = globalData.budgets.filter(bg => bg.Budget_ID !== budgetId);
-                        renderAllData(globalData);
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    globalData.budgets = globalData.budgets.filter(bg => bg.Budget_ID !== budgetId);
-                    renderAllData(globalData);
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
-            }
-        }
-
-        function submitWithdrawalForm(e) {
-            e.preventDefault();
+            if (currentUser && currentUser.role !== 'admin') { showToast('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error'); return; }
+            const id = document.getElementById('w-edit-index').value;
+            
             closeWithdrawalModal();
+            showLoading('กำลังบันทึกข้อมูล...');
 
-            const editIndex = document.getElementById('w-edit-index').value;
-            const isEdit = editIndex !== '';
-            const payload = {
-                action: isEdit ? 'editWithdrawal' : 'addWithdrawal',
-                Row_Index: isEdit ? globalData.withdrawals[editIndex].Row_Index : undefined,
-                Budget_Name: document.getElementById('w-budget-name').value,
-                Event_Date: document.getElementById('w-event-date').value,
-                Amount: document.getElementById('w-amount').value,
-                Actual_Date: document.getElementById('w-actual-date').value,
-                Status: document.getElementById('w-status').value,
-                Description: document.getElementById('w-desc').value
-            };
-
-            if (!globalData.withdrawals) globalData.withdrawals = [];
-
-            if (isEdit) {
-                const backup = { ...globalData.withdrawals[editIndex] };
-                globalData.withdrawals[editIndex] = { ...globalData.withdrawals[editIndex], ...payload };
-                renderAllData(globalData);
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        cacheData(globalData);
-                        showToast('บันทึกการเบิกสำเร็จ', 'success');
-                    } else {
-                        globalData.withdrawals[editIndex] = backup;
-                        renderAllData(globalData);
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    globalData.withdrawals[editIndex] = backup;
-                    renderAllData(globalData);
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
+            let error;
+            if (id) {
+                const payload = {
+                    Budget_Name: document.getElementById('w-budget-name').value,
+                    Event_Date: document.getElementById('w-event-date').value,
+                    Actual_Date: document.getElementById('w-actual-date').value || null,
+                    Amount: parseFloat(document.getElementById('w-amount').value || 0),
+                    Status: document.getElementById('w-status').value,
+                    Description: document.getElementById('w-desc').value
+                };
+                ({ error } = await supabase.from('Budget_Withdrawals').update(payload).eq('Withdrawal_ID', id));
             } else {
-                const tempId = 'tmp_' + Date.now();
-                const optimisticW = { Budget_Name: payload.Budget_Name, Event_Date: payload.Event_Date, Amount: payload.Amount, Actual_Date: payload.Actual_Date, Status: payload.Status, Description: payload.Description, Row_Index: tempId };
-                globalData.withdrawals.push(optimisticW);
-                renderAllData(globalData);
-                showToast('บันทึกการเบิกสำเร็จ', 'success');
-
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        loadData();
-                    } else {
-                        globalData.withdrawals = globalData.withdrawals.filter(w => w.Row_Index !== tempId);
-                        renderAllData(globalData);
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    globalData.withdrawals = globalData.withdrawals.filter(w => w.Row_Index !== tempId);
-                    renderAllData(globalData);
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
+                const newWithdrawalId = await generateNextWithdrawalID();
+                const payload = {
+                    Withdrawal_ID: newWithdrawalId,
+                    Budget_Name: document.getElementById('w-budget-name').value,
+                    Event_Date: document.getElementById('w-event-date').value,
+                    Actual_Date: document.getElementById('w-actual-date').value || null,
+                    Amount: parseFloat(document.getElementById('w-amount').value || 0),
+                    Status: document.getElementById('w-status').value,
+                    Description: document.getElementById('w-desc').value
+                };
+                ({ error } = await supabase.from('Budget_Withdrawals').insert([payload]));
             }
+            hideLoading();
+            if (!error) { showToast('บันทึกรายการสำเร็จ', 'success'); loadDataFromSupabase(); }
+            else { showToast('เกิดข้อผิดพลาดในการบันทึก', 'error'); }
         }
 
         function confirmDeleteWithdrawal() {
-            const idx = document.getElementById('w-edit-index').value;
-            if (idx === '') return;
-            const w = globalData.withdrawals[idx];
+            const id = document.getElementById('w-edit-index').value;
+            if (!id) return;
             document.getElementById('confirm-msg').textContent = 'คุณต้องการลบรายการเบิกงบนี้ใช่หรือไม่?';
-            document.getElementById('confirm-action-btn').onclick = () => { closeConfirmModal(); closeWithdrawalModal(); deleteWithdrawal(w.Row_Index); };
+            document.getElementById('confirm-action-btn').onclick = async () => {
+                closeConfirmModal();
+                closeWithdrawalModal();
+                showLoading('กำลังลบข้อมูล...');
+                const { error } = await supabase.from('Budget_Withdrawals').delete().eq('Withdrawal_ID', id);
+                hideLoading();
+                if (!error) { showToast('ลบรายการสำเร็จ', 'success'); loadDataFromSupabase(); }
+                else { showToast('เกิดข้อผิดพลาดในการลบ', 'error'); }
+            };
             document.getElementById('confirmModal').classList.remove('hidden');
         }
 
-        function deleteWithdrawal(rowIndex) {
-            const backupList = [...(globalData.withdrawals || [])];
-            globalData.withdrawals = (globalData.withdrawals || []).filter(w => w.Row_Index != rowIndex);
-            renderAllData(globalData);
-            showToast('ลบสำเร็จ', 'success');
-            fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteWithdrawal', Row_Index: rowIndex }) })
-            .then(res => res.json()).then(() => { 
-                cacheData(globalData);
-            }).catch(() => {
-                globalData.withdrawals = backupList;
-                renderAllData(globalData);
-                showToast('เกิดข้อผิดพลาด', 'error');
+        function renderTransfersTable() {
+            const years = getAllYears();
+            populateYearSelect('filter-year-transfers', years);
+            const yearSel = document.getElementById('filter-year-transfers');
+            if (!yearSel) return;
+            const selYear = parseInt(yearSel.value) || years[0];
+            const statusFilter = document.getElementById('filter-transfer-status').value || 'รอโอน';
+
+            // ควบคุมการแสดงผลปุ่ม "โอน" ด้านล่าง: ให้แสดงเฉพาะเมื่อเลือกสถานะเป็น "รอโอน" เท่านั้น
+            const actionContainer = document.getElementById('transfer-action-container');
+            if (actionContainer) {
+                actionContainer.style.display = (statusFilter === 'รอโอน') ? 'flex' : 'none';
+            }
+
+            let filtered = (globalData.transfers || []).filter(t => getYearFromDate(t.Date) === selYear);
+            if (statusFilter === 'รอโอน') filtered = filtered.filter(t => !t.Transfer);
+            else if (statusFilter === 'โอนแล้ว') filtered = filtered.filter(t => !!t.Transfer);
+            filtered = filtered.slice().sort((a, b) => new Date(a.Date) - new Date(b.Date));
+
+            const yearTransfers = (globalData.transfers || []).filter(t => getYearFromDate(t.Date) === selYear);
+            const catSums = { 'ค่าบำเหน็จ/ค่าพาหนะ': 0, 'ค่าจัดงาน': 0, 'Com Plus': 0, 'อื่น ๆ': 0 };
+            yearTransfers.forEach(t => {
+                const amt = parseFloat(t.Amount) || 0;
+                if (catSums.hasOwnProperty(t.Note)) catSums[t.Note] += amt; else catSums['อื่น ๆ'] += amt;
             });
+            document.getElementById('lbl-transfer-cat-1').textContent = money(catSums['ค่าบำเหน็จ/ค่าพาหนะ']) + ' บาท';
+            document.getElementById('lbl-transfer-cat-2').textContent = money(catSums['ค่าจัดงาน']) + ' บาท';
+            document.getElementById('lbl-transfer-cat-3').textContent = money(catSums['Com Plus']) + ' บาท';
+            document.getElementById('lbl-transfer-cat-4').textContent = money(catSums['อื่น ๆ']) + ' บาท';
+            const total = Object.values(catSums).reduce((s, v) => s + v, 0);
+            document.getElementById('lbl-transfer-cat-total').textContent = money(total) + ' บาท';
+
+            const canEdit = currentUser && currentUser.role === 'admin';
+            const tbody = document.getElementById('transfers-tbody');
+            tbody.innerHTML = filtered.length ? filtered.map(t => {
+                const amt = parseFloat(t.Amount) || 0;
+                return `<tr>
+                    <td class="py-2.5">${formatThaiDate(t.Date)}</td>
+                    <td class="py-2.5">${t.Note || ''}</td>
+                    <td class="py-2.5 text-right">${money(amt)}</td>
+                    <td class="py-2.5 text-center">${t.Transfer ? formatThaiDate(t.Transfer) : '<span class="text-amber-500 text-xs">รอโอน</span>'}</td>
+                    <td class="py-2.5 text-center">${canEdit ? `<button onclick="openTransferModal('${t.ID}')" class="text-[#253487] hover:underline text-xs">แก้ไข</button>` : '-'}</td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="5" class="py-6 text-center text-slate-400">ไม่มีรายการ</td></tr>`;
         }
 
-        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
-        function openUserModal() { document.getElementById('userModal').classList.remove('hidden'); document.getElementById('userForm').reset(); }
-        function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); }
+        // ฟังก์ชันเมื่อกดปุ่ม "โอน" ด้านล่าง: อัปเดตทุกแถวที่อยู่ในสถานะ รอโอน เป็นวันที่ปัจจุบัน
+        async function bulkExecuteTransfer() {
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error');
+                return;
+            }
 
-        function submitUserForm(e) {
+            const yearSel = document.getElementById('filter-year-transfers');
+            const selYear = yearSel ? parseInt(yearSel.value) : new Date().getFullYear();
+
+            // ค้นหารายการทั้งหมดในปีที่เลือก ที่ยังไม่มีค่า Transfer (สถานะรอโอน)
+            const pendingItems = (globalData.transfers || []).filter(t => getYearFromDate(t.Date) === selYear && !t.Transfer);
+
+            if (pendingItems.length === 0) {
+                showToast('ไม่มีรายการที่รอโอนในปีนี้', 'error');
+                return;
+            }
+
+            const todayStr = new Date().toISOString().slice(0, 10); // รูปแบบ YYYY-MM-DD
+
+            showLoading('กำลังดำเนินการโอนผลประโยชน์...');
+
+            try {
+                // ทำการอัปเดตข้อมูลทีละรายการผ่าน Supabase
+                for (let item of pendingItems) {
+                    const { error } = await supabase
+                        .from('Transfers')
+                        .update({ Transfer: todayStr })
+                        .eq('ID', item.ID);
+
+                    if (error) {
+                        console.error('Error updating transfer ID:', item.ID, error);
+                    }
+                }
+
+                hideLoading();
+                showToast(`บันทึกการโอนสำเร็จ ${pendingItems.length} รายการ`, 'success');
+                loadDataFromSupabase(); // โหลดข้อมูลใหม่ทั้งหมดมาแสดงผล
+            } catch (err) {
+                hideLoading();
+                showToast('เกิดข้อผิดพลาดในการโอนข้อมูล', 'error');
+                console.error(err);
+            }
+        }
+
+        function openTransferModal(transferId) {
+            document.getElementById('transferForm').reset();
+            document.getElementById('tr-row-index').value = '';
+            document.getElementById('tr-other-container').classList.add('hidden');
+            document.getElementById('transfer-delete-btn').classList.add('hidden');
+            document.getElementById('transfer-modal-title').textContent = 'บันทึกผลประโยชน์';
+            if (transferId) {
+                const t = (globalData.transfers || []).find(x => String(x.ID) === String(transferId));
+                if (t) {
+                    document.getElementById('tr-row-index').value = t.ID;
+                    document.getElementById('tr-date').value = formatDateForInput(t.Date);
+                    const knownCats = ['ค่าบำเหน็จ/ค่าพาหนะ', 'ค่าจัดงาน', 'Com Plus'];
+                    if (knownCats.includes(t.Note)) {
+                        document.getElementById('tr-category').value = t.Note;
+                    } else {
+                        document.getElementById('tr-category').value = 'อื่น ๆ';
+                        document.getElementById('tr-other-container').classList.remove('hidden');
+                        document.getElementById('tr-other-text').value = t.Note || '';
+                    }
+                    const amt = parseFloat(t.Amount) || 0;
+                    document.getElementById('tr-amount-display').value = amt.toLocaleString('en-US');
+                    document.getElementById('tr-amount').value = amt;
+                    document.getElementById('transfer-modal-title').textContent = 'แก้ไขรายการผลประโยชน์';
+                    document.getElementById('transfer-delete-btn').classList.remove('hidden');
+                }
+            }
+            document.getElementById('transferModal').classList.remove('hidden');
+        }
+
+        function closeTransferModal() {
+            document.getElementById('transferModal').classList.add('hidden');
+        }
+
+        function handleTransferCategoryChange() {
+            const cat = document.getElementById('tr-category').value;
+            document.getElementById('tr-other-container').classList.toggle('hidden', cat !== 'อื่น ๆ');
+        }
+
+        async function submitTransferForm(e) {
             e.preventDefault();
-            closeUserModal();
-            showLoading('กำลังบันทึกผู้ใช้งาน...');
+            if (currentUser && currentUser.role !== 'admin') { showToast('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error'); return; }
+            const id = document.getElementById('tr-row-index').value;
+            const date = document.getElementById('tr-date').value;
+            let cat = document.getElementById('tr-category').value;
+            if (cat === 'อื่น ๆ') {
+                cat = document.getElementById('tr-other-text').value.trim() || 'อื่น ๆ';
+            }
+            const amount = parseFloat(document.getElementById('tr-amount').value || 0);
 
-            const u = document.getElementById('usr-username').value.trim();
-            const p = document.getElementById('usr-password').value.trim();
-            const name = document.getElementById('usr-name').value.trim();
-            const role = document.getElementById('usr-role').value;
-            systemUsers.push({ Username: u, Password: p, Name: name, Role: role });
-            fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addUser', Username: u, Password: p, Name: name, Role: role }) })
-            .then(() => {
-                hideLoading();
-                renderUserManagementTable(); 
-                showToast('เพิ่มผู้ใช้สำเร็จ', 'success');
-            }).catch(() => {
-                hideLoading();
-                showToast('เกิดข้อผิดพลาด', 'error');
-            });
+            closeTransferModal();
+            showLoading('กำลังบันทึกข้อมูล...');
+
+            let error;
+            if (id) {
+                const payload = { Date: date, Note: cat, Amount: amount };
+                ({ error } = await supabase.from('Transfers').update(payload).eq('ID', id));
+            } else {
+                const newId = await generateNextTransferID();
+                const payload = { ID: newId, Date: date, Note: cat, Amount: amount, Transfer: null };
+                ({ error } = await supabase.from('Transfers').insert([payload]));
+            }
+            hideLoading();
+            if (!error) { showToast('บันทึกรายการสำเร็จ', 'success'); loadDataFromSupabase(); }
+            else { showToast('เกิดข้อผิดพลาดในการบันทึก', 'error'); }
         }
 
-        function deleteUser(username) {
-            if (username === 'admin') { showToast('ไม่สามารถลบผู้ดูแลระบบหลักได้', 'error'); return; }
-            document.getElementById('confirm-msg').textContent = `คุณต้องการลบผู้ใช้งาน "${username}" ใช่หรือไม่?`;
-            document.getElementById('confirm-action-btn').onclick = () => {
+        function confirmDeleteTransfer() {
+            const id = document.getElementById('tr-row-index').value;
+            if (!id) return;
+            document.getElementById('confirm-msg').textContent = 'คุณต้องการลบรายการผลประโยชน์นี้ใช่หรือไม่?';
+            document.getElementById('confirm-action-btn').onclick = async () => {
                 closeConfirmModal();
-                showLoading('กำลังลบผู้ใช้งาน...');
-                systemUsers = systemUsers.filter(u => u.Username !== username);
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteUser', Username: username }) })
-                .then(() => {
-                    hideLoading();
-                    renderUserManagementTable(); 
-                    showToast('ลบผู้ใช้สำเร็จ', 'success');
-                }).catch(() => {
-                    hideLoading();
-                    showToast('เกิดข้อผิดพลาด', 'error');
-                });
+                closeTransferModal();
+                showLoading('กำลังลบข้อมูล...');
+                const { error } = await supabase.from('Transfers').delete().eq('ID', id);
+                hideLoading();
+                if (!error) { showToast('ลบรายการสำเร็จ', 'success'); loadDataFromSupabase(); }
+                else { showToast('เกิดข้อผิดพลาดในการลบ', 'error'); }
             };
             document.getElementById('confirmModal').classList.remove('hidden');
         }
 
         function renderUserManagementTable() {
             const tbody = document.getElementById('users-table-body');
-            tbody.innerHTML = '';
-            systemUsers.forEach(u => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-50"><td class="py-3 font-medium">${u.Username}</td><td class="py-3">${u.Name}</td><td class="py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100">${u.Role}</span></td><td class="py-3 text-right">${u.Username !== 'admin' ? `<button onclick="deleteUser('${u.Username}')" class="text-[#E42113] hover:underline text-xs">ลบ</button>` : '-'}</td></tr>`;
-            });
+            if (!tbody) return;
+            tbody.innerHTML = systemUsers.length ? systemUsers.map(u => `
+                <tr>
+                    <td class="py-2.5 font-medium text-slate-800">${u.Username || ''}</td>
+                    <td class="py-2.5">${u.Name || ''}</td>
+                    <td class="py-2.5"><span class="px-2 py-0.5 rounded-full text-xs ${(u.Role || '').toLowerCase() === 'admin' ? 'bg-purple-50 text-purple-700' : 'bg-slate-100 text-slate-600'}">${u.Role || 'user'}</span></td>
+                    <td class="py-2.5 text-right">
+                        <button onclick="openUserModal('${u.id}')" class="text-[#253487] hover:underline text-xs mr-2">แก้ไข</button>
+                        <button onclick="confirmDeleteUser('${u.id}')" class="text-[#E42113] hover:underline text-xs">ลบ</button>
+                    </td>
+                </tr>
+            `).join('') : `<tr><td colspan="4" class="py-6 text-center text-slate-400">ไม่มีข้อมูลผู้ใช้งาน</td></tr>`;
         }
 
-        function loadData() {
-            fetch(scriptURL + '?t=' + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
-                    globalData = data;
-                    if (data.users) systemUsers = data.users;
-                    cacheData(data);
-                    document.getElementById('sync-status').textContent = 'ซิงค์ข้อมูลสำเร็จ';
-                    renderAllData(data);
-                })
-                .catch(() => { document.getElementById('sync-status').textContent = 'เชื่อมต่อล้มเหลว'; });
+        function openUserModal(userId) {
+            document.getElementById('userForm').reset();
+            document.getElementById('user-modal-title').textContent = 'เพิ่มผู้ใช้งานระบบ';
+            document.getElementById('usr-id-container').style.display = 'block';
+            if (userId) {
+                const u = systemUsers.find(x => x.id === userId);
+                if (u) {
+                    document.getElementById('user-modal-title').textContent = 'แก้ไขผู้ใช้งานระบบ';
+                    document.getElementById('usr-username').value = u.Username || '';
+                    document.getElementById('usr-id').value = u.id || '';
+                    document.getElementById('usr-id').readOnly = true;
+                    document.getElementById('usr-name').value = u.Name || '';
+                    document.getElementById('usr-role').value = (u.Role || 'user').toLowerCase();
+                }
+            } else {
+                document.getElementById('usr-id').readOnly = false;
+            }
+            document.getElementById('userModal').classList.remove('hidden');
         }
 
-        function loadDataWithHideLoading() {
-            fetch(scriptURL + '?t=' + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
-                    globalData = data;
-                    if (data.users) systemUsers = data.users;
-                    cacheData(data);
-                    document.getElementById('sync-status').textContent = 'ซิงค์ข้อมูลสำเร็จ';
-                    renderAllData(data);
-                    hideLoading();
-                })
-                .catch(() => { 
-                    document.getElementById('sync-status').textContent = 'เชื่อมต่อล้มเหลว'; 
-                    hideLoading();
-                });
+        function closeUserModal() {
+            document.getElementById('userModal').classList.add('hidden');
         }
 
-        function submitTransaction(e) {
+        async function submitUserForm(e) {
             e.preventDefault();
-            closeModal();
+            if (currentUser && currentUser.role !== 'admin') { showToast('คุณไม่มีสิทธิ์ดำเนินการนี้', 'error'); return; }
+            const username = document.getElementById('usr-username').value.trim();
+            const id = document.getElementById('usr-id').value.trim();
+            const name = document.getElementById('usr-name').value.trim();
+            const role = document.getElementById('usr-role').value;
 
-            const rowIndex = document.getElementById('tx-row-index').value;
-            const isEdit = !!rowIndex;
-            const payload = {
-                action: isEdit ? 'editTransaction' : 'addTransaction',
-                Row_Index: rowIndex,
-                Date: document.getElementById('tx-date').value,
-                Type: document.getElementById('tx-type').value,
-                Account_Name: document.getElementById('tx-account-name').value,
-                Category: document.getElementById('tx-category').value,
-                Amount: document.getElementById('tx-amount-raw').value,
-                Description: document.getElementById('tx-desc').value
-            };
+            closeUserModal();
+            showLoading('กำลังบันทึกข้อมูลผู้ใช้งาน...');
 
-            if (!globalData.transactions) globalData.transactions = [];
-
-            if (isEdit) {
-                // แก้ไข: อัปเดตข้อมูลในเครื่องทันที ไม่ต้องรอโหลดข้อมูลใหม่ทั้งหมด
-                const idx = globalData.transactions.findIndex(t => t.Row_Index == rowIndex);
-                const backup = idx !== -1 ? { ...globalData.transactions[idx] } : null;
-                if (idx !== -1) {
-                    globalData.transactions[idx] = { ...globalData.transactions[idx], ...payload };
-                    renderAllData(globalData);
-                }
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        cacheData(globalData);
-                    } else {
-                        if (backup) { globalData.transactions[idx] = backup; renderAllData(globalData); }
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    if (backup) { globalData.transactions[idx] = backup; renderAllData(globalData); }
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
+            const payload = { Username: username, Name: name, Role: role };
+            let error;
+            if (id && systemUsers.some(u => u.id === id)) {
+                ({ error } = await supabase.from('Users').update(payload).eq('id', id));
             } else {
-                // เพิ่มใหม่: แสดงผลทันที (optimistic) แล้วซิงค์เลขแถวจริงจากเซิร์ฟเวอร์เงียบ ๆ ทีหลัง
-                const tempId = 'tmp_' + Date.now();
-                const optimisticTx = { Date: payload.Date, Type: payload.Type, Account_Name: payload.Account_Name, Category: payload.Category, Amount: payload.Amount, Description: payload.Description, Row_Index: tempId };
-                globalData.transactions.push(optimisticTx);
-                renderAllData(globalData);
-
-                fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
-                .then(res => res.json()).then(res => {
-                    if (res.result === 'success') {
-                        loadData(); // ซิงค์เงียบ ๆ เพื่ออัปเดตเลขแถวจริง ไม่แสดงหน้าโหลด
-                    } else {
-                        globalData.transactions = globalData.transactions.filter(t => t.Row_Index !== tempId);
-                        renderAllData(globalData);
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                    }
-                }).catch(() => {
-                    globalData.transactions = globalData.transactions.filter(t => t.Row_Index !== tempId);
-                    renderAllData(globalData);
-                    showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                });
+                if (!id) {
+                    hideLoading();
+                    showToast('กรุณาระบุ Auth User ID', 'error');
+                    return;
+                }
+                payload.id = id;
+                ({ error } = await supabase.from('Users').insert([payload]));
             }
-        }
-
-        function confirmDeleteTransaction() {
-            const rowIndex = document.getElementById('tx-row-index').value;
-            if (!rowIndex) return;
-            document.getElementById('confirm-msg').textContent = 'คุณต้องการลบรายการนี้ใช่หรือไม่?';
-            document.getElementById('confirm-action-btn').onclick = () => { closeConfirmModal(); deleteTransaction(rowIndex); };
-            document.getElementById('confirmModal').classList.remove('hidden');
-        }
-
-        function deleteTransaction(rowIndex) {
-            closeModal();
-            const backupList = [...(globalData.transactions || [])];
-            globalData.transactions = (globalData.transactions || []).filter(t => t.Row_Index != rowIndex);
-            renderAllData(globalData);
-            fetch(scriptURL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteTransaction', Row_Index: rowIndex }) })
-            .then(res => res.json()).then(() => { 
-                cacheData(globalData);
-            }).catch(() => {
-                globalData.transactions = backupList;
-                renderAllData(globalData);
-                showToast('เกิดข้อผิดพลาด', 'error');
-            });
-        }
-
-        function populateAllGlobalYearDropdowns(transactions, budgets) {
-            let yearsSet = new Set();
-            let currentYearTh = (new Date().getFullYear() + 543).toString();
-            yearsSet.add(currentYearTh);
-
-            transactions.forEach(tx => {
-                if (tx.Date) {
-                    let d = new Date(tx.Date);
-                    if (!isNaN(d.getTime())) yearsSet.add((d.getFullYear() + 543).toString());
-                }
-            });
-            budgets.forEach(b => {
-                if (b.Year) yearsSet.add(formatToThaiYear(b.Year).toString());
-            });
-
-            const globalYearSelect = document.getElementById('filter-year-dashboard-global');
-            if (globalYearSelect) {
-                let currentVal = globalYearSelect.value || currentYearTh;
-                globalYearSelect.innerHTML = '';
-                Array.from(yearsSet).sort().forEach(y => {
-                    let opt = document.createElement('option');
-                    opt.value = y;
-                    opt.textContent = y;
-                    if (y === currentVal) opt.selected = true;
-                    globalYearSelect.appendChild(opt);
-                });
-                if (!globalYearSelect.value && globalYearSelect.options.length > 0) globalYearSelect.selectedIndex = 0;
-            }
-        }
-
-        function renderDashboardYearChange() {
-            renderAllData(globalData);
-        }
-
-        function renderCategorySummary(transactions, selectedYearTh) {
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const categorySummary = {};
-            transactions.forEach(tx => {
-                if (!tx.Date) return;
-                let d = new Date(tx.Date);
-                if (!isNaN(d.getTime()) && d.getFullYear() === selectedYearAd) {
-                    let cat = tx.Category || 'อื่นๆ';
-                    if (!categorySummary[cat]) categorySummary[cat] = { income: 0, expense: 0 };
-                    let amt = parseFloat(tx.Amount || 0);
-                    if (tx.Type === 'รายรับ') categorySummary[cat].income += amt;
-                    else if (tx.Type === 'รายจ่าย') categorySummary[cat].expense += amt;
-                }
-            });
-
-            const body = document.getElementById('dashboard-category-summary-body');
-            body.innerHTML = '';
-            let categories = Object.keys(categorySummary).sort((a, b) => {
-                let netA = categorySummary[a].income - categorySummary[a].expense;
-                let netB = categorySummary[b].income - categorySummary[b].expense;
-                return netA - netB;
-            });
-
-            if (categories.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400 text-sm">ไม่พบรายการเคลื่อนไหวในปี พ.ศ. ${selectedYearTh}</td></tr>`;
-                return;
-            }
-
-            let maxAbsNet = 1;
-            categories.forEach(cat => {
-                let net = Math.abs(categorySummary[cat].income - categorySummary[cat].expense);
-                if (net > maxAbsNet) maxAbsNet = net;
-            });
-
-            categories.forEach(cat => {
-                let inc = categorySummary[cat].income;
-                let exp = categorySummary[cat].expense;
-                let net = inc - exp;
-                let percent = Math.min(Math.round((Math.abs(net) / maxAbsNet) * 100), 100);
-                if (percent < 3 && Math.abs(net) > 0) percent = 3;
-
-                body.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="py-3 font-medium text-slate-800">${cat}</td>
-                        <td class="py-3 text-right font-semibold text-[#007AC2]">${inc > 0 ? inc.toLocaleString() + ' บาท' : '-'}</td>
-                        <td class="py-3 text-right font-semibold text-[#E42113]">${exp > 0 ? exp.toLocaleString() + ' บาท' : '-'}</td>
-                        <td class="py-3 text-right">
-                            <div class="flex flex-col items-end gap-1">
-                                <span class="font-bold ${net >= 0 ? 'text-[#253487]' : 'text-[#E42113]'}">${net.toLocaleString()} บาท</span>
-                                <div class="w-32 bg-slate-100 h-2 rounded-full overflow-hidden flex items-center">
-                                    <div class="${net >= 0 ? 'bg-[#253487]' : 'bg-rose-500'} h-2 rounded-full" style="width: ${percent}%"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderAllData(data) {
-            const accounts = [
-                { Account_Name: 'กองทุนศูนย์', Initial_Balance: 0 },
-                { Account_Name: 'ตัวแทนมาตรฐาน', Initial_Balance: 0 },
-                { Account_Name: 'ประชุมศูนย์ภาค', Initial_Balance: 0 },
-                { Account_Name: 'งบส่วนตัวฝ่าย', Initial_Balance: 0 }
-            ];
-            const transactions = data.transactions || [];
-            const budgets = data.budgets || [];
-            const withdrawals = data.withdrawals || [];
-            const transfers = data.transfers || [];
-
-            populateAllGlobalYearDropdowns(transactions, budgets);
-
-            const globalYearSelect = document.getElementById('filter-year-dashboard-global');
-            const selectedYearTh = globalYearSelect ? globalYearSelect.value : (new Date().getFullYear() + 543).toString();
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const accountBalances = {};
-            accounts.forEach(acc => { accountBalances[acc.Account_Name] = 0; });
-            transactions.forEach(tx => {
-                let amt = parseFloat(tx.Amount || 0);
-                if (accountBalances[tx.Account_Name] !== undefined) {
-                    if (tx.Type === 'รายรับ') accountBalances[tx.Account_Name] += amt;
-                    else if (tx.Type === 'รายจ่าย') accountBalances[tx.Account_Name] -= amt;
-                }
-            });
-
-            let balanceFundCenter = accountBalances['กองทุนศูนย์'] || 0;
-            let balanceStandardAgent = accountBalances['ตัวแทนมาตรฐาน'] || 0;
-            let balanceRegionalMeeting = accountBalances['ประชุมศูนย์ภาค'] || 0;
-            let combinedBudgetBalance = balanceStandardAgent + balanceRegionalMeeting;
-
-            let totalTransferredSum = 0;
-            transfers.forEach(tr => {
-                let transferVal = tr.Transfer !== undefined && tr.Transfer !== null && String(tr.Transfer).trim() !== '' ? String(tr.Transfer).trim() : 'รอโอน';
-                let isDateVal = !isNaN(new Date(transferVal).getTime()) && transferVal.includes('-');
-                if (isDateVal || transferVal === 'โอนแล้ว') {
-                    totalTransferredSum += parseFloat(tr.Amount || 0);
-                }
-            });
-
-            const elFund = document.getElementById('lbl-summary-fund-center');
-            const elBudgetComb = document.getElementById('lbl-summary-budget-combined');
-            const elTransferred = document.getElementById('lbl-summary-total-transferred');
-
-            if (elFund) elFund.innerHTML = balanceFundCenter.toLocaleString() + ' <span class="text-xs font-normal text-slate-400">บาท</span>';
-            if (elBudgetComb) elBudgetComb.innerHTML = combinedBudgetBalance.toLocaleString() + ' <span class="text-xs font-normal text-slate-400">บาท</span>';
-            if (elTransferred) elTransferred.innerHTML = totalTransferredSum.toLocaleString() + ' <span class="text-xs font-normal text-slate-400">บาท</span>';
-
-            const accountsGrid = document.getElementById('accounts-grid');
-            if (accountsGrid) {
-                accountsGrid.innerHTML = '';
-                accounts.forEach(acc => {
-                    let bal = accountBalances[acc.Account_Name] || 0;
-                    accountsGrid.innerHTML += `
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                            <p class="text-xs text-slate-400 font-medium">${acc.Account_Name}</p>
-                            <h3 class="text-xl font-bold text-[#253487] mt-2">${bal.toLocaleString()} <span class="text-xs font-normal text-slate-400">บาท</span></h3>
-                        </div>
-                    `;
-                });
-            }
-
-            renderCategorySummary(transactions, selectedYearTh);
-            renderDashboardBudgetStatus(budgets, withdrawals, selectedYearTh);
-            
-            ['กองทุนศูนย์', 'ตัวแทนมาตรฐาน', 'ประชุมศูนย์ภาค', 'งบส่วนตัวฝ่าย'].forEach(accName => {
-                renderAccountPage(accName);
-            });
-            renderBudgetLedger();
-            renderTransfersTable();
-        }
-
-        function renderDashboardBudgetStatus(budgets, withdrawals, selectedYearTh) {
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const container = document.getElementById('dashboard-budget-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const activeBudget = budgets.find(b => {
-                let bYearAd = parseInt(b.Year, 10);
-                if (bYearAd > 2400) bYearAd -= 543;
-                return bYearAd === selectedYearAd;
-            }) || { Budget1: 0, Budget2: 0 };
-
-            let b1Total = parseFloat(activeBudget.Budget1 || activeBudget.Total_Budget || 0);
-            let b2Total = parseFloat(activeBudget.Budget2 || 0);
-
-            let b1Spent = 0, b2Spent = 0;
-            withdrawals.forEach(w => {
-                if (w.Status === 'เบิกแล้ว') {
-                    let wDate = new Date(w.Event_Date || w.Actual_Date);
-                    if (!isNaN(wDate.getTime()) && wDate.getFullYear() === selectedYearAd) {
-                        let amt = parseFloat(w.Amount || 0);
-                        if (w.Budget_Name === 'งบตัวแทนมาตรฐาน') b1Spent += amt;
-                        else if (w.Budget_Name === 'งบประชุมศูนย์ภาค') b2Spent += amt;
-                    }
-                }
-            });
-
-            let b1Percent = b1Total > 0 ? Math.min(Math.round((b1Spent / b1Total) * 100), 100) : 0;
-            let b2Percent = b2Total > 0 ? Math.min(Math.round((b2Spent / b2Total) * 100), 100) : 0;
-
-            container.innerHTML = `
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center text-sm font-semibold text-slate-700">
-                        <span>งบตัวแทนมาตรฐาน</span>
-                        <span>${b1Spent.toLocaleString()} / ${b1Total.toLocaleString()} บาท (${b1Percent}%)</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                        <div class="bg-[#007AC2] h-3 rounded-full" style="width: ${b1Percent}%"></div>
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center text-sm font-semibold text-slate-700">
-                        <span>งบประชุมศูนย์ภาค</span>
-                        <span>${b2Spent.toLocaleString()} / ${b2Total.toLocaleString()} บาท (${b2Percent}%)</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                        <div class="bg-[#253487] h-3 rounded-full" style="width: ${b2Percent}%"></div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function initAccountYearDropdown(accountName, transactions) {
-            const selectId = `filter-year-${accountName}`;
-            const yearSelect = document.getElementById(selectId);
-            if (!yearSelect) return;
-
-            let yearsSet = new Set();
-            let currentYearTh = (new Date().getFullYear() + 543).toString();
-            yearsSet.add(currentYearTh);
-
-            transactions.forEach(tx => {
-                if (tx.Account_Name === accountName && tx.Date) {
-                    let d = new Date(tx.Date);
-                    if (!isNaN(d.getTime())) yearsSet.add((d.getFullYear() + 543).toString());
-                }
-            });
-
-            let currentVal = yearSelect.value || currentYearTh;
-            yearSelect.innerHTML = '';
-            Array.from(yearsSet).sort().forEach(y => {
-                let opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                if (y === currentVal) opt.selected = true;
-                yearSelect.appendChild(opt);
-            });
-            if (!yearSelect.value && yearSelect.options.length > 0) yearSelect.selectedIndex = 0;
-        }
-
-        function renderAccountPage(accountName) {
-            const transactions = globalData.transactions || [];
-            initAccountYearDropdown(accountName, transactions);
-
-            const yearSelect = document.getElementById(`filter-year-${accountName}`);
-            const selectedYearTh = yearSelect ? yearSelect.value : (new Date().getFullYear() + 543).toString();
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const tbody = document.getElementById(`tbody-${accountName}`);
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            let runningBalance = 0;
-            let totalIncomeThisYear = 0;
-            let totalExpenseThisYear = 0;
-
-            transactions.forEach(tx => {
-                if (tx.Account_Name !== accountName) return;
-                let amt = parseFloat(tx.Amount || 0);
-                let d = new Date(tx.Date);
-                let isThisYear = !isNaN(d.getTime()) && d.getFullYear() === selectedYearAd;
-
-                if (!isNaN(d.getTime()) && d.getFullYear() < selectedYearAd) {
-                    if (tx.Type === 'รายรับ') runningBalance += amt;
-                    else if (tx.Type === 'รายจ่าย') runningBalance -= amt;
-                }
-
-                if (isThisYear) {
-                    if (tx.Type === 'รายรับ') totalIncomeThisYear += amt;
-                    else if (tx.Type === 'รายจ่าย') totalExpenseThisYear += amt;
-                }
-            });
-
-            const filteredTxs = transactions.filter(tx => {
-                if (tx.Account_Name !== accountName) return false;
-                if (!tx.Date) return false;
-                let d = new Date(tx.Date);
-                return !isNaN(d.getTime()) && d.getFullYear() === selectedYearAd;
-            });
-
-            if (filteredTxs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 text-sm">ไม่พบรายการในปี พ.ศ. ${selectedYearTh}</td></tr>`;
+            hideLoading();
+            if (!error) {
+                showToast('บันทึกข้อมูลผู้ใช้งานสำเร็จ', 'success');
+                loadDataFromSupabase();
             } else {
-                let currentRunning = runningBalance;
-                filteredTxs.forEach(tx => {
-                    let amt = parseFloat(tx.Amount || 0);
-                    let inc = tx.Type === 'รายรับ' ? amt : 0;
-                    let exp = tx.Type === 'รายจ่าย' ? amt : 0;
-                    currentRunning += inc - exp;
-
-                    let actionHtml = '-';
-                    if (!currentUser || currentUser.role === 'admin') {
-                        actionHtml = `<button onclick="openEditTransactionModal(${tx.Row_Index})" class="text-xs text-[#253487] bg-indigo-50 px-2.5 py-1 rounded-full font-medium hover:bg-indigo-100">จัดการ</button>`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50">
-                            <td class="py-3 text-slate-600">${formatThaiDate(tx.Date)}</td>
-                            <td class="py-3 font-medium text-slate-800">${tx.Category || '-'}</td>
-                            <td class="py-3 text-slate-600">${tx.Description || '-'}</td>
-                            <td class="py-3 text-right font-medium text-[#007AC2]">${inc > 0 ? inc.toLocaleString() + ' บาท' : '-'}</td>
-                            <td class="py-3 text-right font-medium text-[#E42113]">${exp > 0 ? exp.toLocaleString() + ' บาท' : '-'}</td>
-                            <td class="py-3 text-right font-bold text-[#253487]">${currentRunning.toLocaleString()} บาท</td>
-                            <td class="py-3 text-center">${actionHtml}</td>
-                        </tr>
-                    `;
-                });
+                showToast('เกิดข้อผิดพลาดในการบันทึกผู้ใช้งาน', 'error');
             }
-
-            let netBalanceFinal = runningBalance + totalIncomeThisYear - totalExpenseThisYear;
-
-            const elInc = document.getElementById(`lbl-income-${accountName}`);
-            const elExp = document.getElementById(`lbl-expense-${accountName}`);
-            const elBal = document.getElementById(`lbl-balance-${accountName}`);
-
-            if (elInc) elInc.textContent = totalIncomeThisYear.toLocaleString() + ' บาท';
-            if (elExp) elExp.textContent = totalExpenseThisYear.toLocaleString() + ' บาท';
-            if (elBal) elBal.textContent = netBalanceFinal.toLocaleString() + ' บาท';
         }
 
-        function initBudgetYearDropdown(budgets) {
-            const yearSelect = document.getElementById('filter-year');
-            if (!yearSelect) return;
-
-            let yearsSet = new Set();
-            let currentYearTh = (new Date().getFullYear() + 543).toString();
-            yearsSet.add(currentYearTh);
-
-            budgets.forEach(b => {
-                if (b.Year) yearsSet.add(formatToThaiYear(b.Year).toString());
-            });
-
-            let currentVal = yearSelect.value || currentYearTh;
-            yearSelect.innerHTML = '';
-            Array.from(yearsSet).sort().forEach(y => {
-                let opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                if (y === currentVal) opt.selected = true;
-                yearSelect.appendChild(opt);
-            });
-            if (!yearSelect.value && yearSelect.options.length > 0) yearSelect.selectedIndex = 0;
-        }
-
-        function renderBudgetLedger() {
-            const budgets = globalData.budgets || [];
-            const withdrawals = globalData.withdrawals || [];
-            initBudgetYearDropdown(budgets);
-
-            const yearSelect = document.getElementById('filter-year');
-            const selectedYearTh = yearSelect ? yearSelect.value : (new Date().getFullYear() + 543).toString();
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            const activeBudget = budgets.find(b => {
-                let bYearAd = parseInt(b.Year, 10);
-                if (bYearAd > 2400) bYearAd -= 543;
-                return bYearAd === selectedYearAd;
-            }) || { Budget1: 0, Budget2: 0 };
-
-            let b1Total = parseFloat(activeBudget.Budget1 || activeBudget.Total_Budget || 0);
-            let b2Total = parseFloat(activeBudget.Budget2 || 0);
-
-            let b1Spent = 0, b2Spent = 0;
-            withdrawals.forEach(w => {
-                if (w.Status === 'เบิกแล้ว') {
-                    let wDate = new Date(w.Event_Date || w.Actual_Date);
-                    if (!isNaN(wDate.getTime()) && wDate.getFullYear() === selectedYearAd) {
-                        let amt = parseFloat(w.Amount || 0);
-                        if (w.Budget_Name === 'งบตัวแทนมาตรฐาน') b1Spent += amt;
-                        else if (w.Budget_Name === 'งบประชุมศูนย์ภาค') b2Spent += amt;
-                    }
-                }
-            });
-
-            document.getElementById('card-b1-total').textContent = b1Total.toLocaleString() + ' บาท';
-            document.getElementById('card-b1-spent').textContent = b1Spent.toLocaleString() + ' บาท';
-            document.getElementById('card-b1-remaining').textContent = (b1Total - b1Spent).toLocaleString() + ' บาท';
-
-            document.getElementById('card-b2-total').textContent = b2Total.toLocaleString() + ' บาท';
-            document.getElementById('card-b2-spent').textContent = b2Spent.toLocaleString() + ' บาท';
-            document.getElementById('card-b2-remaining').textContent = (b2Total - b2Spent).toLocaleString() + ' บาท';
-
-            const tabsContainer = document.getElementById('budget-category-tabs');
-            if (tabsContainer) {
-                tabsContainer.innerHTML = `
-                    <button onclick="filterBudgetTable('งบตัวแทนมาตรฐาน')" id="tab-b-1" class="px-4 py-2 rounded-xl text-xs font-semibold bg-[#007AC2] text-white shadow-sm transition">งบตัวแทนมาตรฐาน</button>
-                    <button onclick="filterBudgetTable('งบประชุมศูนย์ภาค')" id="tab-b-2" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition">งบประชุมศูนย์ภาค</button>
-                `;
-            }
-
-            window.currentActiveBudgetName = window.currentActiveBudgetName || 'งบตัวแทนมาตรฐาน';
-            renderWithdrawalTableContent(withdrawals, window.currentActiveBudgetName, selectedYearAd);
-        }
-
-        function filterBudgetTable(budgetName) {
-            window.currentActiveBudgetName = budgetName;
-            document.getElementById('tab-b-1').className = budgetName === 'งบตัวแทนมาตรฐาน' ? 'px-4 py-2 rounded-xl text-xs font-semibold bg-[#007AC2] text-white shadow-sm transition' : 'px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition';
-            document.getElementById('tab-b-2').className = budgetName === 'งบประชุมศูนย์ภาค' ? 'px-4 py-2 rounded-xl text-xs font-semibold bg-[#007AC2] text-white shadow-sm transition' : 'px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition';
-            
-            const yearSelect = document.getElementById('filter-year');
-            let selectedYearTh = yearSelect ? yearSelect.value : (new Date().getFullYear() + 543).toString();
-            let selectedYearAd = parseInt(selectedYearTh, 10);
-            if (selectedYearAd > 2400) selectedYearAd -= 543;
-
-            renderWithdrawalTableContent(globalData.withdrawals || [], budgetName, selectedYearAd);
-        }
-
-        function renderWithdrawalTableContent(withdrawals, budgetName, selectedYearAd) {
-            const tbody = document.getElementById('budget-ledger-tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const budgets = globalData.budgets || [];
-            const activeBudget = budgets.find(b => {
-                let bYearAd = parseInt(b.Year, 10);
-                if (bYearAd > 2400) bYearAd -= 543;
-                return bYearAd === selectedYearAd;
-            }) || { Budget1: 0, Budget2: 0 };
-
-            let totalBudgetLimit = budgetName === 'งบตัวแทนมาตรฐาน' ? parseFloat(activeBudget.Budget1 || activeBudget.Total_Budget || 0) : parseFloat(activeBudget.Budget2 || 0);
-
-            const filtered = withdrawals.filter(w => {
-                if (w.Budget_Name !== budgetName) return false;
-                let wDate = new Date(w.Event_Date || w.Actual_Date);
-                return !isNaN(wDate.getTime()) && wDate.getFullYear() === selectedYearAd;
-            });
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400 text-sm">ไม่พบรายการเบิกงบประมาณสำหรับ ${budgetName} ในปีนี้</td></tr>`;
-                document.getElementById('lbl-total-budget').textContent = totalBudgetLimit.toLocaleString() + ' บาท';
-                document.getElementById('lbl-total-withdrawn-actual').textContent = '0.00 บาท';
-                document.getElementById('lbl-total-pending').textContent = '0.00 บาท';
-                document.getElementById('lbl-total-available').textContent = totalBudgetLimit.toLocaleString() + ' บาท';
-                return;
-            }
-
-            let cumulativeSpent = 0;
-            let totalWithdrawnActual = 0;
-            let totalPending = 0;
-
-            filtered.forEach((w, index) => {
-                let amt = parseFloat(w.Amount || 0);
-                if (w.Status === 'เบิกแล้ว') {
-                    cumulativeSpent += amt;
-                    totalWithdrawnActual += amt;
+        function confirmDeleteUser(userId) {
+            document.getElementById('confirm-msg').textContent = 'คุณต้องการลบผู้ใช้งานนี้จากระบบใช่หรือไม่?';
+            document.getElementById('confirm-action-btn').onclick = async () => {
+                closeConfirmModal();
+                showLoading('กำลังลบผู้ใช้งาน...');
+                const { error } = await supabase.from('Users').delete().eq('id', userId);
+                hideLoading();
+                if (!error) {
+                    showToast('ลบผู้ใช้งานสำเร็จ', 'success');
+                    loadDataFromSupabase();
                 } else {
-                    totalPending += amt;
+                    showToast('เกิดข้อผิดพลาดในการลบ', 'error');
                 }
-                let remainingBudget = totalBudgetLimit - cumulativeSpent;
-
-                let originalIndex = withdrawals.indexOf(w);
-                let statusBadge = w.Status === 'เบิกแล้ว' 
-                    ? `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600">เบิกแล้ว</span>`
-                    : `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-[#E42113]">รอเบิก</span>`;
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="py-3 font-medium text-slate-800">#${index + 1}</td>
-                        <td class="py-3 text-slate-600">${formatThaiDate(w.Event_Date)}</td>
-                        <td class="py-3 text-slate-600">${formatThaiDate(w.Actual_Date)}</td>
-                        <td class="py-3 text-slate-600">${w.Description || '-'}</td>
-                        <td class="py-3 text-right font-semibold text-slate-800">${amt.toLocaleString()} บาท</td>
-                        <td class="py-3 text-right font-medium text-[#E42113]">${cumulativeSpent.toLocaleString()} บาท</td>
-                        <td class="py-3 text-right font-bold text-[#253487]">${remainingBudget.toLocaleString()} บาท</td>
-                        <td class="py-3 text-center">${statusBadge}</td>
-                        <td class="py-3 text-center"><button onclick="openWithdrawalModal(${originalIndex})" class="text-xs text-[#253487] bg-indigo-50 px-2.5 py-1 rounded-full font-medium hover:bg-indigo-100">แก้ไข</button></td>
-                    </tr>
-                `;
-            });
-
-            let availableBudgetFinal = totalBudgetLimit - totalWithdrawnActual;
-
-            document.getElementById('lbl-total-budget').textContent = totalBudgetLimit.toLocaleString() + ' บาท';
-            document.getElementById('lbl-total-withdrawn-actual').textContent = totalWithdrawnActual.toLocaleString() + ' บาท';
-            document.getElementById('lbl-total-pending').textContent = totalPending.toLocaleString() + ' บาท';
-            document.getElementById('lbl-total-available').textContent = availableBudgetFinal.toLocaleString() + ' บาท';
+            };
+            document.getElementById('confirmModal').classList.remove('hidden');
         }
     </script>
 </body>
