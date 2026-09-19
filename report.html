@@ -28,7 +28,8 @@
             border-bottom: 2px solid #0b2265 !important;
         }
 
-        #page-allLevels .overflow-x-auto {
+        #page-allLevels .overflow-x-auto,
+        #page-team .overflow-x-auto {
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -39,18 +40,61 @@
         }
         
         #page-allLevels thead,
-        #page-regionCenter thead {
+        #page-regionCenter thead,
+        #page-team thead {
             position: sticky;
             top: 0;
             z-index: 40;
         }
 
         #page-allLevels thead th,
-        #page-regionCenter thead th {
+        #page-regionCenter thead th,
+        #page-team thead th {
             background-color: #0b2265 !important;
             border-bottom: none !important;
             box-shadow: inset 0 -1px 0 #0b2265, 0 1px 0 #0b2265 !important;
         }
+
+        /* ป้ายวันเกิดของคนที่เกิดเดือนปัจจุบัน */
+        #page-team .bday-badge {
+            display: inline-block; padding: 1px 8px; border-radius: 9999px; white-space: nowrap;
+            background: #fce7f3; color: #be185d; border: 1px solid #f9a8d4; font-weight: 600;
+        }
+
+        /* ชิปตัวกรองด้านบนตาราง */
+        #page-team .team-chip {
+            background: #eff6ff; color: #273482; border: 1px solid #bfdbfe;
+            font-size: .75rem; font-weight: 600; padding: 4px 10px; border-radius: 9999px;
+            cursor: pointer; transition: background .15s, color .15s;
+        }
+        #page-team .team-chip:hover { background: #dbeafe; }
+        #page-team .team-chip.active { background: #273482; color: #fff; border-color: #273482; }
+        #page-team .team-chip.bday { background: #fce7f3; color: #be185d; border-color: #f9a8d4; }
+        #page-team .team-chip.bday:hover { background: #fbcfe8; }
+        #page-team .team-chip.warn { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+        #page-team .team-chip.warn:hover { background: #ffedd5; }
+        #page-team .team-chip.warn.active { background: #c2410c; color: #fff; border-color: #c2410c; }
+        #page-team .team-chip.bday.active { background: #be185d; color: #fff; border-color: #be185d; }
+
+        /* โหมดกรอง: แสดงเป็นรายการเรียบ ไม่มีย่อหน้า/เส้นต้นไม้ แต่บอกสังกัดต่อท้ายชื่อ */
+        #page-team .tree-parent { display: none; margin-left: 8px; font-size: 11px; opacity: .7; white-space: nowrap; }
+        #page-team table.team-filtered td.tree-name { background-image: none !important; }
+        #page-team table.team-filtered .tree-indent { margin-left: 0 !important; }
+        #page-team table.team-filtered .tree-toggle,
+        #page-team table.team-filtered .tree-toggle-spacer,
+        #page-team table.team-filtered .tree-count { display: none !important; }
+        #page-team table.team-filtered .tree-parent { display: inline; }
+
+        /* โครงสร้างสังกัด (tree) ในหน้าทีมงาน */
+        #page-team tr.tree-hidden { display: none; }
+        #page-team td.tree-name { padding-left: 8px; }
+        #page-team .tree-toggle {
+            display: inline-block; width: 14px; text-align: center; cursor: pointer;
+            user-select: none; font-size: 11px; line-height: 1; margin-right: 2px; opacity: .85;
+        }
+        #page-team .tree-toggle:hover { opacity: 1; }
+        #page-team .tree-toggle-spacer { display: inline-block; width: 16px; }
+        #page-team .tree-count { margin-left: 6px; font-size: 11px; opacity: .7; }
 
         @media print {
             @page {
@@ -130,7 +174,6 @@
 </head>
 <body class="bg-gray-100 text-gray-800 flex min-h-screen relative overflow-x-hidden">
 
-    <!-- ปุ่มเปิด Sidebar ที่มีพื้นหลังสี #007AC2 ตามต้องการ -->
     <button id="open-sidebar-btn" onclick="toggleSidebar()" class="hidden fixed top-4 left-4 z-50 text-gray-700 p-1 rounded-lg shadow-lg hover:bg-gray-100 transition">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
     </button>
@@ -145,7 +188,6 @@
                         </div>
                         <h1 class="font-bold text-white text-lg">Daily Report</h1>
                     </div>
-                    <!-- ปุ่มซ่อน Sidebar ด้านใน -->
                     <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg transition text-white">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
                     </button>
@@ -163,6 +205,9 @@
                     </button>
                     <button onclick="switchTab('allLevels')" id="btn-allLevels" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
                         ทุกระดับ
+                    </button>
+                    <button onclick="switchTab('team')" id="btn-team" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
+                        ทีมงาน
                     </button>
                     <a href="https://98report.streamlit.app" target="_blank" class="block w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
                         📥 Import
@@ -312,6 +357,51 @@
             </section>
         </div>
 
+        <!-- หน้า: ทีมงาน -->
+        <div id="page-team" class="hidden w-full flex-col min-h-[calc(100vh-3rem)]">
+            <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
+                <div class="flex justify-between items-center mb-4 no-print flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div id="team-table-title" class="text-xl font-bold text-[#273482]">
+                            รายชื่อทีมงานฝ่ายขยายงานภูมิภาค 98
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap" id="team-counts-container">
+                        <!-- จำนวนนับจะถูกแสดงที่นี่ -->
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="team-filter-status" class="text-xs text-gray-500"></span>
+                        <div id="team-tree-buttons" class="flex items-center gap-1 text-xs">
+                            <button onclick="setAllTree(true)" class="px-2 py-1 rounded-lg border border-[#273482] text-[#273482] hover:bg-blue-50 font-medium">ยุบทั้งหมด</button>
+                            <button onclick="setAllTree(false)" class="px-2 py-1 rounded-lg border border-[#273482] text-[#273482] hover:bg-blue-50 font-medium">ขยายทั้งหมด</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto w-full flex-1">
+                    <table class="w-full text-sm custom-horizontal-table min-w-[1000px]">
+                        <thead>
+                            <tr class="bg-[#0b2265] text-white text-center">
+                                <th class="py-3 px-2">คำหน้า</th>
+                                <th class="py-3 px-2 text-left">ชื่อ-สกุล</th>
+                                <th class="py-3 px-2">ตำแหน่ง</th>
+                                <th class="py-3 px-2">รหัส</th>
+                                <th class="py-3 px-2">ใบอนุญาต</th>
+                                <th class="py-3 px-2">วันหมดอายุ</th>
+                                <th class="py-3 px-2">คงเหลือ</th>
+                                <th class="py-3 px-2">หมายเหตุ</th>
+                                <th class="py-3 px-2">มือถือ</th>
+                                <th class="py-3 px-2">แต่งตั้ง</th>
+                                <th class="py-3 px-2">คุณวุฒิ</th>
+                                <th class="py-3 px-2">วันเกิด</th>
+                                <th class="py-3 px-2">อายุ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
     </main>
 
     <script>
@@ -319,7 +409,6 @@
             const sidebar = document.getElementById('sidebar');
             const openBtn = document.getElementById('open-sidebar-btn');
             
-            // สลับสถานะซ่อน/แสดง Sidebar และปุ่มเปิด
             if (sidebar.style.display === 'none') {
                 sidebar.style.display = 'flex';
                 openBtn.classList.add('hidden');
@@ -358,9 +447,13 @@
             document.getElementById('page-allLevels').classList.add('hidden');
             document.getElementById('page-allLevels').classList.remove('flex');
 
+            document.getElementById('page-team').classList.add('hidden');
+            document.getElementById('page-team').classList.remove('flex');
+
             document.getElementById('btn-ranking').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             document.getElementById('btn-regionCenter').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             document.getElementById('btn-allLevels').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
+            document.getElementById('btn-team').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             
             let activePage = document.getElementById('page-' + tabName);
             activePage.classList.remove('hidden');
@@ -369,10 +462,31 @@
             document.getElementById('btn-' + tabName).className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white';
         }
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyIRcGQ-5jbjUmguDFm7pt0br5SAPyQxPWonL00NcIiV0l2DCIQi-LJrTBs2RyGlIZI/exec';
-        const CACHE_KEY = 'report98_cache_v1';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbweU1Z0cfKI31NQb3un9We-HR_BYAESK7Ze2f9KxVfZtEVTHHtIXQ-luL8OZi4gbusU/exec';
+        const CACHE_KEY = 'report98_cache_v2';
+
+        // ดึงข้อมูลทั้งชีต Import และชีต Team พร้อมกัน แล้วรวมเป็นก้อนเดียว
+        function fetchAllData(noStore) {
+            const opt = noStore ? { cache: 'no-store' } : undefined;
+            const importReq = fetch(WEB_APP_URL, opt).then(r => r.json());
+            const teamReq = fetch(WEB_APP_URL + '?sheet=Team', opt)
+                .then(r => r.json())
+                .catch(err => { console.error('Error loading Team sheet:', err); return null; });
+            return Promise.all([importReq, teamReq]).then(([importData, teamData]) => {
+                if (teamData && !teamData.error) {
+                    importData.teamHeaders = teamData.headers || [];
+                    importData.teamRows = teamData.rows || [];
+                } else {
+                    importData.teamHeaders = [];
+                    importData.teamRows = [];
+                }
+                return importData;
+            });
+        }
         let gaugeChartInstance = null;
         let pieChartInstance = null;
+
+        let i2Val = 0, j2Val = 0, k2Val = 0, m2Val = 0, n2Val = 0;
 
         function cleanNumber(val) {
             if (typeof val === 'number') return val;
@@ -417,6 +531,7 @@
             
             let summary = data.summary || {};
             let rows = data.rows || [];
+            let teamRows = data.teamRows || [];
 
             let rawDate = summary.dateColumnHeader || '';
             let formattedDate = formatThaiDate(rawDate);
@@ -441,17 +556,17 @@
             const allTitlePrintEl = document.getElementById('alllevels-table-title-print');
             if (allTitlePrintEl) allTitlePrintEl.innerText = titleText;
             
-            let i2Val = cleanNumber(summary.i2);
-            let j2Val = cleanNumber(summary.j2);
+            i2Val = cleanNumber(summary.i2);
+            j2Val = cleanNumber(summary.j2);
             
             let summaryRowFromData = rows.find(r => r[0] === "ฝ่าย");
-            let k2Val = cleanNumber(summary.k2);
+            k2Val = cleanNumber(summary.k2);
             if (k2Val === 0 && summaryRowFromData && summaryRowFromData[10] !== undefined) {
                 k2Val = cleanNumber(summaryRowFromData[10]);
             }
 
-            let m2Val = cleanNumber(summary.m2);
-            let n2Val = cleanNumber(summary.n2);
+            m2Val = cleanNumber(summary.m2);
+            n2Val = cleanNumber(summary.n2);
 
             const valI2 = document.getElementById('val-i2');
             if (valI2) valI2.innerText = i2Val.toLocaleString();
@@ -582,6 +697,7 @@
             }
 
             buildBothRegionTables(rows, i2Val, n2Val, data);
+            buildTeamTable(rows, teamRows, data.teamHeaders || [], data.headers || []);
 
             function renderFilteredTable(containerId, targetPositions, valueIndex, color, limit, minThreshold) {
                 let containerEl = document.getElementById(containerId);
@@ -660,8 +776,7 @@
                 console.error('Error reading cached report data:', e);
             }
 
-            fetch(WEB_APP_URL)
-                .then(response => response.json())
+            fetchAllData(false)
                 .then(data => {
                     processData(data);
                     try {
@@ -687,8 +802,7 @@
             icon.classList.add('animate-spin');
             label.innerText = 'กำลังโหลด...';
 
-            fetch(WEB_APP_URL, { cache: 'no-store' })
-                .then(response => response.json())
+            fetchAllData(true)
                 .then(data => {
                     processData(data);
                     try {
@@ -710,6 +824,570 @@
                         btn.classList.remove('opacity-60', 'cursor-not-allowed');
                     }, 1500);
                 });
+        }
+
+        function buildTeamTable(rows, teamRows, teamHeaders, importHeaders) {
+            const tbody = document.getElementById('team-table-body');
+            const countsContainer = document.getElementById('team-counts-container');
+            if (!tbody) return;
+
+            let regionCenterCodes = {};
+            rows.forEach(r => {
+                let pos = r[0];
+                let code = r[1];
+                let name = String(r[2] || "").trim();
+                if ((pos === "ภาค" || pos === "ภาค(GL)") && name) {
+                    if (!regionCenterCodes[name]) regionCenterCodes[name] = [];
+                }
+            });
+
+            rows.forEach(r => {
+                let pos = r[0];
+                let code = r[1];
+                let name = String(r[2] || "").trim();
+                if (pos === "ศูนย์" && name) {
+                    if (regionCenterCodes[name] && code) {
+                        regionCenterCodes[name].push(code);
+                    }
+                }
+            });
+
+            let higherLevelNames = {
+                regions: new Set(),
+                centers: new Set(),
+                units: new Set()
+            };
+
+            rows.forEach(r => {
+                let pos = r[0];
+                let name = String(r[2] || "").trim();
+                if (!name || pos === "ฝ่าย") return;
+                
+                if (pos === "ภาค" || pos === "ภาค(GL)") {
+                    higherLevelNames.regions.add(name);
+                } else if (pos === "ศูนย์") {
+                    higherLevelNames.centers.add(name);
+                } else if (pos === "หน่วย") {
+                    higherLevelNames.units.add(name);
+                }
+            });
+
+            let validRows = rows.filter(r => {
+                let pos = r[0];
+                let name = String(r[2] || "").trim();
+                if (!name || pos === "ฝ่าย") return false;
+
+                if (pos === "ศูนย์" && higherLevelNames.regions.has(name)) return false;
+                if (pos === "หน่วย" && (higherLevelNames.regions.has(name) || higherLevelNames.centers.has(name))) return false;
+                if (pos === "ตัวแทน" && (higherLevelNames.regions.has(name) || higherLevelNames.centers.has(name) || higherLevelNames.units.has(name))) return false;
+
+                return true;
+            });
+
+            // ---- ชีต Team: จับคู่ด้วย "ชื่อหัวคอลัมน์" (ไม่ผูกกับตำแหน่งคอลัมน์) ----
+            // หัวข้อในหน้าทีมงาน = ชื่อคอลัมน์ในชีต Team ยกเว้น 2 ตัว:
+            //   "คำหน้า" -> คอลัมน์ "คำนำหน้า"   |   ส่วน "คงเหลือ" ใช้ชื่อเดียวกับชีต Team
+            const colIndex = {};
+            (teamHeaders || []).forEach((h, i) => {
+                const key = String(h || '').trim();
+                if (key && colIndex[key] === undefined) colIndex[key] = i;
+            });
+            const pickCol = (names, fallbackIdx) => {
+                for (const n of names) if (colIndex[n] !== undefined) return colIndex[n];
+                return fallbackIdx;
+            };
+            const COL = {
+                name:          pickCol(['ชื่อ'], 0),
+                prefix:        pickCol(['คำนำหน้า'], 1),
+                license:       pickCol(['ใบอนุญาต'], 3),
+                expDate:       pickCol(['วันหมดอายุ'], 4),
+                leftDays:      pickCol(['คงเหลือ'], 5),
+                remark:        pickCol(['หมายเหตุ'], 6),
+                mobile:        pickCol(['มือถือ'], -1),   // หาจากชื่อหัวคอลัมน์ "มือถือ" (วางไว้คอลัมน์ไหนในชีต Team ก็ได้)
+                qualification: pickCol(['คุณวุฒิ'], 7),
+                appointed:     pickCol(['แต่งตั้ง'], 8),
+                birthDate:     pickCol(['วันเกิด'], 9),
+                age:           pickCol(['อายุ'], 10)
+            };
+
+            // ทำให้ชื่อเทียบกันได้แน่นอน: ตัด zero-width / ช่องว่างทั้งหมด และรวมสระให้เป็นรูปแบบเดียวกัน
+            const normName = (v) => String(v == null ? '' : v)
+                .normalize('NFC')
+                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                .replace(/\u0E4D\u0E32/g, '\u0E33')   // นิคหิต+สระอา -> สระอำ
+                .replace(/\s+/g, '');
+
+            // ---- วันที่: รับได้ทั้ง ISO, "16 เม.ย. 2027", "28 พ.ค. 82", "24/11/2026" แล้วแสดงเป็น "24 พ.ย. 69" (พ.ศ. 2 หลัก) ----
+            const thShortMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const thFullMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+            const monthLookup = {};
+            thShortMonths.forEach((m, i) => { monthLookup[m.replace(/\./g, '')] = i + 1; });
+            thFullMonths.forEach((m, i) => { monthLookup[m] = i + 1; });
+
+            const nowTh = new Date(Date.now() + 7 * 3600 * 1000);   // เวลาไทย
+            const currentMonth = nowTh.getUTCMonth() + 1;
+            const currentYY = nowTh.getUTCFullYear() % 100;
+
+            // คืนค่า {d, m, y(ค.ศ.)} หรือ null ถ้าอ่านไม่ได้
+            const parseDateParts = (v, isBirth) => {
+                if (v === null || v === undefined) return null;
+                if (v instanceof Date) v = v.toISOString();
+                const t = String(v).trim();
+                if (!t) return null;
+
+                let m = t.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+                if (m) {
+                    const d = new Date(t);
+                    if (isNaN(d)) return null;
+                    const th = new Date(d.getTime() + 7 * 3600 * 1000);   // เลื่อนเป็นเวลาไทย
+                    return { d: th.getUTCDate(), m: th.getUTCMonth() + 1, y: th.getUTCFullYear() };
+                }
+                m = t.match(/^(\d{1,2})\s+(\S+?)\s+(\d{2,4})$/);
+                if (m) {
+                    const mo = monthLookup[m[2].replace(/\./g, '')];
+                    if (!mo) return null;
+                    return { d: +m[1], m: mo, y: normYear(+m[3], m[3].length, isBirth) };
+                }
+                m = t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+                if (m) return { d: +m[1], m: +m[2], y: normYear(+m[3], m[3].length, isBirth) };
+                return null;
+            };
+            // ปีที่ได้มาอาจเป็น ค.ศ. 4 หลัก / พ.ศ. 4 หลัก / 2 หลัก -> คืนเป็น ค.ศ. เสมอ
+            function normYear(y, len, isBirth) {
+                if (len === 4) return y > 2400 ? y - 543 : y;
+                if (isBirth) return y <= currentYY ? 2000 + y : 1900 + y;   // วันเกิด 2 หลัก
+                return 2000 + y;
+            }
+            const fmtBE2 = (p) => `${p.d} ${thShortMonths[p.m - 1]} ${String((p.y + 543) % 100).padStart(2, '0')}`;
+
+            const fmtCell = (v) => {
+                if (v === null || v === undefined) return '-';
+                const t = String(v).trim();
+                return t === '' ? '-' : t;   // รวมเลข 0 ด้วย (ไม่ถูกแปลงเป็น '-')
+            };
+            // เบอร์มือถือ -> 000-000-0000
+            // (ตัดขีด/ช่องว่าง/จุด/วงเล็บออกก่อน, ถ้า Google Sheets ตัดเลข 0 หน้าเหลือ 9 หลักให้เติม 0 คืน,
+            //  ถ้าไม่ใช่เบอร์ 10 หลัก เช่น มีหลายเบอร์หรือมีข้อความ ให้แสดงตามที่กรอก)
+            const fmtMobile = (v) => {
+                const t = fmtCell(v);
+                if (t === '-') return t;
+                if (/[^\d\s\-.()+]/.test(t)) return t;
+                let d = t.replace(/\D/g, '');
+                if (/^[1-9]\d{8}$/.test(d)) d = '0' + d;
+                return /^0\d{9}$/.test(d) ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : t;
+            };
+            const fmtDate = (v, isBirth) => {
+                const p = parseDateParts(v, isBirth);
+                if (p) return fmtBE2(p);
+                return fmtCell(v);
+            };
+            const parseLeft = (v) => {
+                if (v === null || v === undefined || String(v).trim() === '') return null;
+                const n = Number(String(v).replace(/,/g, '').trim());
+                return isFinite(n) ? n : null;
+            };
+
+            let teamMap = new Map();
+            if (teamRows && Array.isArray(teamRows)) {
+                teamRows.forEach(tRow => {
+                    const key = normName(tRow[COL.name]);
+                    if (!key || teamMap.has(key)) return;
+                    teamMap.set(key, {
+                        prefix:        fmtCell(tRow[COL.prefix]),
+                        license:       fmtCell(tRow[COL.license]),
+                        expDate:       fmtDate(tRow[COL.expDate], false),
+                        leftDays:      fmtCell(tRow[COL.leftDays]),
+                        leftNum:       parseLeft(tRow[COL.leftDays]),
+                        remark:        fmtCell(tRow[COL.remark]),
+                        mobile:        fmtMobile(tRow[COL.mobile]),
+                        qualification: fmtCell(tRow[COL.qualification]),
+                        appointed:     fmtCell(tRow[COL.appointed]),
+                        birthDate:     fmtDate(tRow[COL.birthDate], true),
+                        birthMonth:    (parseDateParts(tRow[COL.birthDate], true) || {}).m || null,
+                        age:           fmtCell(tRow[COL.age])
+                    });
+                });
+            }
+
+            // ---- สร้างโครงสร้าง "ใครสังกัดใต้ใคร" จากคอลัมน์ ภาค / ศูนย์ / หน่วย ของชีต Import ----
+            // ลำดับตำแหน่ง: ภาค(GL)=ภาค (0) > ศูนย์ (1) > หน่วย (2) > ตัวแทน=ตัวแทนฝึกหัด (3)
+            const RANK = { 'ภาค': 0, 'ภาค(GL)': 0, 'ศูนย์': 1, 'หน่วย': 2, 'ตัวแทน': 3, 'ตัวแทนฝึกหัด': 3 };
+            const hdrIdx = (name, fallback) => {
+                const i = (importHeaders || []).findIndex(h => String(h || '').trim() === name);
+                return i >= 0 ? i : fallback;
+            };
+            const iE = hdrIdx('ภาค', 4), iF = hdrIdx('ศูนย์', 5), iG = hdrIdx('หน่วย', 6);
+            const cleanLeader = (v) => normName(String(v == null ? '' : v).replace('แนะนำโดย', ''));
+
+            const items = validRows.map((r) => {
+                let pos = r[0] || '';
+                let name = String(r[2] || '').trim();
+                if (name.includes('แนะนำโดย')) {
+                    pos = 'ตัวแทนฝึกหัด';
+                    name = name.replace('แนะนำโดย', '').trim();
+                }
+                return { r, pos, name, key: normName(name), rank: (RANK[pos] !== undefined ? RANK[pos] : 3), parent: null, children: [] };
+            });
+
+            const nodeByKey = new Map();
+            items.forEach(it => {
+                const ex = nodeByKey.get(it.key);
+                if (!ex || it.rank < ex.rank) nodeByKey.set(it.key, it);
+            });
+
+            items.forEach(it => {
+                const r = it.r;
+                let cands = [];
+                if (it.rank === 1) cands = [r[iE]];
+                else if (it.rank === 2) cands = [r[iF], r[iE]];
+                else if (it.rank >= 3) cands = [r[iG], r[iF], r[iE]];
+                for (const c of cands) {
+                    const k = cleanLeader(c);
+                    if (!k || k === it.key) continue;
+                    const par = nodeByKey.get(k);
+                    if (par && par.rank < it.rank) { it.parent = par; break; }   // หัวหน้าต้องมีตำแหน่งสูงกว่าเท่านั้น
+                }
+                if (it.parent) it.parent.children.push(it);
+            });
+
+            // เรียงแบบต้นไม้: หัวหน้า -> ลูกทีมทั้งหมดของเขา (คงลำดับตามชีต Import)
+            const ordered = [];
+            const walk = (node, depth, trail, isLast) => {
+                node.depth = depth;
+                node.trail = trail;
+                node.isLast = isLast;
+                node.order = ordered.length;
+                ordered.push(node);
+                const childTrail = depth >= 1 ? trail.concat([isLast]) : trail;
+                let total = 0;
+                node.children.forEach((c, ci) => {
+                    total += 1 + walk(c, depth + 1, childTrail, ci === node.children.length - 1);
+                });
+                node.descCount = total;
+                return total;
+            };
+            items.filter(it => !it.parent).forEach(root => walk(root, 0, [], true));
+
+            window.teamTreeKeys = ordered.map(n => n.key);
+            if (!window.teamLevels) window.teamLevels = new Map();     // ระดับที่ขยายของแต่ละคน (ไม่มี = ขยายเต็ม)
+            if (!window.teamFilters) window.teamFilters = new Set();   // ตัวกรองที่เลือกจากชิปด้านบน
+
+            // เส้นนำสายตาของต้นไม้ วาดด้วย background ของเซลล์ชื่อ (ต่อเนื่องข้ามแถว)
+            const LINE = 'rgba(71,85,105,.55)';
+            const treeBackground = (node) => {
+                if (node.depth === 0) return '';
+                const layers = [], sizes = [], poss = [];
+                const add = (w, h, x, y) => {
+                    layers.push(`linear-gradient(${LINE},${LINE})`);
+                    sizes.push(`${w} ${h}`);
+                    poss.push(`${x}px ${y}`);
+                };
+                node.trail.forEach((ancLast, k) => { if (!ancLast) add('1px', '100%', 8 + k * 18 + 6, '0'); });
+                const x = 8 + (node.depth - 1) * 18 + 6;
+                add('1px', node.isLast ? '50%' : '100%', x, '0');
+                add('10px', '1px', x, '50%');
+                return `background-image:${layers.join(',')};background-size:${sizes.join(',')};background-position:${poss.join(',')};background-repeat:no-repeat;`;
+            };
+
+            let html = '';
+            if (validRows.length === 0) {
+                if (countsContainer) countsContainer.innerHTML = '';
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-gray-400">ไม่มีข้อมูลทีมงาน</td></tr>`;
+                return;
+            }
+
+            // ทำทีละแถว: วนลูปตามรายชื่อจากชีต Import คอลัมน์ C (r[2]) แล้วเทียบกับชีต Team คอลัมน์ A
+            const birthdayNames = [];
+            let expiringCount = 0;
+            ordered.forEach((node, nodeIdx) => {
+                const r = node.r;
+                let pos = r[0] || '';
+                let code = r[1] || '';
+                let importNameColC = String(r[2] || '').trim();
+                
+                if (importNameColC.includes("แนะนำโดย")) {
+                    pos = "ตัวแทนฝึกหัด";
+                    importNameColC = importNameColC.replace("แนะนำโดย", "").trim();
+                }
+
+                let displayCode = code;
+                if ((pos === "ภาค" || pos === "ภาค(GL)") && regionCenterCodes[importNameColC] && regionCenterCodes[importNameColC].length > 0) {
+                    let centerCodesStr = regionCenterCodes[importNameColC].join(' | ');
+                    displayCode = `${centerCodesStr} (${code})`;
+                }
+
+                let rowBg = "bg-white text-gray-700 font-normal";
+                let posDisplay = pos;
+
+                if (pos === "ภาค" || pos === "ภาค(GL)") {
+                    rowBg = "bg-[#047dc2] text-white font-normal";
+                } else if (pos === "ศูนย์") {
+                    rowBg = "bg-[#7cbadf] text-gray-900 font-normal";
+                    posDisplay = "ศูนย์";
+                } else if (pos === "หน่วย") {
+                    rowBg = "bg-[#cce5f1] text-gray-900 font-normal";
+                    posDisplay = "หน่วย";
+                } else if (pos === "ตัวแทน" || pos === "ตัวแทนฝึกหัด") {
+                    rowBg = "bg-white text-gray-700 font-normal";
+                    posDisplay = pos;
+                }
+
+                // เทียบ ชื่อ-สกุล (Import คอลัมน์ C) กับ ชื่อ (Team คอลัมน์ A) แบบตรงกันทุกตัวอักษร
+                let matchTeam = teamMap.get(normName(importNameColC));
+
+                // ถ้ายังไม่พบข้อมูล ให้แสดงเครื่องหมาย - ไว้ก่อน
+                if (!matchTeam) {
+                    matchTeam = {
+                        prefix: '-',
+                        license: '-',
+                        expDate: '-',
+                        leftDays: '-',
+                        leftNum: null,
+                        remark: '-',
+                        mobile: '-',
+                        qualification: '-',
+                        appointed: '-',
+                        birthDate: '-',
+                        birthMonth: null,
+                        age: '-'
+                    };
+                }
+
+                // สีตัวอักษรของแถว (แถวพื้นเข้มใช้เฉดที่อ่านชัดกว่า)
+                //  1) ใบอนุญาต = "หมดอายุ"  หรือ  (ไม่ใช่ตัวแทนฝึกหัด และใบอนุญาตเป็น "-")  -> แดง
+                //  2) คงเหลือ <= 60 -> แดง, <= 90 -> เหลือง
+                const isDarkRow = (pos === "ภาค" || pos === "ภาค(GL)");
+                const licenseText = String(matchTeam.license == null ? '' : matchTeam.license).trim();
+                const licenseExpired = licenseText.includes('หมดอายุ');
+                const licenseMissing = (licenseText === '' || licenseText === '-') && pos !== 'ตัวแทนฝึกหัด';
+                const redColor = isDarkRow ? '#ff9b9b' : '#dc2626';
+                let rowStyle = '';
+                if (licenseExpired || licenseMissing) {
+                    rowStyle += `color:${redColor};font-weight:600;`;
+                } else if (matchTeam.leftNum !== null) {
+                    if (matchTeam.leftNum <= 60) {
+                        rowStyle += `color:${redColor};font-weight:600;`;
+                    } else if (matchTeam.leftNum <= 90) {
+                        rowStyle += `color:${isDarkRow ? '#ffe14d' : '#c99700'};font-weight:600;`;
+                    }
+                }
+                // แถวที่ตัวหนังสือเป็นสีเหลืองหรือสีแดง = ใกล้หมดอายุ
+                const isExpiring = rowStyle !== '';
+                if (isExpiring) expiringCount++;
+
+                // เดือนเกิดตรงกับเดือนปัจจุบัน -> แสดงป้าย 🎂 เฉพาะช่องวันเกิด และเก็บชื่อไว้ทำสรุปด้านบน
+                const isBirthMonth = (matchTeam.birthMonth === currentMonth);
+                if (isBirthMonth) birthdayNames.push(importNameColC);
+                const birthCell = isBirthMonth
+                    ? `<span class="bday-badge" title="เกิดเดือน${thFullMonths[currentMonth - 1]}">🎂 ${matchTeam.birthDate}</span>`
+                    : matchTeam.birthDate;
+
+                const hasKids = node.children.length > 0;
+                const toggleHtml = hasKids
+                    ? `<span class="tree-toggle no-print" onclick="toggleTreeRow(${nodeIdx})">▾</span>`
+                    : `<span class="tree-toggle-spacer"></span>`;
+                const countHtml = hasKids ? `<span class="tree-count">(${node.descCount})</span>` : '';
+                const parentTitle = node.parent ? `สังกัด: ${node.parent.name} (${node.parent.pos})` : '';
+                const parentHtml = node.parent ? `<span class="tree-parent">สังกัด: ${node.parent.name}</span>` : '';
+                const childRanks = Array.from(new Set(node.children.map(c => c.rank))).sort((x, y) => x - y).join(',');
+                const grp = groupOfPos(node.pos);
+
+                html += `
+                    <tr class="${rowBg}" style="${rowStyle}" data-idx="${nodeIdx}" data-depth="${node.depth}" data-has-children="${hasKids ? 1 : 0}" data-rank="${node.rank}" data-parent="${node.parent ? node.parent.order : -1}" data-child-ranks="${childRanks}" data-total="${node.descCount}" data-group="${grp}" data-struct="${node.pos === 'ภาค' ? 1 : 0}" data-bday="${isBirthMonth ? 1 : 0}" data-expiring="${isExpiring ? 1 : 0}">
+                        <td class="py-2 px-2 text-center">${matchTeam.prefix}</td>
+                        <td class="py-2 px-2 text-left tree-name" style="${treeBackground(node)}" title="${parentTitle}">
+                            <div class="flex items-center tree-indent" style="margin-left:${node.depth * 18}px">${toggleHtml}<span>${importNameColC}</span>${countHtml}${parentHtml}</div>
+                        </td>
+                        <td class="py-2 px-2 text-center">${posDisplay}</td>
+                        <td class="py-2 px-2 text-center">${displayCode}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.license}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.expDate}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.leftDays}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.remark}</td>
+                        <td class="py-2 px-2 text-center" style="white-space:nowrap">${matchTeam.mobile}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.appointed}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.qualification}</td>
+                        <td class="py-2 px-2 text-center">${birthCell}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.age}</td>
+                    </tr>
+                `;
+            });
+
+            html += `<tr id="team-filter-empty" style="display:none"><td colspan="13" class="text-center py-6 text-gray-400">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`;
+            tbody.innerHTML = html;
+
+            // ---- ชิปสรุป: นับจาก "แถวที่แสดงในตาราง" (ตัดแถวซ้ำแล้ว) และกดเพื่อกรองการแสดงผลได้ ----
+            const cnt = { region: 0, regionStruct: 0, center: 0, unit: 0, agent: 0 };
+            ordered.forEach(n => {
+                const g = groupOfPos(n.pos);
+                if (g === 'region') cnt.region++;
+                if (n.pos === 'ภาค') cnt.regionStruct++;
+                if (g === 'center') cnt.center++;
+                if (g === 'unit') cnt.unit++;
+                if (g === 'agent') cnt.agent++;
+            });
+            window.teamChipMeta = [
+                { key: 'region',       label: 'ภาคทั้งหมด',   count: cnt.region },
+                { key: 'regionStruct', label: 'ภาคโครงสร้าง', count: cnt.regionStruct },
+                { key: 'center',       label: 'ศูนย์',         count: cnt.center },
+                { key: 'unit',         label: 'หน่วย',         count: cnt.unit },
+                { key: 'agent',        label: 'ตัวแทน',        count: cnt.agent },
+                { key: 'expiring',     label: 'ใกล้หมดอายุ', count: expiringCount, tip: 'แถวที่ตัวหนังสือเป็นสีเหลืองหรือสีแดง' },
+                { key: 'bday',         label: `🎂 เกิดเดือน${thFullMonths[currentMonth - 1]}`, count: birthdayNames.length, tip: birthdayNames.join(', ') }
+            ];
+            renderTeamChips();
+            syncTreeState();
+        }
+
+        // ---- ชิปตัวกรอง ----
+        const RANK_NAME = { 1: 'ศูนย์', 2: 'หน่วย', 3: 'ตัวแทน' };
+        function groupOfPos(pos) {
+            if (pos === 'ภาค' || pos === 'ภาค(GL)') return 'region';
+            if (pos === 'ศูนย์') return 'center';
+            if (pos === 'หน่วย') return 'unit';
+            if (pos === 'ตัวแทน' || pos === 'ตัวแทนฝึกหัด') return 'agent';
+            return '';
+        }
+
+        function renderTeamChips() {
+            const box = document.getElementById('team-counts-container');
+            if (!box) return;
+            const meta = window.teamChipMeta || [];
+            const active = window.teamFilters || new Set();
+            box.innerHTML = meta.map(m => {
+                const hint = 'คลิกเพื่อแสดงเฉพาะกลุ่มนี้ (คลิกอีกครั้งเพื่อยกเลิก)';
+                const tip = (m.tip ? m.tip + ' — ' : '') + hint;
+                return `<button type="button" class="team-chip${m.key === 'bday' ? ' bday' : ''}${m.key === 'expiring' ? ' warn' : ''}${active.has(m.key) ? ' active' : ''}" onclick="toggleTeamFilter('${m.key}')" title="${String(tip).replace(/"/g, '&quot;')}">${m.label}: ${m.count}</button>`;
+            }).join('');
+        }
+
+        function toggleTeamFilter(key) {
+            if (!window.teamFilters) window.teamFilters = new Set();
+            if (window.teamFilters.has(key)) window.teamFilters.delete(key);
+            else window.teamFilters.add(key);
+            renderTeamChips();
+            syncTreeState();
+        }
+
+        function rowMatchesFilter(tr, key) {
+            if (key === 'regionStruct') return tr.dataset.struct === '1';
+            return tr.dataset.group === key;
+        }
+
+        // ---- ยุบ/ขยายลูกทีม แบบไล่ตามตำแหน่ง ----
+        // ทุกคนที่มีลูกทีมมี "ระดับ" (ตัวเลขตำแหน่ง: 1=ศูนย์, 2=หน่วย, 3=ตัวแทน)
+        // ลูกทีมโดยตรงที่ตำแหน่ง <= ระดับนี้จะแสดง  |  ค่าเริ่มต้น = 3 (แสดงครบ)
+        function getTreeLevel(key) {
+            return window.teamLevels && window.teamLevels.has(key) ? window.teamLevels.get(key) : 3;
+        }
+
+        function syncTreeState() {
+            const tbody = document.getElementById('team-table-body');
+            if (!tbody) return;
+            const table = tbody.closest('table');
+            const trs = Array.from(tbody.querySelectorAll('tr[data-idx]'));
+            const filters = window.teamFilters || new Set();
+            const filtering = filters.size > 0;
+            const keys = window.teamTreeKeys || [];
+
+            if (table) table.classList.toggle('team-filtered', filtering);
+            const treeBtns = document.getElementById('team-tree-buttons');
+            if (treeBtns) treeBtns.style.display = filtering ? 'none' : '';
+            const status = document.getElementById('team-filter-status');
+            const emptyRow = document.getElementById('team-filter-empty');
+
+            // โหมดกรอง: แสดงเป็นรายการเรียบ ๆ เฉพาะแถวที่ตรงเงื่อนไข
+            //  - ตำแหน่งที่เลือกหลายอันใช้ "หรือ"   - ชิปวันเกิด/ใกล้หมดอายุ ใช้ "และ" กับตำแหน่ง
+            if (filtering) {
+                const posKeys = Array.from(filters).filter(k => k !== 'bday' && k !== 'expiring');
+                const needBday = filters.has('bday');
+                const needExpiring = filters.has('expiring');
+                let shown = 0;
+                trs.forEach(tr => {
+                    const okPos = posKeys.length === 0 || posKeys.some(k => rowMatchesFilter(tr, k));
+                    const ok = okPos && (!needBday || tr.dataset.bday === '1') && (!needExpiring || tr.dataset.expiring === '1');
+                    tr.classList.toggle('tree-hidden', !ok);
+                    if (ok) shown++;
+                });
+                if (status) status.textContent = `แสดง ${shown} จาก ${trs.length} รายการ`;
+                if (emptyRow) emptyRow.style.display = shown === 0 ? '' : 'none';
+                return;
+            }
+            if (emptyRow) emptyRow.style.display = 'none';
+            if (status) status.textContent = '';
+
+            // โหมดต้นไม้: แถวจะแสดงเมื่อพ่อแม่แสดง และตำแหน่งของแถว <= ระดับของพ่อแม่
+            const vis = [];
+            trs.forEach((tr, i) => {
+                const p = Number(tr.dataset.parent);
+                let v = true;
+                if (p >= 0) v = vis[p] && Number(tr.dataset.rank) <= getTreeLevel(keys[p]);
+                vis[i] = v;
+                tr.classList.toggle('tree-hidden', !v);
+            });
+
+            // อัปเดตลูกศร / จำนวน / คำแนะนำของแถวที่มีลูกทีม
+            trs.forEach((tr, i) => {
+                if (tr.dataset.hasChildren !== '1') return;
+                const rank = Number(tr.dataset.rank);
+                const depth = Number(tr.dataset.depth);
+                const ranks = tr.dataset.childRanks.split(',').map(Number);
+                const s = getTreeLevel(keys[i]);
+                const collapsed = s <= rank;
+                const next = ranks.find(x => x > s);
+
+                const t = tr.querySelector('.tree-toggle');
+                if (t) {
+                    t.textContent = collapsed ? '▸' : '▾';
+                    t.title = next !== undefined ? `คลิกเพื่อแสดง: ${RANK_NAME[next]}` : 'คลิกเพื่อยุบ';
+                }
+
+                const total = Number(tr.dataset.total);
+                let shownDesc = 0;
+                for (let j = i + 1; j < trs.length && Number(trs[j].dataset.depth) > depth; j++) {
+                    if (!trs[j].classList.contains('tree-hidden')) shownDesc++;
+                }
+                const c = tr.querySelector('.tree-count');
+                if (c) c.textContent = (!collapsed && shownDesc < total) ? `(${shownDesc}/${total})` : `(${total})`;
+            });
+        }
+
+        function collapseTreeNode(trs, i) {
+            const depth = Number(trs[i].dataset.depth);
+            const keys = window.teamTreeKeys || [];
+            for (let j = i; j < trs.length; j++) {
+                if (j > i && Number(trs[j].dataset.depth) <= depth) break;
+                if (trs[j].dataset.hasChildren === '1') {
+                    window.teamLevels.set(keys[j], Number(trs[j].dataset.rank));   // ยุบ = ระดับเท่าตำแหน่งตัวเอง
+                }
+            }
+        }
+
+        // คลิก 1 ครั้ง = แสดงตำแหน่งถัดลงไปของลูกทีม (เช่น ภาค -> ศูนย์ -> หน่วย -> ตัวแทน) ครบแล้วคลิกอีกครั้ง = ยุบ
+        function toggleTreeRow(idx) {
+            const tbody = document.getElementById('team-table-body');
+            if (!tbody) return;
+            const trs = Array.from(tbody.querySelectorAll('tr[data-idx]'));
+            const tr = trs[idx];
+            if (!tr) return;
+            const key = (window.teamTreeKeys || [])[idx];
+            const ranks = tr.dataset.childRanks.split(',').map(Number);
+            const s = getTreeLevel(key);
+            const next = ranks.find(x => x > s);
+            if (next !== undefined) window.teamLevels.set(key, next);
+            else collapseTreeNode(trs, idx);
+            syncTreeState();
+        }
+
+        function setAllTree(collapse) {
+            const tbody = document.getElementById('team-table-body');
+            window.teamLevels = new Map();
+            if (collapse && tbody) {
+                tbody.querySelectorAll('tr[data-has-children="1"]').forEach(tr => {
+                    window.teamLevels.set(window.teamTreeKeys[Number(tr.dataset.idx)], Number(tr.dataset.rank));
+                });
+            }
+            syncTreeState();
         }
 
         function buildBothRegionTables(rows, summaryI2, summaryN2, dataObj) {
@@ -806,7 +1484,7 @@
             
             const summaryTrHtml = `
                 <td class="py-2.5 px-3 text-left">ฝ่าย ${summaryN2.toFixed(2)}%</td>
-                <td class="py-2.5 px-2 text-right">${summaryI2.toLocaleString()}</td>
+                <td class="py-2.5 px-2 text-right">${i2Val.toLocaleString()}</td>
                 <td class="py-2.5 px-2 text-right">${totalCommissionSummary.toLocaleString()}</td>
                 <td class="py-2.5 px-2 text-center">${totalUnitMe}</td>
                 <td class="py-2.5 px-2 text-center">${totalUnitTem}</td>
@@ -958,10 +1636,9 @@
                             .sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
                         agentsInUnit.forEach((agent, aIdx) => {
-                            let agentName = String(agent[2] || '');
-                            if (agentName.includes("แนะนำโดย")) {
-                                agentName = agentName.replace("แนะนำโดย", "(ฝ) ");
-                            }
+                            let rawAgentName = String(agent[2] || '');
+                            let isTrainee = rawAgentName.includes("แนะนำโดย");
+                            let agentName = rawAgentName.replace("แนะนำโดย", "").trim();
                             let agentPrem = cleanNumber(agent[8]);
                             let agentComm = cleanNumber(agent[7]);
                             let agentPVal = formatComplianceCell('agent', agent[15]);
