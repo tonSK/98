@@ -408,6 +408,7 @@
                                 <th class="py-3 px-2">วันหมดอายุ</th>
                                 <th class="py-3 px-2">คงเหลือ</th>
                                 <th class="py-3 px-2">หมายเหตุ</th>
+                                <th class="py-3 px-2">ชื่อเล่น</th>
                                 <th class="py-3 px-2">มือถือ</th>
                                 <th class="py-3 px-2">แต่งตั้ง</th>
                                 <th class="py-3 px-2">คุณวุฒิ</th>
@@ -458,7 +459,6 @@
         }
 
         function switchTab(tabName) {
-            // หน้าทีมงานต้องใส่รหัสผ่านก่อนเข้า (ผ่านแล้วไม่ถามซ้ำจนกว่าจะรีเฟรชหน้า)
             if (tabName === 'team' && !window.teamUnlocked) {
                 openTeamPassword();
                 return;
@@ -487,10 +487,9 @@
             document.getElementById('btn-' + tabName).className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white';
         }
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyijBDysTP81NtUOmGe5JFJbslx6XkVutC1DEvvGHOFcWZp36tyJioasVGdz8nj27hs/exec';
-        const CACHE_KEY = 'report98_cache_v2';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbywMrSOsKj-viT9RS7FDL97lMP84I7WQ4MdcRpbHFOKbFGDaOW3TnGBL2HDRuOk0f7A/exec';
+        const CACHE_KEY = 'report98_cache_v3';
 
-        // ดึงข้อมูลทั้งชีต Import และชีต Team พร้อมกัน แล้วรวมเป็นก้อนเดียว
         function fetchAllData(noStore) {
             const opt = noStore ? { cache: 'no-store' } : undefined;
             const importReq = fetch(WEB_APP_URL, opt).then(r => r.json());
@@ -855,7 +854,7 @@
             const tbody = document.getElementById('team-table-body');
             const countsContainer = document.getElementById('team-counts-container');
             if (!tbody) return;
-            window.lastTeamArgs = { rows, importHeaders };   // ใช้ตอนโหลดชีต Team ใหม่หลังบันทึก
+            window.lastTeamArgs = { rows, importHeaders };
 
             let regionCenterCodes = {};
             rows.forEach(r => {
@@ -910,9 +909,6 @@
                 return true;
             });
 
-            // ---- ชีต Team: จับคู่ด้วย "ชื่อหัวคอลัมน์" (ไม่ผูกกับตำแหน่งคอลัมน์) ----
-            // หัวข้อในหน้าทีมงาน = ชื่อคอลัมน์ในชีต Team ยกเว้น 2 ตัว:
-            //   "คำหน้า" -> คอลัมน์ "คำนำหน้า"   |   ส่วน "คงเหลือ" ใช้ชื่อเดียวกับชีต Team
             const colIndex = {};
             (teamHeaders || []).forEach((h, i) => {
                 const key = String(h || '').trim();
@@ -924,50 +920,47 @@
             };
             const COL = {
                 name:          pickCol(['ชื่อ'], 0),
-                prefix:        pickCol(['คำนำหน้า'], 1),
+                prefix:        pickCol(['คำนำหน้า', 'หน้า'], 1),
                 license:       pickCol(['ใบอนุญาต'], 3),
                 expDate:       pickCol(['วันหมดอายุ'], 4),
                 leftDays:      pickCol(['คงเหลือ'], 5),
-                remark:        pickCol(['หมายเหตุ'], 6),
-                mobile:        pickCol(['มือถือ'], -1),   // หาจากชื่อหัวคอลัมน์ "มือถือ" (วางไว้คอลัมน์ไหนในชีต Team ก็ได้)
-                qualification: pickCol(['คุณวุฒิ'], 7),
+                remark:        pickCol(['หมายเหตุ', 'Note'], 6),
+                nickname:      pickCol(['ชื่อเล่น'], 12), // คอลัมน์ M (index 12) หรือตามชื่อหัวคอลัมน์ "ชื่อเล่น"
+                mobile:        pickCol(['มือถือ'], -1),
+                qualification: pickCol(['คุณวุฒิ', 'Life Solutions'], 7),
                 appointed:     pickCol(['แต่งตั้ง'], 8),
                 birthDate:     pickCol(['วันเกิด'], 9),
                 age:           pickCol(['อายุ'], 10)
             };
 
-            // ชื่อหัวคอลัมน์จริงในชีต Team (ใช้ส่งไปบันทึก) — null = ไม่มีคอลัมน์นี้ในชีต
             const rawHeaderOf = (name) => (colIndex[name] !== undefined ? teamHeaders[colIndex[name]] : null);
             window.teamEditMeta = {
                 loaded: (teamHeaders || []).length > 0,
                 nameHeader: (teamHeaders || []).length ? teamHeaders[COL.name] : null,
                 fields: {
-                    license: rawHeaderOf('ใบอนุญาต'), expDate: rawHeaderOf('วันหมดอายุ'), remark: rawHeaderOf('หมายเหตุ'),
-                    mobile: rawHeaderOf('มือถือ'), appointed: rawHeaderOf('แต่งตั้ง'), qualification: rawHeaderOf('คุณวุฒิ'),
-                    birthDate: rawHeaderOf('วันเกิด')
+                    license: rawHeaderOf('ใบอนุญาต'), expDate: rawHeaderOf('วันหมดอายุ'), remark: rawHeaderOf('หมายเหตุ') || rawHeaderOf('Note'),
+                    mobile: rawHeaderOf('มือถือ'), appointed: rawHeaderOf('แต่งตั้ง'), qualification: rawHeaderOf('คุณวุฒิ') || rawHeaderOf('Life Solutions'),
+                    birthDate: rawHeaderOf('วันเกิด'), prefix: rawHeaderOf('คำนำหน้า') || rawHeaderOf('หน้า'), nickname: rawHeaderOf('ชื่อเล่น')
                 }
             };
             window.teamRowModels = [];
 
-            // ทำให้ชื่อเทียบกันได้แน่นอน: ตัด zero-width / ช่องว่างทั้งหมด และรวมสระให้เป็นรูปแบบเดียวกัน
             const normName = (v) => String(v == null ? '' : v)
                 .normalize('NFC')
                 .replace(/[\u200B-\u200D\uFEFF]/g, '')
-                .replace(/\u0E4D\u0E32/g, '\u0E33')   // นิคหิต+สระอา -> สระอำ
+                .replace(/\u0E4D\u0E32/g, '\u0E33')
                 .replace(/\s+/g, '');
 
-            // ---- วันที่: รับได้ทั้ง ISO, "16 เม.ย. 2027", "28 พ.ค. 82", "24/11/2026" แล้วแสดงเป็น "24 พ.ย. 69" (พ.ศ. 2 หลัก) ----
             const thShortMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
             const thFullMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
             const monthLookup = {};
             thShortMonths.forEach((m, i) => { monthLookup[m.replace(/\./g, '')] = i + 1; });
             thFullMonths.forEach((m, i) => { monthLookup[m] = i + 1; });
 
-            const nowTh = new Date(Date.now() + 7 * 3600 * 1000);   // เวลาไทย
+            const nowTh = new Date(Date.now() + 7 * 3600 * 1000);
             const currentMonth = nowTh.getUTCMonth() + 1;
             const currentYY = nowTh.getUTCFullYear() % 100;
 
-            // คืนค่า {d, m, y(ค.ศ.)} หรือ null ถ้าอ่านไม่ได้
             const parseDateParts = (v, isBirth) => {
                 if (v === null || v === undefined) return null;
                 if (v instanceof Date) v = v.toISOString();
@@ -978,7 +971,7 @@
                 if (m) {
                     const d = new Date(t);
                     if (isNaN(d)) return null;
-                    const th = new Date(d.getTime() + 7 * 3600 * 1000);   // เลื่อนเป็นเวลาไทย
+                    const th = new Date(d.getTime() + 7 * 3600 * 1000);
                     return { d: th.getUTCDate(), m: th.getUTCMonth() + 1, y: th.getUTCFullYear() };
                 }
                 m = t.match(/^(\d{1,2})\s+(\S+?)\s+(\d{2,4})$/);
@@ -991,10 +984,9 @@
                 if (m) return { d: +m[1], m: +m[2], y: normYear(+m[3], m[3].length, isBirth) };
                 return null;
             };
-            // ปีที่ได้มาอาจเป็น ค.ศ. 4 หลัก / พ.ศ. 4 หลัก / 2 หลัก -> คืนเป็น ค.ศ. เสมอ
             function normYear(y, len, isBirth) {
                 if (len === 4) return y > 2400 ? y - 543 : y;
-                if (isBirth) return y <= currentYY ? 2000 + y : 1900 + y;   // วันเกิด 2 หลัก
+                if (isBirth) return y <= currentYY ? 2000 + y : 1900 + y;
                 return 2000 + y;
             }
             const fmtBE2 = (p) => `${p.d} ${thShortMonths[p.m - 1]} ${String((p.y + 543) % 100).padStart(2, '0')}`;
@@ -1002,11 +994,8 @@
             const fmtCell = (v) => {
                 if (v === null || v === undefined) return '-';
                 const t = String(v).trim();
-                return t === '' ? '-' : t;   // รวมเลข 0 ด้วย (ไม่ถูกแปลงเป็น '-')
+                return t === '' ? '-' : t;
             };
-            // เบอร์มือถือ -> 000-000-0000
-            // (ตัดขีด/ช่องว่าง/จุด/วงเล็บออกก่อน, ถ้า Google Sheets ตัดเลข 0 หน้าเหลือ 9 หลักให้เติม 0 คืน,
-            //  ถ้าไม่ใช่เบอร์ 10 หลัก เช่น มีหลายเบอร์หรือมีข้อความ ให้แสดงตามที่กรอก)
             const fmtMobile = (v) => {
                 const t = fmtCell(v);
                 if (t === '-') return t;
@@ -1020,7 +1009,6 @@
                 if (p) return fmtBE2(p);
                 return fmtCell(v);
             };
-            // ค่าดิบสำหรับฟอร์มแก้ไข
             const rawText = (v) => {
                 if (v === null || v === undefined) return '';
                 const t = String(v).trim();
@@ -1056,16 +1044,19 @@
                         leftDays:      fmtCell(tRow[COL.leftDays]),
                         leftNum:       parseLeft(tRow[COL.leftDays]),
                         remark:        fmtCell(tRow[COL.remark]),
+                        nickname:      fmtCell(tRow[COL.nickname]),
                         mobile:        fmtMobile(tRow[COL.mobile]),
-                        sheetRow:      ti + 2,   // แถวจริงในชีต (แถว 1 = หัวตาราง)
+                        sheetRow:      ti + 2,
                         raw: {
                             license:       rawText(tRow[COL.license]),
                             expDate:       toISO(tRow[COL.expDate], false),
                             remark:        rawText(tRow[COL.remark]),
+                            nickname:      rawText(tRow[COL.nickname]),
                             mobile:        rawMobile(tRow[COL.mobile]),
                             appointed:     toISO(tRow[COL.appointed], false),
                             qualification: rawText(tRow[COL.qualification]),
-                            birthDate:     toISO(tRow[COL.birthDate], true)
+                            birthDate:     toISO(tRow[COL.birthDate], true),
+                            prefix:        rawText(tRow[COL.prefix])
                         },
                         qualification: fmtCell(tRow[COL.qualification]),
                         appointed:     fmtDate(tRow[COL.appointed], false),
@@ -1076,8 +1067,6 @@
                 });
             }
 
-            // ---- สร้างโครงสร้าง "ใครสังกัดใต้ใคร" จากคอลัมน์ ภาค / ศูนย์ / หน่วย ของชีต Import ----
-            // ลำดับตำแหน่ง: ภาค(GL)=ภาค (0) > ศูนย์ (1) > หน่วย (2) > ตัวแทน=ตัวแทนฝึกหัด (3)
             const RANK = { 'ภาค': 0, 'ภาค(GL)': 0, 'ศูนย์': 1, 'หน่วย': 2, 'ตัวแทน': 3, 'ตัวแทนฝึกหัด': 3 };
             const hdrIdx = (name, fallback) => {
                 const i = (importHeaders || []).findIndex(h => String(h || '').trim() === name);
@@ -1112,12 +1101,11 @@
                     const k = cleanLeader(c);
                     if (!k || k === it.key) continue;
                     const par = nodeByKey.get(k);
-                    if (par && par.rank < it.rank) { it.parent = par; break; }   // หัวหน้าต้องมีตำแหน่งสูงกว่าเท่านั้น
+                    if (par && par.rank < it.rank) { it.parent = par; break; }
                 }
                 if (it.parent) it.parent.children.push(it);
             });
 
-            // เรียงแบบต้นไม้: หัวหน้า -> ลูกทีมทั้งหมดของเขา (คงลำดับตามชีต Import)
             const ordered = [];
             const walk = (node, depth, trail, isLast) => {
                 node.depth = depth;
@@ -1136,17 +1124,16 @@
             items.filter(it => !it.parent).forEach(root => walk(root, 0, [], true));
 
             window.teamTreeKeys = ordered.map(n => n.key);
-            if (!window.teamLevels) window.teamLevels = new Map();     // ระดับที่ขยายของแต่ละคน (ไม่มี = ขยายเต็ม)
-            if (!window.teamFilters) window.teamFilters = new Set();   // ตัวกรองที่เลือกจากชิปด้านบน
+            if (!window.teamLevels) window.teamLevels = new Map();
+            if (!window.teamFilters) window.teamFilters = new Set();
 
             let html = '';
             if (validRows.length === 0) {
                 if (countsContainer) countsContainer.innerHTML = '';
-                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-4 text-gray-400">ไม่มีข้อมูลทีมงาน</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="15" class="text-center py-4 text-gray-400">ไม่มีข้อมูลทีมงาน</td></tr>`;
                 return;
             }
 
-            // ทำทีละแถว: วนลูปตามรายชื่อจากชีต Import คอลัมน์ C (r[2]) แล้วเทียบกับชีต Team คอลัมน์ A
             const birthdayNames = [];
             let expiringCount = 0;
             ordered.forEach((node, nodeIdx) => {
@@ -1182,10 +1169,8 @@
                     posDisplay = pos;
                 }
 
-                // เทียบ ชื่อ-สกุล (Import คอลัมน์ C) กับ ชื่อ (Team คอลัมน์ A) แบบตรงกันทุกตัวอักษร
                 let matchTeam = teamMap.get(normName(importNameColC));
 
-                // ถ้ายังไม่พบข้อมูล ให้แสดงเครื่องหมาย - ไว้ก่อน
                 if (!matchTeam) {
                     matchTeam = {
                         prefix: '-',
@@ -1194,9 +1179,10 @@
                         leftDays: '-',
                         leftNum: null,
                         remark: '-',
+                        nickname: '-',
                         mobile: '-',
                         sheetRow: null,
-                        raw: { license: '', expDate: '', remark: '', mobile: '', appointed: '', qualification: '', birthDate: '' },
+                        raw: { license: '', expDate: '', remark: '', nickname: '', mobile: '', appointed: '', qualification: '', birthDate: '', prefix: '' },
                         qualification: '-',
                         appointed: '-',
                         birthDate: '-',
@@ -1205,9 +1191,6 @@
                     };
                 }
 
-                // สีตัวอักษรของแถว (แถวพื้นเข้มใช้เฉดที่อ่านชัดกว่า)
-                //  1) ใบอนุญาต = "หมดอายุ"  หรือ  (ไม่ใช่ตัวแทนฝึกหัด และใบอนุญาตเป็น "-")  -> แดง
-                //  2) คงเหลือ <= 60 -> แดง, <= 90 -> เหลือง
                 const isDarkRow = (pos === "ภาค" || pos === "ภาค(GL)");
                 const licenseText = String(matchTeam.license == null ? '' : matchTeam.license).trim();
                 const licenseExpired = licenseText.includes('หมดอายุ');
@@ -1223,11 +1206,9 @@
                         rowStyle += `color:${isDarkRow ? '#ffe14d' : '#c99700'};font-weight:600;`;
                     }
                 }
-                // แถวที่ตัวหนังสือเป็นสีเหลืองหรือสีแดง = ใกล้หมดอายุ
                 const isExpiring = rowStyle !== '';
                 if (isExpiring) expiringCount++;
 
-                // เดือนเกิดตรงกับเดือนปัจจุบัน -> แสดงป้าย 🎂 เฉพาะช่องวันเกิด และเก็บชื่อไว้ทำสรุปด้านบน
                 const isBirthMonth = (matchTeam.birthMonth === currentMonth);
                 if (isBirthMonth) birthdayNames.push(importNameColC);
                 const birthCell = isBirthMonth
@@ -1258,6 +1239,7 @@
                         <td class="py-2 px-2 text-center">${matchTeam.expDate}</td>
                         <td class="py-2 px-2 text-center">${matchTeam.leftDays}</td>
                         <td class="py-2 px-2 text-center">${matchTeam.remark}</td>
+                        <td class="py-2 px-2 text-center">${matchTeam.nickname}</td>
                         <td class="py-2 px-2 text-center" style="white-space:nowrap">${matchTeam.mobile}</td>
                         <td class="py-2 px-2 text-center">${matchTeam.appointed}</td>
                         <td class="py-2 px-2 text-center">${matchTeam.qualification}</td>
@@ -1268,10 +1250,9 @@
                 `;
             });
 
-            html += `<tr id="team-filter-empty" style="display:none"><td colspan="14" class="text-center py-6 text-gray-400">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`;
+            html += `<tr id="team-filter-empty" style="display:none"><td colspan="15" class="text-center py-6 text-gray-400">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`;
             tbody.innerHTML = html;
 
-            // ---- ชิปสรุป: นับจาก "แถวที่แสดงในตาราง" (ตัดแถวซ้ำแล้ว) และกดเพื่อกรองการแสดงผลได้ ----
             const cnt = { region: 0, regionStruct: 0, center: 0, unit: 0, agent: 0 };
             ordered.forEach(n => {
                 const g = groupOfPos(n.pos);
@@ -1294,12 +1275,6 @@
             syncTreeState();
         }
 
-
-        // ================= ล็อกรหัสผ่านหน้าทีมงาน =================
-        // สองระดับสิทธิ์:
-        //  - รหัส "ดูอย่างเดียว"  : ตรวจในหน้าเว็บ (ไม่มีสิทธิ์แก้ข้อมูล จึงวางไว้ในไฟล์นี้ได้)
-        //  - รหัส "แก้ไขได้"      : ไม่ได้อยู่ในไฟล์นี้ ตรวจกับ Apps Script (Script properties: EDIT_PASSWORD)
-        //                           ทำให้คนที่ได้รหัสดูอย่างเดียว เปิดซอร์สหน้าเว็บก็ไม่เจอรหัสแก้ไข
         const TEAM_VIEW_PASSWORD = '07116542';
 
         function openTeamPassword() {
@@ -1329,8 +1304,7 @@
             page.classList.toggle('team-readonly', !canEdit);
             const badge = document.getElementById('team-mode-badge');
             if (badge) badge.style.display = canEdit ? 'none' : 'inline';
-            // แถวข้อความ (ไม่มีข้อมูล / ไม่พบรายการ) ให้กว้างเท่าจำนวนคอลัมน์ที่แสดงจริง
-            document.querySelectorAll('#team-table-body td[colspan]').forEach(td => { td.colSpan = canEdit ? 14 : 13; });
+            document.querySelectorAll('#team-table-body td[colspan]').forEach(td => { td.colSpan = canEdit ? 15 : 14; });
             closeTeamPassword();
             switchTab('team');
         }
@@ -1343,7 +1317,6 @@
 
             if (val === TEAM_VIEW_PASSWORD) { unlockTeam(false, ''); return; }
 
-            // รหัสอื่น -> ถามเซิร์ฟเวอร์ว่าเป็นรหัสแก้ไขหรือไม่
             const btn = document.getElementById('pw-submit');
             window.pwBusy = true;
             btn.disabled = true;
@@ -1361,7 +1334,6 @@
                 } else {
                     const msg = String(out.message || '');
                     if (msg.includes('รหัสผ่านไม่ถูกต้อง')) showTeamPasswordError('รหัสผ่านไม่ถูกต้อง');
-                    else if (msg.includes('ไม่รองรับ') || msg.includes('ไม่พบ Action')) showTeamPasswordError('Apps Script ยังไม่ได้อัปเดตเป็นเวอร์ชันล่าสุด (ต้องรองรับ verify)');
                     else showTeamPasswordError(msg || 'ตรวจรหัสผ่านไม่สำเร็จ');
                 }
             } catch (err) {
@@ -1374,15 +1346,16 @@
             }
         }
 
-        // ================= แก้ไขข้อมูลทีมงาน (เขียนกลับชีต Team) =================
         const TEAM_EDIT_FIELDS = [
-            { id: 'license',       label: 'ใบอนุญาต',   type: 'text' },
-            { id: 'expDate',       label: 'วันหมดอายุ', type: 'date' },
-            { id: 'remark',        label: 'หมายเหตุ',   type: 'text', wide: true },
-            { id: 'mobile',        label: 'มือถือ',      type: 'tel' },
-            { id: 'appointed',     label: 'แต่งตั้ง',    type: 'date' },
-            { id: 'qualification', label: 'คุณวุฒิ',     type: 'text', list: ['FP', 'LP', 'LPP'] },
-            { id: 'birthDate',     label: 'วันเกิด',     type: 'date' }
+            { id: 'prefix',        label: 'หน้า (คำนำหน้า)', type: 'text' },
+            { id: 'nickname',      label: 'ชื่อเล่น',        type: 'text' },
+            { id: 'license',       label: 'ใบอนุญาต',       type: 'text' },
+            { id: 'expDate',       label: 'วันหมดอายุ',     type: 'date' },
+            { id: 'remark',        label: 'หมายเหตุ',       type: 'text', wide: true },
+            { id: 'mobile',        label: 'มือถือ',          type: 'tel' },
+            { id: 'appointed',     label: 'แต่งตั้ง',        type: 'date' },
+            { id: 'qualification', label: 'คุณวุฒิ',         type: 'text', list: ['FP', 'LP', 'LPP'] },
+            { id: 'birthDate',     label: 'วันเกิด',         type: 'date' }
         ];
         const TH_SHORT_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
@@ -1408,7 +1381,7 @@
         }
 
         function openTeamEdit(idx) {
-            if (!window.teamCanEdit) return;   // โหมดดูอย่างเดียว
+            if (!window.teamCanEdit) return;
             const model = (window.teamRowModels || [])[idx];
             const meta = window.teamEditMeta;
             if (!model || !meta) return;
@@ -1423,7 +1396,7 @@
             if (!meta.loaded) notes.push('โหลดชีต Team ไม่สำเร็จ จึงยังบันทึกไม่ได้ ลองกด Reload แล้วเปิดใหม่');
             else if (!model.sheetRow) notes.push('ยังไม่มีชื่อนี้ในชีต Team — เมื่อบันทึกระบบจะเพิ่มเป็นแถวใหม่ในชีต Team ให้');
             const missing = TEAM_EDIT_FIELDS.filter(f => meta.loaded && !meta.fields[f.id]).map(f => f.label);
-            if (missing.length) notes.push('ไม่พบคอลัมน์ในชีต Team: ' + missing.join(', ') + ' (ต้องเพิ่มหัวคอลัมน์ชื่อตรงกันก่อนจึงจะบันทึกได้)');
+            if (missing.length) notes.push('ไม่พบคอลัมน์ในชีต Team: ' + missing.join(', ') + ' (หากต้องการบันทึกฟิลด์นี้ ให้เพิ่มหัวคอลัมน์ชื่อตรงกันในชีต Team ก่อน)');
             notice.innerHTML = notes.join('<br>');
             notice.style.display = notes.length ? 'block' : 'none';
 
@@ -1490,14 +1463,13 @@
         });
 
         async function saveTeamEdit() {
-            if (!window.teamCanEdit) return;   // โหมดดูอย่างเดียว
+            if (!window.teamCanEdit) return;
             const model = window.teamEditing;
             const meta = window.teamEditMeta;
             if (!model || !meta || !meta.loaded) return;
 
-            // ส่งเฉพาะช่องที่แก้ไขจริง
             const data = {};
-            const changes = {};   // fieldId -> ค่าที่ตั้งใจบันทึก (ใช้ตรวจย้อนกลับจากชีต)
+            const changes = {};
             let changed = 0;
             TEAM_EDIT_FIELDS.forEach(f => {
                 const el = document.getElementById('te-f-' + f.id);
@@ -1515,7 +1487,7 @@
             if (model.sheetRow) {
                 payload.action = 'edit';
                 payload.rowIndex = model.sheetRow;
-                payload.expectName = model.name;   // กันแก้ผิดแถว ถ้าลำดับแถวในชีตเปลี่ยนไป
+                payload.expectName = model.name;
                 payload.nameHeader = meta.nameHeader;
                 payload.data = data;
             } else {
@@ -1534,7 +1506,6 @@
             btn.textContent = 'กำลังบันทึก...';
             setTeamEditError('');
             try {
-                // 1) ส่งข้อมูลและอ่านผลตอบกลับจาก Apps Script ตามปกติ
                 let out = null;
                 try {
                     const res = await fetch(WEB_APP_URL, postOpts);
@@ -1545,7 +1516,6 @@
 
                 if (out) {
                     if (out.status !== 'success') throw new Error(out.message || 'บันทึกไม่สำเร็จ');
-                    // บันทึกสำเร็จแล้ว — ถ้าโหลดข้อมูลใหม่ไม่ได้ ไม่ถือว่าบันทึกล้มเหลว
                     try {
                         await refreshTeamData();
                     } catch (refreshErr) {
@@ -1555,14 +1525,11 @@
                         return;
                     }
                 } else {
-                    // 2) อ่านผลตอบกลับไม่ได้ (มักเป็นเรื่อง CORS/redirect ของ Apps Script)
-                    //    -> ตรวจในชีตว่าข้อมูลถูกบันทึกแล้วหรือยัง ถ้ายังให้ส่งซ้ำแบบ no-cors แล้วตรวจอีกครั้ง
                     btn.textContent = 'กำลังตรวจสอบ...';
                     const savedNow = async () => {
                         try { await refreshTeamData(); } catch (e) { return false; }
                         return teamModelMatches(model.name, changes);
                     };
-                    // รอดูผลในชีตอย่างอดทน (การแก้วันที่ทำให้สูตรในชีตคำนวณใหม่ อาจใช้เวลาหลายวินาที)
                     const pollSaved = async (seconds) => {
                         const end = Date.now() + seconds * 1000;
                         while (Date.now() < end) {
@@ -1573,12 +1540,11 @@
                     };
                     let saved = await pollSaved(20);
                     if (!saved) {
-                        // ยังไม่พบ -> ส่งซ้ำอีกครั้ง (การแก้ค่าเดิมซ้ำไม่ทำให้ข้อมูลเสีย) แล้วรออีกรอบ
                         await fetch(WEB_APP_URL, Object.assign({}, postOpts, { mode: 'no-cors' }));
                         saved = await pollSaved(25);
                     }
                     if (!saved) {
-                        throw new Error('ยังไม่พบการเปลี่ยนแปลงในชีต Team (ชีตอาจยังประมวลผลอยู่) — กด Reload แล้วเช็กค่าในชีตอีกครั้ง ถ้ายังไม่มีค่อยกดบันทึกใหม่ (กด F12 > Console เพื่อดูรายละเอียด)');
+                        throw new Error('ยังไม่พบการเปลี่ยนแปลงในชีต Team — กรุณากด Reload แล้วลองใหม่');
                     }
                 }
                 closeTeamEdit();
@@ -1586,16 +1552,13 @@
             } catch (err) {
                 console.error(err);
                 const msg = String(err && err.message || err);
-                setTeamEditError(/Failed to fetch|NetworkError|Load failed/i.test(msg)
-                    ? 'เชื่อมต่อ Google Sheet ไม่ได้ — ตรวจอินเทอร์เน็ต และลิงก์ WEB_APP_URL (กด F12 > Console เพื่อดูรายละเอียด)'
-                    : msg);
+                setTeamEditError(msg);
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'บันทึก';
             }
         }
 
-        // เทียบค่าที่ตั้งใจบันทึก กับค่าที่อ่านกลับมาจากชีต (หลังโหลดชีต Team ใหม่)
         function teamModelMatches(name, changes) {
             const m = (window.teamRowModels || []).find(x => x.name === name);
             if (!m) return false;
@@ -1605,7 +1568,6 @@
             });
         }
 
-        // โหลดเฉพาะชีต Team ใหม่ แล้ววาดตารางทีมงานอีกครั้ง (ค่าคงเหลือ/อายุ ที่คำนวณในชีตจะอัปเดตตาม)
         async function refreshTeamData() {
             const args = window.lastTeamArgs;
             if (!args) return;
@@ -1613,7 +1575,6 @@
             if (t && !t.error) buildTeamTable(args.rows, t.rows || [], t.headers || [], args.importHeaders || []);
         }
 
-        // ทำให้ข้อความค้นหา/ชื่อเทียบกันได้: ตัดช่องว่าง, zero-width และรวมสระอำให้เป็นรูปแบบเดียวกัน
         function normThai(v) {
             return String(v == null ? '' : v)
                 .normalize('NFC')
@@ -1622,7 +1583,6 @@
                 .replace(/\s+/g, '');
         }
 
-        // วัดความสูงหัวตารางเพื่อให้แถวภาคที่ตรึงไว้ไปต่อใต้หัวตารางพอดี
         function ensureTeamHeadObserver(table) {
             if (!table || window.teamHeadObserved) return;
             const thead = table.querySelector('thead');
@@ -1634,7 +1594,6 @@
             window.addEventListener('resize', apply);
         }
 
-        // ---- ชิปตัวกรอง ----
         const RANK_NAME = { 1: 'ศูนย์', 2: 'หน่วย', 3: 'ตัวแทน' };
         function groupOfPos(pos) {
             if (pos === 'ภาค' || pos === 'ภาค(GL)') return 'region';
@@ -1669,8 +1628,6 @@
             return tr.dataset.group === key;
         }
 
-        // ---- ยุบ/ขยายลูกทีม (ขยายทีละ 1 ขั้น) ----
-        // ระดับของแต่ละคน: เท่าตำแหน่งตัวเอง = ยุบ | 3 = ขยาย (แสดงลูกทีมโดยตรงทั้งหมด)  |  ค่าเริ่มต้น = 3
         function getTreeLevel(key) {
             return window.teamLevels && window.teamLevels.has(key) ? window.teamLevels.get(key) : 3;
         }
@@ -1693,8 +1650,6 @@
             const status = document.getElementById('team-filter-status');
             const emptyRow = document.getElementById('team-filter-empty');
 
-            // โหมดกรอง: แสดงเป็นรายการเรียบ ๆ เฉพาะแถวที่ตรงเงื่อนไข
-            //  - ตำแหน่งที่เลือกหลายอันใช้ "หรือ"   - ชิปวันเกิด/ใกล้หมดอายุ ใช้ "และ" กับตำแหน่ง
             if (filtering) {
                 const posKeys = Array.from(filters).filter(k => k !== 'bday' && k !== 'expiring');
                 const needBday = filters.has('bday');
@@ -1714,7 +1669,6 @@
             if (emptyRow) emptyRow.style.display = 'none';
             if (status) status.textContent = '';
 
-            // โหมดต้นไม้: แถวจะแสดงเมื่อพ่อแม่แสดง และตำแหน่งของแถว <= ระดับของพ่อแม่
             const vis = [];
             trs.forEach((tr, i) => {
                 const p = Number(tr.dataset.parent);
@@ -1724,19 +1678,17 @@
                 tr.classList.toggle('tree-hidden', !v);
             });
 
-            // อัปเดตลูกศร / จำนวน / คำแนะนำของแถวที่มีลูกทีม
             trs.forEach((tr, i) => {
                 if (tr.dataset.hasChildren !== '1') return;
                 const rank = Number(tr.dataset.rank);
                 const depth = Number(tr.dataset.depth);
-                const ranks = tr.dataset.childRanks.split(',').map(Number);
                 const s = getTreeLevel(keys[i]);
                 const collapsed = s <= rank;
 
                 const t = tr.querySelector('.tree-toggle');
                 if (t) {
                     t.textContent = collapsed ? '▸' : '▾';
-                    t.title = collapsed ? 'คลิกเพื่อขยาย (แสดงลูกทีมโดยตรง 1 ขั้น)' : 'คลิกเพื่อยุบ';
+                    t.title = collapsed ? 'คลิกเพื่อขยาย' : 'คลิกเพื่อยุบ';
                 }
 
                 const total = Number(tr.dataset.total);
@@ -1755,13 +1707,11 @@
             for (let j = i; j < trs.length; j++) {
                 if (j > i && Number(trs[j].dataset.depth) <= depth) break;
                 if (trs[j].dataset.hasChildren === '1') {
-                    window.teamLevels.set(keys[j], Number(trs[j].dataset.rank));   // ยุบ = ระดับเท่าตำแหน่งตัวเอง
+                    window.teamLevels.set(keys[j], Number(trs[j].dataset.rank));
                 }
             }
         }
 
-        // คลิก = ขยายได้แค่ขั้นเดียว (แสดงลูกทีมโดยตรงทั้งหมด ลูกทีมของลูกทีมยังยุบอยู่ ต้องกดขยายทีละคน)
-        // คลิกอีกครั้ง = ยุบ (รวมถึงลูกทีมที่เคยขยายไว้)
         function toggleTreeRow(idx) {
             const tbody = document.getElementById('team-table-body');
             if (!tbody) return;
@@ -1770,8 +1720,8 @@
             if (!tr) return;
             const key = (window.teamTreeKeys || [])[idx];
             const rank = Number(tr.dataset.rank);
-            if (getTreeLevel(key) <= rank) window.teamLevels.set(key, 3);   // ขยาย 1 ขั้น
-            else collapseTreeNode(trs, idx);                                 // ยุบ
+            if (getTreeLevel(key) <= rank) window.teamLevels.set(key, 3);
+            else collapseTreeNode(trs, idx);
             syncTreeState();
         }
 
@@ -1946,7 +1896,6 @@
                     <td class="py-2 px-2 text-center ${cenPctClass}">${cenPct}</td>
                     ${regPCell}
                 `;
-                // หน้า "ภาคศูนย์" แสดงเลขลำดับหน้าชื่อ / หน้า "ทุกระดับ" ไม่แสดง
                 regionFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml.replace('@@NAME@@', () => `${index + 1} ${regName}`)));
                 allFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml.replace('@@NAME@@', () => regName)));
 
