@@ -58,7 +58,7 @@
         /* ป้ายวันเกิดของคนที่เกิดเดือนปัจจุบัน */
         #page-team .bday-badge {
             display: inline-block; padding: 1px 8px; border-radius: 9999px; white-space: nowrap;
-            background: #fce7f3; color: #be185d; border: 1px solid #f9a8d4; font-weight: 600;
+            background: #253487; color: #F2F7F9; border: 1px solid #F2F7F9; font-weight: 600;
         }
 
         /* ตรึงแถว ภาค(GL)/ภาค ไว้ใต้หัวตาราง จนกว่าจะเลื่อนถึงภาคถัดไป (ภาคถัดไปจะมาทับที่เดิม) */
@@ -88,12 +88,12 @@
         }
         #page-team .team-chip:hover { background: #dbeafe; }
         #page-team .team-chip.active { background: #273482; color: #fff; border-color: #273482; }
-        #page-team .team-chip.bday { background: #fce7f3; color: #be185d; border-color: #f9a8d4; }
-        #page-team .team-chip.bday:hover { background: #fbcfe8; }
+        #page-team .team-chip.bday { background: #0073bd; color: #F2F7F9; border-color: #253487; }
+        #page-team .team-chip.bday:hover { background: #005D97; }
         #page-team .team-chip.warn { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
         #page-team .team-chip.warn:hover { background: #ffedd5; }
         #page-team .team-chip.warn.active { background: #c2410c; color: #fff; border-color: #c2410c; }
-        #page-team .team-chip.bday.active { background: #be185d; color: #fff; border-color: #be185d; }
+        #page-team .team-chip.bday.active { background: #253487; color: #fff; border-color: #253487; }
 
         /* โหมดกรอง: แสดงเป็นรายการเรียบ ไม่มีย่อหน้า/เส้นต้นไม้ แต่บอกสังกัดต่อท้ายชื่อ */
         #page-team .tree-parent { display: none; margin-left: 8px; font-size: 11px; opacity: .7; white-space: nowrap; }
@@ -545,7 +545,7 @@
             let isRed = num < 75;
 
             if (isRed) {
-                return `<span class="text-red-600 font-bold">${formattedText}</span>`;
+                return `<span class="text-red-600 font-normal">${formattedText}</span>`;
             }
             return formattedText;
         }
@@ -713,7 +713,7 @@
                     itemDiv.className = 'flex items-center space-x-2 truncate';
                     itemDiv.innerHTML = `
                         <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color};"></span>
-                        <span class="font-bold text-gray-800 flex-shrink-0">${pct}</span>
+                        <span class="font-semibold text-gray-800 flex-shrink-0">${pct}</span>
                         <span class="text-gray-700 truncate" title="${name}">${name}</span>
                     `;
                     legendContainer.appendChild(itemDiv);
@@ -1406,7 +1406,7 @@
                 const wrap = document.createElement('div');
                 if (f.wide) wrap.className = 'sm:col-span-2';
                 const label = document.createElement('label');
-                label.className = 'block text-xs font-semibold text-gray-600 mb-1';
+                label.className = 'block text-xs font-normal text-gray-600 mb-1';
                 label.textContent = f.label;
                 label.htmlFor = 'te-f-' + f.id;
                 wrap.appendChild(label);
@@ -1832,7 +1832,7 @@
             let totalCenPct = totalCenMe > 0 ? ((totalCenTem / totalCenMe) * 100).toFixed(1) + '%' : '0.0%';
 
             let summaryPCell = hasPCol ? `<td class="py-2.5 px-2 text-center">${summaryPVal}</td>` : '';
-            let summaryRedClass = 'text-red-300 font-bold';
+            let summaryRedClass = 'text-red-300 font-normal';
             let totalUnitTokClass = tokColorClass(totalUnitTok, summaryRedClass);
             let totalUnitPctClass = pctColorClass(totalUnitPct, summaryRedClass);
             let totalCenTokClass = tokColorClass(totalCenTok, summaryRedClass);
@@ -1861,8 +1861,8 @@
                 return tr;
             };
 
-            regionFrag.appendChild(makeRow('bg-[#1558a2] text-white font-bold text-center', summaryTrHtml));
-            allFrag.appendChild(makeRow('bg-[#1558a2] text-white font-bold text-center', summaryTrHtml));
+            regionFrag.appendChild(makeRow('bg-[#1558a2] text-white font-normal text-center', summaryTrHtml));
+            allFrag.appendChild(makeRow('bg-[#1558a2] text-white font-normal text-center', summaryTrHtml));
 
             regions.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
@@ -1884,7 +1884,7 @@
                 let unitTok = unitMe - unitTem;
                 let unitPct = unitMe > 0 ? ((unitTem / unitMe) * 100).toFixed(1) + '%' : '0.0%';
 
-                let regRedClass = 'text-red-300 font-bold';
+                let regRedClass = 'text-red-300 font-normal';
                 let regCommClass = regComm < 60000 ? `py-2 px-2 text-right ${regRedClass}` : 'py-2 px-2 text-right';
                 let regPCell = hasPCol ? `<td class="py-2 px-2 text-center">${regPVal}</td>` : '';
                 let unitTokClass = tokColorClass(unitTok, regRedClass);
@@ -1906,8 +1906,8 @@
                     <td class="py-2 px-2 text-center ${cenPctClass}">${cenPct}</td>
                     ${regPCell}
                 `;
-                regionFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml.replace('@@NAME@@', () => `${index + 1} ${regName}`)));
-                allFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml.replace('@@NAME@@', () => regName)));
+                regionFrag.appendChild(makeRow('bg-[#047dc2] text-white font-normal text-center', regTrHtml.replace('@@NAME@@', () => `${index + 1} ${regName}`)));
+                allFrag.appendChild(makeRow('bg-[#047dc2] text-white font-normal text-center', regTrHtml.replace('@@NAME@@', () => regName)));
 
                 centers.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
@@ -1923,7 +1923,7 @@
                     let cUnitTok = cUnitMe - cUnitTem;
                     let cUnitPct = cUnitMe > 0 ? ((cUnitTem / cUnitMe) * 100).toFixed(1) + '%' : '0.0%';
 
-                    let cenRedClass = 'text-red-600 font-bold';
+                    let cenRedClass = 'text-red-600 font-normal';
                     let cenCommClass = cenComm < 15000 ? `py-1.5 px-2 text-right ${cenRedClass}` : 'py-1.5 px-2 text-right';
                     let cenPCell = hasPCol ? `<td class="py-1.5 px-2 text-center">${cenPVal}</td>` : '';
                     let cUnitTokClass = tokColorClass(cUnitTok, cenRedClass);
@@ -1956,7 +1956,7 @@
                             ${cenPCell}
                         `;
                     }
-                    const cenRowClass = 'hover:opacity-95 text-center font-semibold text-gray-900';
+                    const cenRowClass = 'hover:opacity-95 text-center font-normal text-gray-900';
                     regionFrag.appendChild(makeRow(cenRowClass, cenBodyHtml.replace('@@NAME@@', () => `${cIdx + 1} ${cenName}`), '#ffffff'));
                     allFrag.appendChild(makeRow(cenRowClass, cenBodyHtml.replace('@@NAME@@', () => cenName), '#7cbadf'));
 
@@ -1967,7 +1967,7 @@
                         let unitComm = cleanNumber(unit[7]);
                         let unitPVal = formatComplianceCell('unit', unit[15]);
 
-                        let unitCommClass = unitComm < 2500 ? 'py-1.5 px-2 text-right text-red-700 font-bold' : 'py-1.5 px-2 text-right text-gray-900';
+                        let unitCommClass = unitComm < 2500 ? 'py-1.5 px-2 text-right text-red-700 font-normal' : 'py-1.5 px-2 text-right text-gray-900';
                         let unitPCell = hasPCol ? `<td class="py-1.5 px-2 text-center">${unitPVal}</td>` : '';
 
                         let unitAdminHtml;
@@ -1986,7 +1986,7 @@
                             <td colspan="4"></td>
                             ${unitPCell}
                         `;
-                        allFrag.appendChild(makeRow('hover:opacity-95 text-center font-semibold text-gray-900', unitTrHtml, '#cce5f1'));
+                        allFrag.appendChild(makeRow('hover:opacity-95 text-center font-normal text-gray-900', unitTrHtml, '#cce5f1'));
 
                         let agentsInUnit = (agentsByUnit.get(unitName) || []).slice()
                             .sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
