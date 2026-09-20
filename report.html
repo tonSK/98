@@ -97,7 +97,6 @@
 
         /* โหมดกรอง: แสดงเป็นรายการเรียบ ไม่มีย่อหน้า/เส้นต้นไม้ แต่บอกสังกัดต่อท้ายชื่อ */
         #page-team .tree-parent { display: none; margin-left: 8px; font-size: 11px; opacity: .7; white-space: nowrap; }
-        #page-team table.team-filtered td.tree-name { background-image: none !important; }
         #page-team table.team-filtered .tree-indent { margin-left: 0 !important; }
         #page-team table.team-filtered .tree-toggle,
         #page-team table.team-filtered .tree-toggle-spacer,
@@ -398,11 +397,11 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto w-full flex-1">
-                    <table class="w-full text-sm custom-horizontal-table min-w-[1000px]">
+                    <table class="w-full text-xs custom-horizontal-table min-w-[1000px]">
                         <thead>
                             <tr class="bg-[#0b2265] text-white text-center">
-                                <th class="py-3 px-2">คำหน้า</th>
-                                <th class="py-3 px-2 text-left">ชื่อ-สกุล</th>
+                                <th class="py-3 px-2">หน้า</th>
+                                <th class="py-3 px-2 text-left">ชื่อ สกุล</th>
                                 <th class="py-3 px-2">ตำแหน่ง</th>
                                 <th class="py-3 px-2">รหัส</th>
                                 <th class="py-3 px-2">ใบอนุญาต</th>
@@ -488,7 +487,7 @@
             document.getElementById('btn-' + tabName).className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white';
         }
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxqRA8NKnVJbX1SQ5CYfGSmApstLEfEO7OeOxYu7QZQMDZWqLm4GQU7E2t33cMMQTnu/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyijBDysTP81NtUOmGe5JFJbslx6XkVutC1DEvvGHOFcWZp36tyJioasVGdz8nj27hs/exec';
         const CACHE_KEY = 'report98_cache_v2';
 
         // ดึงข้อมูลทั้งชีต Import และชีต Team พร้อมกัน แล้วรวมเป็นก้อนเดียว
@@ -1064,12 +1063,12 @@
                             expDate:       toISO(tRow[COL.expDate], false),
                             remark:        rawText(tRow[COL.remark]),
                             mobile:        rawMobile(tRow[COL.mobile]),
-                            appointed:     rawText(tRow[COL.appointed]),
+                            appointed:     toISO(tRow[COL.appointed], false),
                             qualification: rawText(tRow[COL.qualification]),
                             birthDate:     toISO(tRow[COL.birthDate], true)
                         },
                         qualification: fmtCell(tRow[COL.qualification]),
-                        appointed:     fmtCell(tRow[COL.appointed]),
+                        appointed:     fmtDate(tRow[COL.appointed], false),
                         birthDate:     fmtDate(tRow[COL.birthDate], true),
                         birthMonth:    (parseDateParts(tRow[COL.birthDate], true) || {}).m || null,
                         age:           fmtCell(tRow[COL.age])
@@ -1139,23 +1138,6 @@
             window.teamTreeKeys = ordered.map(n => n.key);
             if (!window.teamLevels) window.teamLevels = new Map();     // ระดับที่ขยายของแต่ละคน (ไม่มี = ขยายเต็ม)
             if (!window.teamFilters) window.teamFilters = new Set();   // ตัวกรองที่เลือกจากชิปด้านบน
-
-            // เส้นนำสายตาของต้นไม้ วาดด้วย background ของเซลล์ชื่อ (ต่อเนื่องข้ามแถว)
-            const LINE = 'rgba(71,85,105,.55)';
-            const treeBackground = (node) => {
-                if (node.depth === 0) return '';
-                const layers = [], sizes = [], poss = [];
-                const add = (w, h, x, y) => {
-                    layers.push(`linear-gradient(${LINE},${LINE})`);
-                    sizes.push(`${w} ${h}`);
-                    poss.push(`${x}px ${y}`);
-                };
-                node.trail.forEach((ancLast, k) => { if (!ancLast) add('1px', '100%', 8 + k * 18 + 6, '0'); });
-                const x = 8 + (node.depth - 1) * 18 + 6;
-                add('1px', node.isLast ? '50%' : '100%', x, '0');
-                add('10px', '1px', x, '50%');
-                return `background-image:${layers.join(',')};background-size:${sizes.join(',')};background-position:${poss.join(',')};background-repeat:no-repeat;`;
-            };
 
             let html = '';
             if (validRows.length === 0) {
@@ -1267,7 +1249,7 @@
                 html += `
                     <tr class="${rowBg}${node.rank === 0 ? ' region-sticky' : ''}" style="${rowStyle}" data-idx="${nodeIdx}" data-depth="${node.depth}" data-has-children="${hasKids ? 1 : 0}" data-rank="${node.rank}" data-parent="${node.parent ? node.parent.order : -1}" data-child-ranks="${childRanks}" data-total="${node.descCount}" data-group="${grp}" data-struct="${node.pos === 'ภาค' ? 1 : 0}" data-bday="${isBirthMonth ? 1 : 0}" data-expiring="${isExpiring ? 1 : 0}" data-name="${node.key.toLowerCase().replace(/"/g, '&quot;')}">
                         <td class="py-2 px-2 text-center">${matchTeam.prefix}</td>
-                        <td class="py-2 px-2 text-left tree-name" style="${treeBackground(node)}" title="${parentTitle}">
+                        <td class="py-2 px-2 text-left tree-name" title="${parentTitle}">
                             <div class="flex items-center tree-indent" style="margin-left:${node.depth * 18}px">${toggleHtml}<span>${importNameColC}</span>${countHtml}${parentHtml}</div>
                         </td>
                         <td class="py-2 px-2 text-center">${posDisplay}</td>
@@ -1398,7 +1380,7 @@
             { id: 'expDate',       label: 'วันหมดอายุ', type: 'date' },
             { id: 'remark',        label: 'หมายเหตุ',   type: 'text', wide: true },
             { id: 'mobile',        label: 'มือถือ',      type: 'tel' },
-            { id: 'appointed',     label: 'แต่งตั้ง',    type: 'text' },
+            { id: 'appointed',     label: 'แต่งตั้ง',    type: 'date' },
             { id: 'qualification', label: 'คุณวุฒิ',     type: 'text', list: ['FP', 'LP', 'LPP'] },
             { id: 'birthDate',     label: 'วันเกิด',     type: 'date' }
         ];
@@ -1515,6 +1497,7 @@
 
             // ส่งเฉพาะช่องที่แก้ไขจริง
             const data = {};
+            const changes = {};   // fieldId -> ค่าที่ตั้งใจบันทึก (ใช้ตรวจย้อนกลับจากชีต)
             let changed = 0;
             TEAM_EDIT_FIELDS.forEach(f => {
                 const el = document.getElementById('te-f-' + f.id);
@@ -1524,7 +1507,7 @@
                     const d = v.replace(/\D/g, '');
                     if (/^0\d{9}$/.test(d)) v = d;
                 }
-                if (v !== (model.init[f.id] || '')) { data[meta.fields[f.id]] = v; changed++; }
+                if (v !== (model.init[f.id] || '')) { data[meta.fields[f.id]] = v; changes[f.id] = v; changed++; }
             });
             if (!changed) { setTeamEditError('ยังไม่มีการเปลี่ยนแปลง'); return; }
 
@@ -1540,32 +1523,86 @@
                 payload.action = 'add';
                 payload.data = Object.assign({ [meta.nameHeader]: model.name }, data);
             }
+            const postOpts = {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            };
 
             const btn = document.getElementById('te-save');
             btn.disabled = true;
             btn.textContent = 'กำลังบันทึก...';
             setTeamEditError('');
             try {
-                const res = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
-                const out = await res.json();
-                if (out.status !== 'success') throw new Error(out.message || 'บันทึกไม่สำเร็จ');
-                await refreshTeamData();
+                // 1) ส่งข้อมูลและอ่านผลตอบกลับจาก Apps Script ตามปกติ
+                let out = null;
+                try {
+                    const res = await fetch(WEB_APP_URL, postOpts);
+                    out = await res.json();
+                } catch (netErr) {
+                    console.warn('อ่านผลตอบกลับจาก Apps Script ไม่ได้ จะตรวจจากชีตแทน', netErr);
+                }
+
+                if (out) {
+                    if (out.status !== 'success') throw new Error(out.message || 'บันทึกไม่สำเร็จ');
+                    // บันทึกสำเร็จแล้ว — ถ้าโหลดข้อมูลใหม่ไม่ได้ ไม่ถือว่าบันทึกล้มเหลว
+                    try {
+                        await refreshTeamData();
+                    } catch (refreshErr) {
+                        console.warn('โหลดชีต Team ใหม่ไม่สำเร็จ', refreshErr);
+                        closeTeamEdit();
+                        showTeamToast('บันทึกแล้ว แต่โหลดข้อมูลใหม่ไม่สำเร็จ — กด Reload');
+                        return;
+                    }
+                } else {
+                    // 2) อ่านผลตอบกลับไม่ได้ (มักเป็นเรื่อง CORS/redirect ของ Apps Script)
+                    //    -> ตรวจในชีตว่าข้อมูลถูกบันทึกแล้วหรือยัง ถ้ายังให้ส่งซ้ำแบบ no-cors แล้วตรวจอีกครั้ง
+                    btn.textContent = 'กำลังตรวจสอบ...';
+                    const savedNow = async () => {
+                        try { await refreshTeamData(); } catch (e) { return false; }
+                        return teamModelMatches(model.name, changes);
+                    };
+                    // รอดูผลในชีตอย่างอดทน (การแก้วันที่ทำให้สูตรในชีตคำนวณใหม่ อาจใช้เวลาหลายวินาที)
+                    const pollSaved = async (seconds) => {
+                        const end = Date.now() + seconds * 1000;
+                        while (Date.now() < end) {
+                            if (await savedNow()) return true;
+                            await new Promise(r => setTimeout(r, 2000));
+                        }
+                        return false;
+                    };
+                    let saved = await pollSaved(20);
+                    if (!saved) {
+                        // ยังไม่พบ -> ส่งซ้ำอีกครั้ง (การแก้ค่าเดิมซ้ำไม่ทำให้ข้อมูลเสีย) แล้วรออีกรอบ
+                        await fetch(WEB_APP_URL, Object.assign({}, postOpts, { mode: 'no-cors' }));
+                        saved = await pollSaved(25);
+                    }
+                    if (!saved) {
+                        throw new Error('ยังไม่พบการเปลี่ยนแปลงในชีต Team (ชีตอาจยังประมวลผลอยู่) — กด Reload แล้วเช็กค่าในชีตอีกครั้ง ถ้ายังไม่มีค่อยกดบันทึกใหม่ (กด F12 > Console เพื่อดูรายละเอียด)');
+                    }
+                }
                 closeTeamEdit();
                 showTeamToast('บันทึกเรียบร้อย ✓');
             } catch (err) {
                 console.error(err);
                 const msg = String(err && err.message || err);
                 setTeamEditError(/Failed to fetch|NetworkError|Load failed/i.test(msg)
-                    ? 'เชื่อมต่อ Google Sheet ไม่ได้ — ตรวจว่า deploy Apps Script เวอร์ชันล่าสุดแล้ว'
+                    ? 'เชื่อมต่อ Google Sheet ไม่ได้ — ตรวจอินเทอร์เน็ต และลิงก์ WEB_APP_URL (กด F12 > Console เพื่อดูรายละเอียด)'
                     : msg);
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'บันทึก';
             }
+        }
+
+        // เทียบค่าที่ตั้งใจบันทึก กับค่าที่อ่านกลับมาจากชีต (หลังโหลดชีต Team ใหม่)
+        function teamModelMatches(name, changes) {
+            const m = (window.teamRowModels || []).find(x => x.name === name);
+            if (!m) return false;
+            return Object.keys(changes).every(id => {
+                const want = changes[id] === '-' ? '' : changes[id];
+                return String(m.init[id] || '') === want;
+            });
         }
 
         // โหลดเฉพาะชีต Team ใหม่ แล้ววาดตารางทีมงานอีกครั้ง (ค่าคงเหลือ/อายุ ที่คำนวณในชีตจะอัปเดตตาม)
@@ -1632,9 +1669,8 @@
             return tr.dataset.group === key;
         }
 
-        // ---- ยุบ/ขยายลูกทีม แบบไล่ตามตำแหน่ง ----
-        // ทุกคนที่มีลูกทีมมี "ระดับ" (ตัวเลขตำแหน่ง: 1=ศูนย์, 2=หน่วย, 3=ตัวแทน)
-        // ลูกทีมโดยตรงที่ตำแหน่ง <= ระดับนี้จะแสดง  |  ค่าเริ่มต้น = 3 (แสดงครบ)
+        // ---- ยุบ/ขยายลูกทีม (ขยายทีละ 1 ขั้น) ----
+        // ระดับของแต่ละคน: เท่าตำแหน่งตัวเอง = ยุบ | 3 = ขยาย (แสดงลูกทีมโดยตรงทั้งหมด)  |  ค่าเริ่มต้น = 3
         function getTreeLevel(key) {
             return window.teamLevels && window.teamLevels.has(key) ? window.teamLevels.get(key) : 3;
         }
@@ -1696,12 +1732,11 @@
                 const ranks = tr.dataset.childRanks.split(',').map(Number);
                 const s = getTreeLevel(keys[i]);
                 const collapsed = s <= rank;
-                const next = ranks.find(x => x > s);
 
                 const t = tr.querySelector('.tree-toggle');
                 if (t) {
                     t.textContent = collapsed ? '▸' : '▾';
-                    t.title = next !== undefined ? `คลิกเพื่อแสดง: ${RANK_NAME[next]}` : 'คลิกเพื่อยุบ';
+                    t.title = collapsed ? 'คลิกเพื่อขยาย (แสดงลูกทีมโดยตรง 1 ขั้น)' : 'คลิกเพื่อยุบ';
                 }
 
                 const total = Number(tr.dataset.total);
@@ -1725,7 +1760,8 @@
             }
         }
 
-        // คลิก 1 ครั้ง = แสดงตำแหน่งถัดลงไปของลูกทีม (เช่น ภาค -> ศูนย์ -> หน่วย -> ตัวแทน) ครบแล้วคลิกอีกครั้ง = ยุบ
+        // คลิก = ขยายได้แค่ขั้นเดียว (แสดงลูกทีมโดยตรงทั้งหมด ลูกทีมของลูกทีมยังยุบอยู่ ต้องกดขยายทีละคน)
+        // คลิกอีกครั้ง = ยุบ (รวมถึงลูกทีมที่เคยขยายไว้)
         function toggleTreeRow(idx) {
             const tbody = document.getElementById('team-table-body');
             if (!tbody) return;
@@ -1733,11 +1769,9 @@
             const tr = trs[idx];
             if (!tr) return;
             const key = (window.teamTreeKeys || [])[idx];
-            const ranks = tr.dataset.childRanks.split(',').map(Number);
-            const s = getTreeLevel(key);
-            const next = ranks.find(x => x > s);
-            if (next !== undefined) window.teamLevels.set(key, next);
-            else collapseTreeNode(trs, idx);
+            const rank = Number(tr.dataset.rank);
+            if (getTreeLevel(key) <= rank) window.teamLevels.set(key, 3);   // ขยาย 1 ขั้น
+            else collapseTreeNode(trs, idx);                                 // ยุบ
             syncTreeState();
         }
 
@@ -1899,7 +1933,7 @@
                 let cenPctClass = pctColorClass(cenPct, regRedClass);
 
                 const regTrHtml = `
-                    <td class="py-2 px-3 text-left">${index + 1} ${regName}</td>
+                    <td class="py-2 px-3 text-left">@@NAME@@</td>
                     <td class="py-2 px-2 text-right">${regPrem.toLocaleString()}</td>
                     <td class="${regCommClass}">${regComm.toLocaleString()}</td>
                     <td class="py-2 px-2 text-center">${unitMe}</td>
@@ -1912,8 +1946,9 @@
                     <td class="py-2 px-2 text-center ${cenPctClass}">${cenPct}</td>
                     ${regPCell}
                 `;
-                regionFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml));
-                allFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml));
+                // หน้า "ภาคศูนย์" แสดงเลขลำดับหน้าชื่อ / หน้า "ทุกระดับ" ไม่แสดง
+                regionFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml.replace('@@NAME@@', () => `${index + 1} ${regName}`)));
+                allFrag.appendChild(makeRow('bg-[#047dc2] text-white font-bold text-center', regTrHtml.replace('@@NAME@@', () => regName)));
 
                 centers.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
@@ -1939,7 +1974,7 @@
                     if (cenComm < 15000) {
                         let diffCen = 15000 - cenComm;
                         cenBodyHtml = `
-                            <td class="py-1.5 px-3 text-left pl-6">${cIdx + 1} ${cenName}</td>
+                            <td class="py-1.5 px-3 text-left pl-6">@@NAME@@</td>
                             <td class="py-1.5 px-2 text-right">${cenPrem.toLocaleString()}</td>
                             <td class="${cenCommClass}">${cenComm.toLocaleString()}</td>
                             <td class="py-1.5 px-2 text-center">${cUnitMe}</td>
@@ -1951,7 +1986,7 @@
                         `;
                     } else {
                         cenBodyHtml = `
-                            <td class="py-1.5 px-3 text-left pl-6">${cIdx + 1} ${cenName}</td>
+                            <td class="py-1.5 px-3 text-left pl-6">@@NAME@@</td>
                             <td class="py-1.5 px-2 text-right">${cenPrem.toLocaleString()}</td>
                             <td class="${cenCommClass}">${cenComm.toLocaleString()}</td>
                             <td class="py-1.5 px-2 text-center">${cUnitMe}</td>
@@ -1963,8 +1998,8 @@
                         `;
                     }
                     const cenRowClass = 'hover:opacity-95 text-center font-semibold text-gray-900';
-                    regionFrag.appendChild(makeRow(cenRowClass, cenBodyHtml, '#ffffff'));
-                    allFrag.appendChild(makeRow(cenRowClass, cenBodyHtml, '#7cbadf'));
+                    regionFrag.appendChild(makeRow(cenRowClass, cenBodyHtml.replace('@@NAME@@', () => `${cIdx + 1} ${cenName}`), '#ffffff'));
+                    allFrag.appendChild(makeRow(cenRowClass, cenBodyHtml.replace('@@NAME@@', () => cenName), '#7cbadf'));
 
                     let sortedUnitsInCen = unitsInCen.slice().sort((a, b) => cleanNumber(b[7]) - cleanNumber(a[7]));
                     sortedUnitsInCen.forEach((unit, uIdx) => {
@@ -1985,7 +2020,7 @@
                         }
 
                         const unitTrHtml = `
-                            <td class="py-1.5 px-3 text-left pl-10 text-gray-900">${uIdx + 1} ${unitName}</td>
+                            <td class="py-1.5 px-3 text-left pl-10 text-gray-900">${unitName}</td>
                             <td class="py-1.5 px-2 text-right text-gray-900">${unitPrem.toLocaleString()}</td>
                             <td class="${unitCommClass}">${unitComm.toLocaleString()}</td>
                             ${unitAdminHtml}
@@ -2007,7 +2042,7 @@
                             let agentPCell = hasPCol ? `<td class="py-1.5 px-2 text-center">${agentPVal}</td>` : '';
 
                             const agentTrHtml = `
-                                <td class="py-1.5 px-3 text-left pl-14 text-gray-700">${aIdx + 1} ${agentName}</td>
+                                <td class="py-1.5 px-3 text-left pl-14 text-gray-700">${agentName}</td>
                                 <td class="py-1.5 px-2 text-right text-gray-700">${agentPrem.toLocaleString()}</td>
                                 <td class="py-1.5 px-2 text-right text-gray-700">${agentComm.toLocaleString()}</td>
                                 <td colspan="8"></td>
