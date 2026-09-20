@@ -1253,7 +1253,7 @@
             html += `<tr id="team-filter-empty" style="display:none"><td colspan="15" class="text-center py-6 text-gray-400">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`;
             tbody.innerHTML = html;
 
-            const cnt = { region: 0, regionStruct: 0, center: 0, unit: 0, agent: 0 };
+            const cnt = { region: 0, regionStruct: 0, center: 0, unit: 0, agent: 0, trainee: 0 };
             ordered.forEach(n => {
                 const g = groupOfPos(n.pos);
                 if (g === 'region') cnt.region++;
@@ -1261,15 +1261,17 @@
                 if (g === 'center') cnt.center++;
                 if (g === 'unit') cnt.unit++;
                 if (g === 'agent') cnt.agent++;
+                if (g === 'trainee') cnt.trainee++;
             });
             window.teamChipMeta = [
-                { key: 'region',       label: 'ภาคทั้งหมด',   count: cnt.region },
-                { key: 'regionStruct', label: 'ภาคโครงสร้าง', count: cnt.regionStruct },
+                { key: 'region',       label: 'ภาค',   count: cnt.region },
+                { key: 'regionStruct', label: 'ภาคโควตา', count: cnt.regionStruct },
                 { key: 'center',       label: 'ศูนย์',         count: cnt.center },
                 { key: 'unit',         label: 'หน่วย',         count: cnt.unit },
                 { key: 'agent',        label: 'ตัวแทน',        count: cnt.agent },
+                { key: 'trainee',      label: 'ตัวแทนฝึกหัด',  count: cnt.trainee },
                 { key: 'expiring',     label: 'ใกล้หมดอายุ', count: expiringCount, tip: 'แถวที่ตัวหนังสือเป็นสีเหลืองหรือสีแดง' },
-                { key: 'bday',         label: `🎂 เกิดเดือน${thFullMonths[currentMonth - 1]}`, count: birthdayNames.length, tip: birthdayNames.join(', ') }
+                { key: 'bday',         label: `🎂 เกิด${thFullMonths[currentMonth - 1]}`, count: birthdayNames.length, tip: birthdayNames.join(', ') }
             ];
             renderTeamChips();
             syncTreeState();
@@ -1609,7 +1611,8 @@
             if (pos === 'ภาค' || pos === 'ภาค(GL)') return 'region';
             if (pos === 'ศูนย์') return 'center';
             if (pos === 'หน่วย') return 'unit';
-            if (pos === 'ตัวแทน' || pos === 'ตัวแทนฝึกหัด') return 'agent';
+            if (pos === 'ตัวแทน') return 'agent';
+            if (pos === 'ตัวแทนฝึกหัด') return 'trainee';
             return '';
         }
 
