@@ -61,6 +61,25 @@
             background: #fce7f3; color: #be185d; border: 1px solid #f9a8d4; font-weight: 600;
         }
 
+        /* ตรึงแถว ภาค(GL)/ภาค ไว้ใต้หัวตาราง จนกว่าจะเลื่อนถึงภาคถัดไป (ภาคถัดไปจะมาทับที่เดิม) */
+        #page-team tr.region-sticky > td {
+            position: sticky;
+            top: var(--team-head-h, 44px);
+            z-index: 20;
+            background-color: inherit;
+            box-shadow: inset 0 -1px 0 rgba(15, 23, 42, .25), 0 2px 4px rgba(15, 23, 42, .18);
+        }
+        /* โหมดค้นหา/กรอง เป็นรายการเรียบ ไม่ต้องตรึง */
+        #page-team table.team-filtered tr.region-sticky > td {
+            position: static;
+            box-shadow: none;
+        }
+
+        /* โหมดดูอย่างเดียว: ซ่อนคอลัมน์แก้ไข */
+        #page-team.team-readonly .col-edit { display: none; }
+        #page-team .team-edit-btn { cursor: pointer; opacity: .65; font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 6px; }
+        #page-team .team-edit-btn:hover { opacity: 1; background: rgba(255,255,255,.35); }
+
         /* ชิปตัวกรองด้านบนตาราง */
         #page-team .team-chip {
             background: #eff6ff; color: #273482; border: 1px solid #bfdbfe;
@@ -362,9 +381,10 @@
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print flex-wrap gap-3">
                     <div class="flex items-center gap-3">
-                        <div id="team-table-title" class="text-xl font-bold text-[#273482]">
-                            รายชื่อทีมงานฝ่ายขยายงานภูมิภาค 98
-                        </div>
+                        <input id="team-search" type="search" placeholder="🔍 ค้นหาชื่อ-สกุล" autocomplete="off"
+                               oninput="syncTreeState()" onkeydown="if(event.key==='Escape'){this.value='';syncTreeState();}"
+                               class="border border-gray-300 rounded-full px-4 py-1.5 text-sm w-64 focus:outline-none focus:border-[#273482]">
+                        <span id="team-mode-badge" class="text-xs text-gray-500" style="display:none">👁 โหมดดูอย่างเดียว</span>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap" id="team-counts-container">
                         <!-- จำนวนนับจะถูกแสดงที่นี่ -->
@@ -394,6 +414,7 @@
                                 <th class="py-3 px-2">คุณวุฒิ</th>
                                 <th class="py-3 px-2">วันเกิด</th>
                                 <th class="py-3 px-2">อายุ</th>
+                                <th class="py-3 px-2 col-edit">แก้ไข</th>
                             </tr>
                         </thead>
                         <tbody id="team-table-body"></tbody>
@@ -438,6 +459,11 @@
         }
 
         function switchTab(tabName) {
+            // หน้าทีมงานต้องใส่รหัสผ่านก่อนเข้า (ผ่านแล้วไม่ถามซ้ำจนกว่าจะรีเฟรชหน้า)
+            if (tabName === 'team' && !window.teamUnlocked) {
+                openTeamPassword();
+                return;
+            }
             document.getElementById('page-ranking').classList.add('hidden');
             document.getElementById('page-ranking').classList.remove('flex');
             
@@ -462,7 +488,7 @@
             document.getElementById('btn-' + tabName).className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white';
         }
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbweU1Z0cfKI31NQb3un9We-HR_BYAESK7Ze2f9KxVfZtEVTHHtIXQ-luL8OZi4gbusU/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxqRA8NKnVJbX1SQ5CYfGSmApstLEfEO7OeOxYu7QZQMDZWqLm4GQU7E2t33cMMQTnu/exec';
         const CACHE_KEY = 'report98_cache_v2';
 
         // ดึงข้อมูลทั้งชีต Import และชีต Team พร้อมกัน แล้วรวมเป็นก้อนเดียว
@@ -830,6 +856,7 @@
             const tbody = document.getElementById('team-table-body');
             const countsContainer = document.getElementById('team-counts-container');
             if (!tbody) return;
+            window.lastTeamArgs = { rows, importHeaders };   // ใช้ตอนโหลดชีต Team ใหม่หลังบันทึก
 
             let regionCenterCodes = {};
             rows.forEach(r => {
@@ -910,6 +937,19 @@
                 age:           pickCol(['อายุ'], 10)
             };
 
+            // ชื่อหัวคอลัมน์จริงในชีต Team (ใช้ส่งไปบันทึก) — null = ไม่มีคอลัมน์นี้ในชีต
+            const rawHeaderOf = (name) => (colIndex[name] !== undefined ? teamHeaders[colIndex[name]] : null);
+            window.teamEditMeta = {
+                loaded: (teamHeaders || []).length > 0,
+                nameHeader: (teamHeaders || []).length ? teamHeaders[COL.name] : null,
+                fields: {
+                    license: rawHeaderOf('ใบอนุญาต'), expDate: rawHeaderOf('วันหมดอายุ'), remark: rawHeaderOf('หมายเหตุ'),
+                    mobile: rawHeaderOf('มือถือ'), appointed: rawHeaderOf('แต่งตั้ง'), qualification: rawHeaderOf('คุณวุฒิ'),
+                    birthDate: rawHeaderOf('วันเกิด')
+                }
+            };
+            window.teamRowModels = [];
+
             // ทำให้ชื่อเทียบกันได้แน่นอน: ตัด zero-width / ช่องว่างทั้งหมด และรวมสระให้เป็นรูปแบบเดียวกัน
             const normName = (v) => String(v == null ? '' : v)
                 .normalize('NFC')
@@ -981,6 +1021,24 @@
                 if (p) return fmtBE2(p);
                 return fmtCell(v);
             };
+            // ค่าดิบสำหรับฟอร์มแก้ไข
+            const rawText = (v) => {
+                if (v === null || v === undefined) return '';
+                const t = String(v).trim();
+                return t === '-' ? '' : t;
+            };
+            const rawMobile = (v) => {
+                const t = rawText(v);
+                if (!t || /[^\d\s\-.()+]/.test(t)) return t;
+                let d = t.replace(/\D/g, '');
+                if (/^[1-9]\d{8}$/.test(d)) d = '0' + d;
+                return /^0\d{9}$/.test(d) ? d : t;
+            };
+            const toISO = (v, isBirth) => {
+                const pp = parseDateParts(v, isBirth);
+                if (!pp) return '';
+                return `${pp.y}-${String(pp.m).padStart(2, '0')}-${String(pp.d).padStart(2, '0')}`;
+            };
             const parseLeft = (v) => {
                 if (v === null || v === undefined || String(v).trim() === '') return null;
                 const n = Number(String(v).replace(/,/g, '').trim());
@@ -989,7 +1047,7 @@
 
             let teamMap = new Map();
             if (teamRows && Array.isArray(teamRows)) {
-                teamRows.forEach(tRow => {
+                teamRows.forEach((tRow, ti) => {
                     const key = normName(tRow[COL.name]);
                     if (!key || teamMap.has(key)) return;
                     teamMap.set(key, {
@@ -1000,6 +1058,16 @@
                         leftNum:       parseLeft(tRow[COL.leftDays]),
                         remark:        fmtCell(tRow[COL.remark]),
                         mobile:        fmtMobile(tRow[COL.mobile]),
+                        sheetRow:      ti + 2,   // แถวจริงในชีต (แถว 1 = หัวตาราง)
+                        raw: {
+                            license:       rawText(tRow[COL.license]),
+                            expDate:       toISO(tRow[COL.expDate], false),
+                            remark:        rawText(tRow[COL.remark]),
+                            mobile:        rawMobile(tRow[COL.mobile]),
+                            appointed:     rawText(tRow[COL.appointed]),
+                            qualification: rawText(tRow[COL.qualification]),
+                            birthDate:     toISO(tRow[COL.birthDate], true)
+                        },
                         qualification: fmtCell(tRow[COL.qualification]),
                         appointed:     fmtCell(tRow[COL.appointed]),
                         birthDate:     fmtDate(tRow[COL.birthDate], true),
@@ -1092,7 +1160,7 @@
             let html = '';
             if (validRows.length === 0) {
                 if (countsContainer) countsContainer.innerHTML = '';
-                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-gray-400">ไม่มีข้อมูลทีมงาน</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="14" class="text-center py-4 text-gray-400">ไม่มีข้อมูลทีมงาน</td></tr>`;
                 return;
             }
 
@@ -1145,6 +1213,8 @@
                         leftNum: null,
                         remark: '-',
                         mobile: '-',
+                        sheetRow: null,
+                        raw: { license: '', expDate: '', remark: '', mobile: '', appointed: '', qualification: '', birthDate: '' },
                         qualification: '-',
                         appointed: '-',
                         birthDate: '-',
@@ -1182,6 +1252,8 @@
                     ? `<span class="bday-badge" title="เกิดเดือน${thFullMonths[currentMonth - 1]}">🎂 ${matchTeam.birthDate}</span>`
                     : matchTeam.birthDate;
 
+                window.teamRowModels[nodeIdx] = { name: importNameColC, pos: pos, sheetRow: matchTeam.sheetRow, init: matchTeam.raw };
+
                 const hasKids = node.children.length > 0;
                 const toggleHtml = hasKids
                     ? `<span class="tree-toggle no-print" onclick="toggleTreeRow(${nodeIdx})">▾</span>`
@@ -1193,7 +1265,7 @@
                 const grp = groupOfPos(node.pos);
 
                 html += `
-                    <tr class="${rowBg}" style="${rowStyle}" data-idx="${nodeIdx}" data-depth="${node.depth}" data-has-children="${hasKids ? 1 : 0}" data-rank="${node.rank}" data-parent="${node.parent ? node.parent.order : -1}" data-child-ranks="${childRanks}" data-total="${node.descCount}" data-group="${grp}" data-struct="${node.pos === 'ภาค' ? 1 : 0}" data-bday="${isBirthMonth ? 1 : 0}" data-expiring="${isExpiring ? 1 : 0}">
+                    <tr class="${rowBg}${node.rank === 0 ? ' region-sticky' : ''}" style="${rowStyle}" data-idx="${nodeIdx}" data-depth="${node.depth}" data-has-children="${hasKids ? 1 : 0}" data-rank="${node.rank}" data-parent="${node.parent ? node.parent.order : -1}" data-child-ranks="${childRanks}" data-total="${node.descCount}" data-group="${grp}" data-struct="${node.pos === 'ภาค' ? 1 : 0}" data-bday="${isBirthMonth ? 1 : 0}" data-expiring="${isExpiring ? 1 : 0}" data-name="${node.key.toLowerCase().replace(/"/g, '&quot;')}">
                         <td class="py-2 px-2 text-center">${matchTeam.prefix}</td>
                         <td class="py-2 px-2 text-left tree-name" style="${treeBackground(node)}" title="${parentTitle}">
                             <div class="flex items-center tree-indent" style="margin-left:${node.depth * 18}px">${toggleHtml}<span>${importNameColC}</span>${countHtml}${parentHtml}</div>
@@ -1209,11 +1281,12 @@
                         <td class="py-2 px-2 text-center">${matchTeam.qualification}</td>
                         <td class="py-2 px-2 text-center">${birthCell}</td>
                         <td class="py-2 px-2 text-center">${matchTeam.age}</td>
+                        <td class="py-2 px-2 text-center col-edit"><button type="button" class="team-edit-btn" onclick="openTeamEdit(${nodeIdx})" title="แก้ไขข้อมูล">✏️</button></td>
                     </tr>
                 `;
             });
 
-            html += `<tr id="team-filter-empty" style="display:none"><td colspan="13" class="text-center py-6 text-gray-400">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`;
+            html += `<tr id="team-filter-empty" style="display:none"><td colspan="14" class="text-center py-6 text-gray-400">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`;
             tbody.innerHTML = html;
 
             // ---- ชิปสรุป: นับจาก "แถวที่แสดงในตาราง" (ตัดแถวซ้ำแล้ว) และกดเพื่อกรองการแสดงผลได้ ----
@@ -1237,6 +1310,291 @@
             ];
             renderTeamChips();
             syncTreeState();
+        }
+
+
+        // ================= ล็อกรหัสผ่านหน้าทีมงาน =================
+        // สองระดับสิทธิ์:
+        //  - รหัส "ดูอย่างเดียว"  : ตรวจในหน้าเว็บ (ไม่มีสิทธิ์แก้ข้อมูล จึงวางไว้ในไฟล์นี้ได้)
+        //  - รหัส "แก้ไขได้"      : ไม่ได้อยู่ในไฟล์นี้ ตรวจกับ Apps Script (Script properties: EDIT_PASSWORD)
+        //                           ทำให้คนที่ได้รหัสดูอย่างเดียว เปิดซอร์สหน้าเว็บก็ไม่เจอรหัสแก้ไข
+        const TEAM_VIEW_PASSWORD = '07116542';
+
+        function openTeamPassword() {
+            const m = document.getElementById('pw-modal');
+            const input = document.getElementById('pw-input');
+            document.getElementById('pw-error').style.display = 'none';
+            input.value = '';
+            m.style.display = 'flex';
+            setTimeout(() => input.focus(), 50);
+        }
+        function closeTeamPassword() {
+            document.getElementById('pw-modal').style.display = 'none';
+        }
+        function showTeamPasswordError(msg) {
+            const e = document.getElementById('pw-error');
+            e.textContent = msg;
+            e.style.display = 'block';
+            const input = document.getElementById('pw-input');
+            input.value = '';
+            input.focus();
+        }
+        function unlockTeam(canEdit, pass) {
+            window.teamUnlocked = true;
+            window.teamCanEdit = canEdit;
+            window.teamPassword = canEdit ? pass : '';
+            const page = document.getElementById('page-team');
+            page.classList.toggle('team-readonly', !canEdit);
+            const badge = document.getElementById('team-mode-badge');
+            if (badge) badge.style.display = canEdit ? 'none' : 'inline';
+            // แถวข้อความ (ไม่มีข้อมูล / ไม่พบรายการ) ให้กว้างเท่าจำนวนคอลัมน์ที่แสดงจริง
+            document.querySelectorAll('#team-table-body td[colspan]').forEach(td => { td.colSpan = canEdit ? 14 : 13; });
+            closeTeamPassword();
+            switchTab('team');
+        }
+
+        async function submitTeamPassword() {
+            const input = document.getElementById('pw-input');
+            const val = input.value;
+            if (!val) return;
+            if (window.pwBusy) return;
+
+            if (val === TEAM_VIEW_PASSWORD) { unlockTeam(false, ''); return; }
+
+            // รหัสอื่น -> ถามเซิร์ฟเวอร์ว่าเป็นรหัสแก้ไขหรือไม่
+            const btn = document.getElementById('pw-submit');
+            window.pwBusy = true;
+            btn.disabled = true;
+            btn.textContent = 'กำลังตรวจสอบ...';
+            document.getElementById('pw-error').style.display = 'none';
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ sheet: 'Team', action: 'verify', pass: val })
+                });
+                const out = await res.json();
+                if (out.status === 'success') {
+                    unlockTeam(true, val);
+                } else {
+                    const msg = String(out.message || '');
+                    if (msg.includes('รหัสผ่านไม่ถูกต้อง')) showTeamPasswordError('รหัสผ่านไม่ถูกต้อง');
+                    else if (msg.includes('ไม่รองรับ') || msg.includes('ไม่พบ Action')) showTeamPasswordError('Apps Script ยังไม่ได้อัปเดตเป็นเวอร์ชันล่าสุด (ต้องรองรับ verify)');
+                    else showTeamPasswordError(msg || 'ตรวจรหัสผ่านไม่สำเร็จ');
+                }
+            } catch (err) {
+                console.error(err);
+                showTeamPasswordError('ตรวจรหัสผ่านกับเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่');
+            } finally {
+                window.pwBusy = false;
+                btn.disabled = false;
+                btn.textContent = 'เข้าสู่ระบบ';
+            }
+        }
+
+        // ================= แก้ไขข้อมูลทีมงาน (เขียนกลับชีต Team) =================
+        const TEAM_EDIT_FIELDS = [
+            { id: 'license',       label: 'ใบอนุญาต',   type: 'text' },
+            { id: 'expDate',       label: 'วันหมดอายุ', type: 'date' },
+            { id: 'remark',        label: 'หมายเหตุ',   type: 'text', wide: true },
+            { id: 'mobile',        label: 'มือถือ',      type: 'tel' },
+            { id: 'appointed',     label: 'แต่งตั้ง',    type: 'text' },
+            { id: 'qualification', label: 'คุณวุฒิ',     type: 'text', list: ['FP', 'LP', 'LPP'] },
+            { id: 'birthDate',     label: 'วันเกิด',     type: 'date' }
+        ];
+        const TH_SHORT_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+        function isoToBE2(iso) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+            if (!m) return '-';
+            return `${+m[3]} ${TH_SHORT_MONTHS[+m[2] - 1]} ${String((+m[1] + 543) % 100).padStart(2, '0')}`;
+        }
+        function fmtMobileInput(d) {
+            return /^0\d{9}$/.test(d) ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : d;
+        }
+        function showTeamToast(msg) {
+            const t = document.getElementById('team-toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            clearTimeout(window.teamToastTimer);
+            window.teamToastTimer = setTimeout(() => { t.style.display = 'none'; }, 2500);
+        }
+        function setTeamEditError(msg) {
+            const e = document.getElementById('te-error');
+            e.textContent = msg || '';
+            e.style.display = msg ? 'block' : 'none';
+        }
+
+        function openTeamEdit(idx) {
+            if (!window.teamCanEdit) return;   // โหมดดูอย่างเดียว
+            const model = (window.teamRowModels || [])[idx];
+            const meta = window.teamEditMeta;
+            if (!model || !meta) return;
+            window.teamEditing = model;
+
+            document.getElementById('te-title').textContent = 'แก้ไขข้อมูล: ' + model.name;
+            document.getElementById('te-sub').textContent = 'ตำแหน่ง: ' + model.pos;
+            setTeamEditError('');
+
+            const notice = document.getElementById('te-notice');
+            const notes = [];
+            if (!meta.loaded) notes.push('โหลดชีต Team ไม่สำเร็จ จึงยังบันทึกไม่ได้ ลองกด Reload แล้วเปิดใหม่');
+            else if (!model.sheetRow) notes.push('ยังไม่มีชื่อนี้ในชีต Team — เมื่อบันทึกระบบจะเพิ่มเป็นแถวใหม่ในชีต Team ให้');
+            const missing = TEAM_EDIT_FIELDS.filter(f => meta.loaded && !meta.fields[f.id]).map(f => f.label);
+            if (missing.length) notes.push('ไม่พบคอลัมน์ในชีต Team: ' + missing.join(', ') + ' (ต้องเพิ่มหัวคอลัมน์ชื่อตรงกันก่อนจึงจะบันทึกได้)');
+            notice.innerHTML = notes.join('<br>');
+            notice.style.display = notes.length ? 'block' : 'none';
+
+            const box = document.getElementById('te-fields');
+            box.innerHTML = '';
+            TEAM_EDIT_FIELDS.forEach(f => {
+                const wrap = document.createElement('div');
+                if (f.wide) wrap.className = 'sm:col-span-2';
+                const label = document.createElement('label');
+                label.className = 'block text-xs font-semibold text-gray-600 mb-1';
+                label.textContent = f.label;
+                label.htmlFor = 'te-f-' + f.id;
+                wrap.appendChild(label);
+
+                const input = document.createElement('input');
+                input.id = 'te-f-' + f.id;
+                input.type = f.type;
+                input.autocomplete = 'off';
+                input.className = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#273482] disabled:bg-gray-100 disabled:text-gray-400';
+                let init = model.init[f.id] || '';
+                input.value = f.id === 'mobile' ? fmtMobileInput(init) : init;
+                if (f.list) {
+                    const dl = document.createElement('datalist');
+                    dl.id = 'te-list-' + f.id;
+                    f.list.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
+                    input.setAttribute('list', dl.id);
+                    wrap.appendChild(dl);
+                }
+                if (!meta.loaded || !meta.fields[f.id]) input.disabled = true;
+                input.addEventListener('keydown', ev => { if (ev.key === 'Enter') saveTeamEdit(); });
+                wrap.appendChild(input);
+
+                if (f.type === 'date') {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between mt-1 text-xs text-gray-500';
+                    const prev = document.createElement('span');
+                    const upd = () => { prev.textContent = input.value ? 'แสดงเป็น: ' + isoToBE2(input.value) : 'ยังไม่ระบุ'; };
+                    upd();
+                    input.addEventListener('input', upd);
+                    const clr = document.createElement('button');
+                    clr.type = 'button';
+                    clr.textContent = 'ล้างวันที่';
+                    clr.className = 'text-[#273482] hover:underline';
+                    clr.onclick = () => { input.value = ''; upd(); };
+                    row.appendChild(prev);
+                    if (!input.disabled) row.appendChild(clr);
+                    wrap.appendChild(row);
+                }
+                box.appendChild(wrap);
+            });
+
+            document.getElementById('te-save').disabled = !meta.loaded;
+            document.getElementById('team-edit-modal').style.display = 'flex';
+            const first = box.querySelector('input:not([disabled])');
+            if (first) setTimeout(() => first.focus(), 50);
+        }
+
+        function closeTeamEdit() {
+            document.getElementById('team-edit-modal').style.display = 'none';
+            window.teamEditing = null;
+        }
+        document.addEventListener('keydown', ev => {
+            if (ev.key === 'Escape' && document.getElementById('team-edit-modal').style.display === 'flex') closeTeamEdit();
+        });
+
+        async function saveTeamEdit() {
+            if (!window.teamCanEdit) return;   // โหมดดูอย่างเดียว
+            const model = window.teamEditing;
+            const meta = window.teamEditMeta;
+            if (!model || !meta || !meta.loaded) return;
+
+            // ส่งเฉพาะช่องที่แก้ไขจริง
+            const data = {};
+            let changed = 0;
+            TEAM_EDIT_FIELDS.forEach(f => {
+                const el = document.getElementById('te-f-' + f.id);
+                if (!el || el.disabled || !meta.fields[f.id]) return;
+                let v = el.value.trim();
+                if (f.id === 'mobile' && v && !/[^\d\s\-.()+]/.test(v)) {
+                    const d = v.replace(/\D/g, '');
+                    if (/^0\d{9}$/.test(d)) v = d;
+                }
+                if (v !== (model.init[f.id] || '')) { data[meta.fields[f.id]] = v; changed++; }
+            });
+            if (!changed) { setTeamEditError('ยังไม่มีการเปลี่ยนแปลง'); return; }
+
+            const payload = { sheet: 'Team', pass: window.teamPassword || '' };
+            if (model.sheetRow) {
+                payload.action = 'edit';
+                payload.rowIndex = model.sheetRow;
+                payload.expectName = model.name;   // กันแก้ผิดแถว ถ้าลำดับแถวในชีตเปลี่ยนไป
+                payload.nameHeader = meta.nameHeader;
+                payload.data = data;
+            } else {
+                if (!meta.nameHeader) { setTeamEditError('ไม่พบคอลัมน์ "ชื่อ" ในชีต Team'); return; }
+                payload.action = 'add';
+                payload.data = Object.assign({ [meta.nameHeader]: model.name }, data);
+            }
+
+            const btn = document.getElementById('te-save');
+            btn.disabled = true;
+            btn.textContent = 'กำลังบันทึก...';
+            setTeamEditError('');
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const out = await res.json();
+                if (out.status !== 'success') throw new Error(out.message || 'บันทึกไม่สำเร็จ');
+                await refreshTeamData();
+                closeTeamEdit();
+                showTeamToast('บันทึกเรียบร้อย ✓');
+            } catch (err) {
+                console.error(err);
+                const msg = String(err && err.message || err);
+                setTeamEditError(/Failed to fetch|NetworkError|Load failed/i.test(msg)
+                    ? 'เชื่อมต่อ Google Sheet ไม่ได้ — ตรวจว่า deploy Apps Script เวอร์ชันล่าสุดแล้ว'
+                    : msg);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'บันทึก';
+            }
+        }
+
+        // โหลดเฉพาะชีต Team ใหม่ แล้ววาดตารางทีมงานอีกครั้ง (ค่าคงเหลือ/อายุ ที่คำนวณในชีตจะอัปเดตตาม)
+        async function refreshTeamData() {
+            const args = window.lastTeamArgs;
+            if (!args) return;
+            const t = await fetch(WEB_APP_URL + '?sheet=Team&_=' + Date.now(), { cache: 'no-store' }).then(r => r.json());
+            if (t && !t.error) buildTeamTable(args.rows, t.rows || [], t.headers || [], args.importHeaders || []);
+        }
+
+        // ทำให้ข้อความค้นหา/ชื่อเทียบกันได้: ตัดช่องว่าง, zero-width และรวมสระอำให้เป็นรูปแบบเดียวกัน
+        function normThai(v) {
+            return String(v == null ? '' : v)
+                .normalize('NFC')
+                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                .replace(/\u0E4D\u0E32/g, '\u0E33')
+                .replace(/\s+/g, '');
+        }
+
+        // วัดความสูงหัวตารางเพื่อให้แถวภาคที่ตรึงไว้ไปต่อใต้หัวตารางพอดี
+        function ensureTeamHeadObserver(table) {
+            if (!table || window.teamHeadObserved) return;
+            const thead = table.querySelector('thead');
+            if (!thead) return;
+            window.teamHeadObserved = true;
+            const apply = () => table.style.setProperty('--team-head-h', thead.offsetHeight + 'px');
+            apply();
+            if (window.ResizeObserver) new ResizeObserver(apply).observe(thead);
+            window.addEventListener('resize', apply);
         }
 
         // ---- ชิปตัวกรอง ----
@@ -1287,7 +1645,10 @@
             const table = tbody.closest('table');
             const trs = Array.from(tbody.querySelectorAll('tr[data-idx]'));
             const filters = window.teamFilters || new Set();
-            const filtering = filters.size > 0;
+            const searchBox = document.getElementById('team-search');
+            const q = normThai(searchBox ? searchBox.value : '').toLowerCase();
+            const filtering = filters.size > 0 || q !== '';
+            ensureTeamHeadObserver(table);
             const keys = window.teamTreeKeys || [];
 
             if (table) table.classList.toggle('team-filtered', filtering);
@@ -1305,7 +1666,8 @@
                 let shown = 0;
                 trs.forEach(tr => {
                     const okPos = posKeys.length === 0 || posKeys.some(k => rowMatchesFilter(tr, k));
-                    const ok = okPos && (!needBday || tr.dataset.bday === '1') && (!needExpiring || tr.dataset.expiring === '1');
+                    const ok = okPos && (!needBday || tr.dataset.bday === '1') && (!needExpiring || tr.dataset.expiring === '1')
+                        && (q === '' || (tr.dataset.name || '').includes(q));
                     tr.classList.toggle('tree-hidden', !ok);
                     if (ok) shown++;
                 });
@@ -1663,5 +2025,42 @@
             allTbody.appendChild(allFrag);
         }
     </script>
+
+    <!-- ล็อกรหัสผ่านก่อนเข้าหน้าทีมงาน -->
+    <div id="pw-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:16px;">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-xs p-5">
+            <div class="text-lg font-bold text-[#273482] mb-1">🔒 หน้าทีมงาน</div>
+            <div class="text-sm text-gray-500 mb-3">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</div>
+            <input id="pw-input" type="password" autocomplete="off" maxlength="40" placeholder="รหัสผ่าน"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:border-[#273482]"
+                   onkeydown="if(event.key==='Enter'){submitTeamPassword();}else if(event.key==='Escape'){closeTeamPassword();}">
+            <div id="pw-error" class="text-sm text-red-600 mt-2" style="display:none">รหัสผ่านไม่ถูกต้อง</div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeTeamPassword()" class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm">ยกเลิก</button>
+                <button type="button" id="pw-submit" onclick="submitTeamPassword()" class="px-4 py-1.5 rounded-lg bg-[#273482] hover:bg-[#1d2766] text-white text-sm font-medium">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ฟอร์มแก้ไขข้อมูลทีมงาน -->
+    <div id="team-edit-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:16px;">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-5" style="max-height:90vh;overflow-y:auto;">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <div class="text-lg font-bold text-[#273482]" id="te-title">แก้ไขข้อมูล</div>
+                    <div class="text-sm text-gray-500" id="te-sub"></div>
+                </div>
+                <button type="button" onclick="closeTeamEdit()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="te-notice" class="text-xs rounded-lg px-3 py-2 mb-3" style="display:none;background:#fffbeb;color:#92400e;border:1px solid #fde68a;"></div>
+            <div id="te-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            <div id="te-error" class="text-sm text-red-600 mt-3" style="display:none"></div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeTeamEdit()" class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm">ยกเลิก</button>
+                <button type="button" id="te-save" onclick="saveTeamEdit()" class="px-4 py-1.5 rounded-lg bg-[#273482] hover:bg-[#1d2766] text-white text-sm font-medium">บันทึก</button>
+            </div>
+        </div>
+    </div>
+    <div id="team-toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:110;background:#065f46;color:#fff;padding:8px 16px;border-radius:9999px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.25);"></div>
 </body>
 </html>
