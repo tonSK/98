@@ -487,7 +487,7 @@
             document.getElementById('btn-' + tabName).className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white';
         }
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbywMrSOsKj-viT9RS7FDL97lMP84I7WQ4MdcRpbHFOKbFGDaOW3TnGBL2HDRuOk0f7A/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxYS9yPNhMDgJEpRxv4buuj9oYw4ZwRgvNJQHc-0hPfV3gKT5zxb3f_ehjwz5ce5F9v/exec';
         const CACHE_KEY = 'report98_cache_v3';
 
         function fetchAllData(noStore) {
@@ -925,7 +925,7 @@
                 expDate:       pickCol(['วันหมดอายุ'], 4),
                 leftDays:      pickCol(['คงเหลือ'], 5),
                 remark:        pickCol(['หมายเหตุ', 'Note'], 6),
-                nickname:      pickCol(['ชื่อเล่น'], 12), // คอลัมน์ M (index 12) หรือตามชื่อหัวคอลัมน์ "ชื่อเล่น"
+                nickname:      pickCol(['ชื่อเล่น'], 12),
                 mobile:        pickCol(['มือถือ'], -1),
                 qualification: pickCol(['คุณวุฒิ', 'Life Solutions'], 7),
                 appointed:     pickCol(['แต่งตั้ง'], 8),
@@ -1347,14 +1347,14 @@
         }
 
         const TEAM_EDIT_FIELDS = [
-            { id: 'prefix',        label: 'หน้า (คำนำหน้า)', type: 'text' },
+            { id: 'prefix',        label: 'หน้า (คำนำหน้า)', type: 'select', list: ['', 'นาย', 'น.ส.', 'นาง'] },
             { id: 'nickname',      label: 'ชื่อเล่น',        type: 'text' },
             { id: 'license',       label: 'ใบอนุญาต',       type: 'text' },
             { id: 'expDate',       label: 'วันหมดอายุ',     type: 'date' },
             { id: 'remark',        label: 'หมายเหตุ',       type: 'text', wide: true },
             { id: 'mobile',        label: 'มือถือ',          type: 'tel' },
             { id: 'appointed',     label: 'แต่งตั้ง',        type: 'date' },
-            { id: 'qualification', label: 'คุณวุฒิ',         type: 'text', list: ['FP', 'LP', 'LPP'] },
+            { id: 'qualification', label: 'คุณวุฒิ',         type: 'select', list: ['', 'LP', 'LPP', 'FP', 'FPP'] },
             { id: 'birthDate',     label: 'วันเกิด',         type: 'date' }
         ];
         const TH_SHORT_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -1411,20 +1411,30 @@
                 label.htmlFor = 'te-f-' + f.id;
                 wrap.appendChild(label);
 
-                const input = document.createElement('input');
+                let input;
+                let init = model.init[f.id] || '';
+
+                if (f.type === 'select') {
+                    input = document.createElement('select');
+                    f.list.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item;
+                        opt.textContent = item === '' ? '(เว้นว่าง)' : item;
+                        if (String(init).trim() === String(item).trim()) {
+                            opt.selected = true;
+                        }
+                        input.appendChild(opt);
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = f.type;
+                    input.value = f.id === 'mobile' ? fmtMobileInput(init) : init;
+                }
+
                 input.id = 'te-f-' + f.id;
-                input.type = f.type;
                 input.autocomplete = 'off';
                 input.className = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#273482] disabled:bg-gray-100 disabled:text-gray-400';
-                let init = model.init[f.id] || '';
-                input.value = f.id === 'mobile' ? fmtMobileInput(init) : init;
-                if (f.list) {
-                    const dl = document.createElement('datalist');
-                    dl.id = 'te-list-' + f.id;
-                    f.list.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
-                    input.setAttribute('list', dl.id);
-                    wrap.appendChild(dl);
-                }
+                
                 if (!meta.loaded || !meta.fields[f.id]) input.disabled = true;
                 input.addEventListener('keydown', ev => { if (ev.key === 'Enter') saveTeamEdit(); });
                 wrap.appendChild(input);
@@ -1450,7 +1460,7 @@
 
             document.getElementById('te-save').disabled = !meta.loaded;
             document.getElementById('team-edit-modal').style.display = 'flex';
-            const first = box.querySelector('input:not([disabled])');
+            const first = box.querySelector('input:not([disabled]), select:not([disabled])');
             if (first) setTimeout(() => first.focus(), 50);
         }
 
