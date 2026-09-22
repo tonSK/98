@@ -62,7 +62,7 @@
             background-color: #0b2265 !important;
             color: #fff !important;
             font-weight: 600;
-            border-bottom: 2px solid #dbe3ee !important;
+            border-bottom: 1px solid #dbe3ee !important;
             box-shadow: inset 0 -1px 0 #dbe3ee, 0 1px 0 #dbe3ee !important;
         }
         .simple-page tbody tr {
@@ -83,21 +83,21 @@
             border-radius: 4px;
             background: var(--accent, transparent);
         }
-        .simple-page tr.lvl-summary td { background-color: rgba(11, 34, 101, 0.2) !important; color: #0b2265 !important; font-weight: 600; }
+        .simple-page tr.lvl-summary td { background-color: rgba(11, 34, 101, 0.2) !important; color: #0b2265 !important; font-weight: 800; }
         .simple-page tr.lvl-summary td.name-cell { padding-left: 1rem !important; }
         .simple-page tr.lvl-summary td.name-cell::before { display: none; }
 
         .simple-page tr.lvl-region td { background-color: rgba(4, 125, 194, 0.2) !important; padding-top: .7rem !important; padding-bottom: .7rem !important; }
-        .simple-page tr.lvl-region td.name-cell { --accent: #047dc2; font-size: .95rem; font-weight: 700; color: #0b2265; }
+        .simple-page tr.lvl-region td.name-cell { --accent: #047dc2; font-weight: 700; color: #0b2265; }
 
         .simple-page tr.lvl-center td { background-color: rgba(124, 186, 223, 0.2) !important; }
-        .simple-page tr.lvl-center td.name-cell { --accent: #7cbadf; padding-left: 2rem !important; font-weight: 600; color: #1e3a8a; }
+        .simple-page tr.lvl-center td.name-cell { --accent: #7cbadf; padding-left: 2rem !important; font-weight: 600; color: #0b2265; }
 
         .simple-page tr.lvl-unit td { background-color: rgba(203, 213, 225, 0.2) !important; }
-        .simple-page tr.lvl-unit td.name-cell { --accent: #CBD5E1; padding-left: 2.75rem !important; font-weight: 500; color: #334155; }
+        .simple-page tr.lvl-unit td.name-cell { --accent: #CBD5E1; padding-left: 2.75rem !important; font-weight: 500; color: #0b2265; }
 
         .simple-page tr.lvl-agent td { background-color: #fff !important; }
-        .simple-page tr.lvl-agent td.name-cell { padding-left: 3.5rem !important; font-weight: 400; color: #64748b; font-size: .85rem; }
+        .simple-page tr.lvl-agent td.name-cell { padding-left: 3.5rem !important; font-weight: 400; color: #0b2265; font-size: .85rem; }
 
         .simple-page .pill {
             display: inline-block;
@@ -107,9 +107,9 @@
             font-weight: 600;
             white-space: nowrap;
         }
-        .simple-page .pill-ok { background: #eff6ff; color: #1d4ed8; }
+        .simple-page .pill-ok { background: #ecfdf5; color: #047857; }
         .simple-page .pill-warn { background: #fef2f2; color: #b91c1c; }
-        .simple-page .pill-neutral { background: #ecfdf5; color: #047857; }
+        .simple-page .pill-neutral { background: #eff6ff; color: #1d4ed8; }
         .simple-page .note-warn {
             font-size: .8rem;
             color: #b91c1c;
@@ -477,11 +477,11 @@
 
         function commissionNote(comm, minThreshold, shortLabel, tiers) {
             if (comm < minThreshold) {
-                return { cls: 'note-warn', text: `ขาดคอม ${(minThreshold - comm).toLocaleString()} ${shortLabel}` };
+                return { cls: 'note-warn', text: `เพิ่มคอม ${(minThreshold - comm).toLocaleString()} ${shortLabel}` };
             }
             for (const t of tiers) {
                 if (comm >= t.min && comm < t.max) {
-                    return { cls: 'note-info', text: `เพิ่มคอม ${(t.target - comm).toLocaleString()} จะได้ค่าจัดงาน ${t.pct}%` };
+                    return { cls: 'note-info', text: `เพิ่มคอม ${(t.target - comm).toLocaleString()} → ค่าจัดงาน ${t.pct}%` };
                 }
             }
             return null;
@@ -1044,7 +1044,7 @@
                     }
                     if (allSimpleTbody) {
                         let cenPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${cenPVal}</td>` : '';
-                        let cenNote = commissionNote(cenComm, 15000, 'จะได้ค่าจัดงาน 15% (เต็มศูนย์)', CENTER_INCENTIVE_TIERS);
+                        let cenNote = commissionNote(cenComm, 15000, '(เต็มศูนย์) → ค่าจัดงาน 15%', CENTER_INCENTIVE_TIERS);
                         let cenNoteSimple = cenNote
                             ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${cenNote.cls}">${cenNote.text}</span></td>`
                             : `<td colspan="4" class="py-2 px-2"></td>`;
@@ -1091,7 +1091,7 @@
                         `;
                         if (allSimpleTbody) {
                             let unitPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${unitPVal}</td>` : '';
-                            let unitNote = commissionNote(unitComm, 2500, 'จะได้ค่าจัดงาน 15% (เต็มหน่วย)', UNIT_INCENTIVE_TIERS);
+                            let unitNote = commissionNote(unitComm, 2500, '(เต็มหน่วย) → ค่าจัดงาน 15%', UNIT_INCENTIVE_TIERS);
                             let unitNoteSimple = unitNote
                                 ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${unitNote.cls}">${unitNote.text}</span></td>`
                                 : `<td colspan="4" class="py-2 px-2"></td>`;
