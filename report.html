@@ -10,6 +10,12 @@
     <style> 
         body { font-family: 'Sarabun', sans-serif; } 
         
+        /* ปรับลดขนาดตัวหนังสือหน้าศูนย์-ภาค และ ทุกระดับ เหลือ 75% */
+        #page-regionCenterSimple table, 
+        #page-allLevelsSimple table {
+            font-size: 75% !important;
+        }
+
         table.custom-horizontal-table {
             border-collapse: collapse;
             width: 100%;
@@ -409,7 +415,7 @@
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print">
                     <div class="flex items-center gap-3">
-                        <div id="regioncenter-simple-table-title" class="text-xl font-bold text-[#273482]">
+                        <div id="regioncenter-simple-table-title" class="text-l font-bold text-[#273482]">
                             สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                         </div>
                     </div>
@@ -428,7 +434,7 @@
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print">
                     <div class="flex items-center gap-3">
-                        <div id="alllevels-simple-table-title" class="text-xl font-bold text-[#273482]">
+                        <div id="alllevels-simple-table-title" class="text-l font-bold text-[#273482]">
                             สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                         </div>
                     </div>
