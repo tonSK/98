@@ -109,7 +109,7 @@
         }
         .simple-page .pill-ok { background: #eff6ff; color: #1d4ed8; }
         .simple-page .pill-warn { background: #fef2f2; color: #b91c1c; }
-        .simple-page .pill-neutral { background: #f1f5f9; color: #475569; }
+        .simple-page .pill-neutral { background: #ecfdf5; color: #047857; }
         .simple-page .note-warn {
             font-size: .8rem;
             color: #b91c1c;
@@ -980,7 +980,7 @@
                     const regSimpleTrHtml = `
                         <td class="py-3 px-3 text-left name-cell">${regName}</td>
                         <td class="py-3 px-2 text-right num">${regPrem.toLocaleString()}</td>
-                        <td class="py-3 px-2 text-right num${regComm < 60000 ? ' text-red-600 font-semibold' : ''}">${regComm.toLocaleString()}</td>
+                        <td class="py-3 px-2 text-right num${regComm < 60000 ? ' text-red-600' : ''}">${regComm.toLocaleString()}</td>
                         <td class="py-3 px-2 text-center num">${unitMe}</td>
                         <td class="py-3 px-2 text-center num">${unitTem}</td>
                         <td class="py-3 px-2 text-center">${pill(unitTok, unitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
@@ -1051,7 +1051,7 @@
                         const cenSimpleTrHtml = `
                             <td class="py-2 px-3 text-left name-cell">${cenName}</td>
                             <td class="py-2 px-2 text-right num">${cenPrem.toLocaleString()}</td>
-                            <td class="py-2 px-2 text-right num${cenComm < 15000 ? ' text-red-600 font-semibold' : ''}">${cenComm.toLocaleString()}</td>
+                            <td class="py-2 px-2 text-right num${cenComm < 15000 ? ' text-red-600' : ''}">${cenComm.toLocaleString()}</td>
                             <td class="py-2 px-2 text-center num">${cUnitMe}</td>
                             <td class="py-2 px-2 text-center num">${cUnitTem}</td>
                             <td class="py-2 px-2 text-center">${pill(cUnitTok, cUnitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
@@ -1098,7 +1098,7 @@
                             const unitSimpleTrHtml = `
                                 <td class="py-2 px-3 text-left name-cell">${unitName}</td>
                                 <td class="py-2 px-2 text-right num">${unitPrem.toLocaleString()}</td>
-                                <td class="py-2 px-2 text-right num${unitComm < 2500 ? ' text-red-600 font-semibold' : ''}">${unitComm.toLocaleString()}</td>
+                                <td class="py-2 px-2 text-right num${unitComm < 2500 ? ' text-red-600' : ''}">${unitComm.toLocaleString()}</td>
                                 ${unitNoteSimple}
                                 <td colspan="4"></td>
                                 ${unitPCellSimple}
