@@ -28,32 +28,113 @@
             border-bottom: 2px solid #0b2265 !important;
         }
 
-        #page-allLevels .overflow-x-auto,
+        #page-allLevelsSimple .overflow-x-auto,
         #page-team .overflow-x-auto {
             max-height: 90vh;
             overflow-y: auto;
         }
 
-        #page-regionCenter .overflow-x-auto {
+        #page-regionCenterSimple .overflow-x-auto {
             overflow-y: visible;
             max-height: none;
         }
         
-        #page-allLevels thead,
-        #page-regionCenter thead,
+        #page-allLevelsSimple thead,
+        #page-regionCenterSimple thead,
         #page-team thead {
             position: sticky;
             top: 0;
             z-index: 40;
         }
 
-        #page-allLevels thead th,
-        #page-regionCenter thead th,
         #page-team thead th {
             background-color: #0b2265 !important;
             border-bottom: none !important;
             box-shadow: inset 0 -1px 0 #0b2265, 0 1px 0 #0b2265 !important;
         }
+
+        /* ===== หน้า "(ง่าย)" ทั้งหมด — ดีไซน์ที่เน้นความโล่ง อ่านง่าย ===== */
+        table.simple-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        table.simple-table th,
+        table.simple-table td {
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            border-bottom: 1px solid rgba(11, 34, 101, 0.2) !important;
+        }
+        .simple-page thead th {
+            background-color: #0b2265 !important;
+            color: #fff !important;
+            font-weight: 600;
+            border-bottom: 2px solid #dbe3ee !important;
+            box-shadow: inset 0 -1px 0 #dbe3ee, 0 1px 0 #dbe3ee !important;
+        }
+        .simple-page tbody tr {
+            transition: background-color .12s ease;
+        }
+        .simple-page tbody tr:hover td {
+            background-color: #f8fafc !important;
+        }
+        .simple-page .name-cell {
+            position: relative;
+            padding-left: 1.25rem !important;
+        }
+        .simple-page .name-cell::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 6px; bottom: 6px;
+            width: 4px;
+            border-radius: 4px;
+            background: var(--accent, transparent);
+        }
+        .simple-page tr.lvl-summary td { background-color: rgba(11, 34, 101, 0.2) !important; color: #0b2265 !important; font-weight: 600; }
+        .simple-page tr.lvl-summary td.name-cell { padding-left: 1rem !important; }
+        .simple-page tr.lvl-summary td.name-cell::before { display: none; }
+
+        .simple-page tr.lvl-region td { background-color: rgba(4, 125, 194, 0.2) !important; padding-top: .7rem !important; padding-bottom: .7rem !important; }
+        .simple-page tr.lvl-region td.name-cell { --accent: #047dc2; font-size: .95rem; font-weight: 700; color: #0b2265; }
+
+        .simple-page tr.lvl-center td { background-color: rgba(124, 186, 223, 0.2) !important; }
+        .simple-page tr.lvl-center td.name-cell { --accent: #7cbadf; padding-left: 2rem !important; font-weight: 600; color: #1e3a8a; }
+
+        .simple-page tr.lvl-unit td { background-color: rgba(203, 213, 225, 0.2) !important; }
+        .simple-page tr.lvl-unit td.name-cell { --accent: #CBD5E1; padding-left: 2.75rem !important; font-weight: 500; color: #334155; }
+
+        .simple-page tr.lvl-agent td { background-color: #fff !important; }
+        .simple-page tr.lvl-agent td.name-cell { padding-left: 3.5rem !important; font-weight: 400; color: #64748b; font-size: .85rem; }
+
+        .simple-page .pill {
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 9999px;
+            font-size: .75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .simple-page .pill-ok { background: #eff6ff; color: #1d4ed8; }
+        .simple-page .pill-warn { background: #fef2f2; color: #b91c1c; }
+        .simple-page .pill-neutral { background: #ecfdf5; color: #047857; }
+        .simple-page .note-warn {
+            font-size: .8rem;
+            color: #b91c1c;
+            background: #fef2f2;
+            border-radius: 8px;
+            padding: 2px 10px;
+            display: inline-block;
+        }
+        .simple-page .note-info {
+            font-size: .8rem;
+            color: #047857;
+            background: #ecfdf5;
+            border-radius: 8px;
+            padding: 2px 10px;
+            display: inline-block;
+        }
+        .simple-page .num { font-variant-numeric: tabular-nums; }
 
         /* ป้ายวันเกิดของคนที่เกิดเดือนปัจจุบัน */
         #page-team .bday-badge {
@@ -128,43 +209,41 @@
             main { padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
             .shadow, .rounded-xl { box-shadow: none !important; border-radius: 0 !important; }
             
-            #page-regionCenter:not(.hidden),
-            #page-allLevels:not(.hidden) {
+            #page-allLevelsSimple:not(.hidden) {
                 display: block !important;
                 width: 100% !important;
                 overflow: visible !important;
             }
             
-            #page-regionCenter section,
-            #page-allLevels section {
+            #page-allLevelsSimple section {
                 padding: 1.25rem !important;
                 margin: 0 !important;
                 width: 100% !important;
             }
 
-            #page-regionCenter .overflow-x-auto,
-            #page-allLevels .overflow-x-auto {
+            #page-allLevelsSimple .overflow-x-auto {
                 overflow: visible !important;
                 width: 100% !important;
                 max-height: none !important;
             }
-            
-            #page-regionCenter table,
-            #page-allLevels table {
-                font-size: 8px !important;
+
+            /* หน้า "ทุกระดับ (ง่าย)" ตอนพิมพ์ ให้คงสี/ดีไซน์แบบเดียวกับที่เห็นบนจอ */
+            #page-allLevelsSimple table {
+                font-size: 9px !important;
                 width: 100% !important;
                 table-layout: auto !important;
             }
-            
-            #page-regionCenter th, #page-regionCenter td,
-            #page-allLevels th, #page-allLevels td {
-                border-bottom: 1px solid #94a3b8 !important;
+            #page-allLevelsSimple th, #page-allLevelsSimple td {
                 white-space: nowrap !important;
-                padding: 2px 3px !important;
+                padding: 4px 6px !important;
+            }
+            #page-allLevelsSimple .pill,
+            #page-allLevelsSimple .note-warn {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             
-            #page-regionCenter div[id*="title-print"],
-            #page-allLevels div[id*="title-print"] {
+            #page-allLevelsSimple div[id*="title-print"] {
                 display: block !important;
                 font-size: 11px !important;
                 margin-bottom: 1rem !important;
@@ -175,14 +254,13 @@
             thead { display: table-header-group !important; }
             tr { page-break-inside: avoid !important; break-inside: avoid !important; }
             
-            #page-ranking, #page-regionCenter, #page-allLevels {
+            #page-ranking, #page-allLevelsSimple {
                 min-height: calc(100vh - 3rem);
                 display: flex;
                 flex-direction: column;
             }
             #page-ranking > div, 
-            #page-regionCenter > section, 
-            #page-allLevels > section {
+            #page-allLevelsSimple > section {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
@@ -218,10 +296,10 @@
                     <button onclick="switchTab('ranking')" id="btn-ranking" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white">
                         จัดอันดับ
                     </button>
-                    <button onclick="switchTab('regionCenter')" id="btn-regionCenter" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
-                        ภาคศูนย์
+                    <button onclick="switchTab('regionCenterSimple')" id="btn-regionCenterSimple" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
+                        ศูนย์-ภาค
                     </button>
-                    <button onclick="switchTab('allLevels')" id="btn-allLevels" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
+                    <button onclick="switchTab('allLevelsSimple')" id="btn-allLevelsSimple" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
                         ทุกระดับ
                     </button>
                     <button onclick="switchTab('team')" id="btn-team" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
@@ -326,34 +404,31 @@
             </div>
         </div>
 
-        <!-- หน้า: ภาคศูนย์ -->
-        <div id="page-regionCenter" class="hidden w-full flex-col min-h-[calc(100vh-3rem)]">
+        <!-- หน้า: ภาคศูนย์ (ง่าย) -->
+        <div id="page-regionCenterSimple" class="simple-page hidden w-full flex-col min-h-[calc(100vh-3rem)]">
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print">
                     <div class="flex items-center gap-3">
-                        <div id="region-table-title" class="text-xl font-bold text-[#273482]">
+                        <div id="regioncenter-simple-table-title" class="text-xl font-bold text-[#273482]">
                             สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                         </div>
                     </div>
                 </div>
-                <div id="region-table-title-print" class="text-xl font-bold text-[#273482] mb-4 hidden">
-                    สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
-                </div>
                 <div class="overflow-x-auto w-full flex-1">
-                    <table class="w-full text-sm custom-horizontal-table min-w-[900px]">
-                        <thead id="region-table-head"></thead>
-                        <tbody id="region-table-body"></tbody>
+                    <table class="w-full text-sm simple-table min-w-[900px]">
+                        <thead id="regioncenter-simple-table-head"></thead>
+                        <tbody id="regioncenter-simple-table-body"></tbody>
                     </table>
                 </div>
             </section>
         </div>
 
-        <!-- หน้า: ทุกระดับ -->
-        <div id="page-allLevels" class="hidden w-full flex-col min-h-[calc(100vh-3rem)]">
+        <!-- หน้า: ทุกระดับ (ง่าย) -->
+        <div id="page-allLevelsSimple" class="simple-page hidden w-full flex-col min-h-[calc(100vh-3rem)]">
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print">
                     <div class="flex items-center gap-3">
-                        <div id="alllevels-table-title" class="text-xl font-bold text-[#273482]">
+                        <div id="alllevels-simple-table-title" class="text-xl font-bold text-[#273482]">
                             สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                         </div>
                     </div>
@@ -363,13 +438,13 @@
                         </svg>
                     </button>
                 </div>
-                <div id="alllevels-table-title-print" class="text-xl font-bold text-[#273482] mb-4 hidden">
+                <div id="alllevels-simple-table-title-print" class="text-xl font-bold text-[#273482] mb-4 hidden">
                     สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
                 </div>
                 <div class="overflow-x-auto w-full flex-1">
-                    <table class="w-full text-sm custom-horizontal-table min-w-[900px]">
-                        <thead id="alllevels-table-head"></thead>
-                        <tbody id="alllevels-table-body"></tbody>
+                    <table class="w-full text-sm simple-table min-w-[900px]">
+                        <thead id="alllevels-simple-table-head"></thead>
+                        <tbody id="alllevels-simple-table-body"></tbody>
                     </table>
                 </div>
             </section>
@@ -466,18 +541,20 @@
             document.getElementById('page-ranking').classList.add('hidden');
             document.getElementById('page-ranking').classList.remove('flex');
             
-            document.getElementById('page-regionCenter').classList.add('hidden');
-            document.getElementById('page-regionCenter').classList.remove('flex');
+
+            document.getElementById('page-regionCenterSimple').classList.add('hidden');
+            document.getElementById('page-regionCenterSimple').classList.remove('flex');
             
-            document.getElementById('page-allLevels').classList.add('hidden');
-            document.getElementById('page-allLevels').classList.remove('flex');
+
+            document.getElementById('page-allLevelsSimple').classList.add('hidden');
+            document.getElementById('page-allLevelsSimple').classList.remove('flex');
 
             document.getElementById('page-team').classList.add('hidden');
             document.getElementById('page-team').classList.remove('flex');
 
             document.getElementById('btn-ranking').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
-            document.getElementById('btn-regionCenter').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
-            document.getElementById('btn-allLevels').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
+            document.getElementById('btn-regionCenterSimple').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
+            document.getElementById('btn-allLevelsSimple').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             document.getElementById('btn-team').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             
             let activePage = document.getElementById('page-' + tabName);
@@ -535,6 +612,29 @@
             return (!isNaN(num) && num < 40) ? redClass : '';
         }
 
+        // ระดับ "ทำเพิ่ม X จะได้ค่าจัดงาน Y%" เมื่อคอมมิชชั่นพ้นเกณฑ์ขั้นต่ำแล้ว แต่ยังไม่ถึงขั้นถัดไป
+        const CENTER_INCENTIVE_TIERS = [
+            { min: 15000, max: 30000, target: 30000, pct: 20 },
+            { min: 30000, max: 60000, target: 60000, pct: 25 },
+            { min: 60000, max: 120000, target: 120000, pct: 30 },
+        ];
+        const UNIT_INCENTIVE_TIERS = [
+            { min: 2500, max: 5000, target: 5000, pct: 25 },
+            { min: 5000, max: 10000, target: 10000, pct: 35 },
+        ];
+
+        function commissionNote(comm, minThreshold, shortLabel, tiers) {
+            if (comm < minThreshold) {
+                return { cls: 'note-warn', text: `ขาดคอม ${(minThreshold - comm).toLocaleString()} ${shortLabel}` };
+            }
+            for (const t of tiers) {
+                if (comm >= t.min && comm < t.max) {
+                    return { cls: 'note-info', text: `เพิ่มคอม ${(t.target - comm).toLocaleString()} จะได้ค่าจัดงาน ${t.pct}%` };
+                }
+            }
+            return null;
+        }
+
         function formatComplianceCell(levelType, val) {
             if (levelType === 'agent') return '-';
             if (val === undefined || val === null || String(val).trim() === '') return '';
@@ -568,17 +668,14 @@
             
             let titleText = `สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ ${formattedDate}`;
             
-            const regTitleEl = document.getElementById('region-table-title');
-            if (regTitleEl) regTitleEl.innerText = titleText;
+            const regSimpleTitleEl = document.getElementById('regioncenter-simple-table-title');
+            if (regSimpleTitleEl) regSimpleTitleEl.innerText = titleText;
 
-            const regTitlePrintEl = document.getElementById('region-table-title-print');
-            if (regTitlePrintEl) regTitlePrintEl.innerText = titleText;
+            const allSimpleTitleEl = document.getElementById('alllevels-simple-table-title');
+            if (allSimpleTitleEl) allSimpleTitleEl.innerText = titleText;
 
-            const allTitleEl = document.getElementById('alllevels-table-title');
-            if (allTitleEl) allTitleEl.innerText = titleText;
-
-            const allTitlePrintEl = document.getElementById('alllevels-table-title-print');
-            if (allTitlePrintEl) allTitlePrintEl.innerText = titleText;
+            const allSimpleTitlePrintEl = document.getElementById('alllevels-simple-table-title-print');
+            if (allSimpleTitlePrintEl) allSimpleTitlePrintEl.innerText = titleText;
             
             i2Val = cleanNumber(summary.i2);
             j2Val = cleanNumber(summary.j2);
@@ -1750,15 +1847,15 @@
         }
 
         function buildBothRegionTables(rows, summaryI2, summaryN2, dataObj) {
-            const regionThead = document.getElementById('region-table-head');
-            const regionTbody = document.getElementById('region-table-body');
-            const allThead = document.getElementById('alllevels-table-head');
-            const allTbody = document.getElementById('alllevels-table-body');
+            const allSimpleThead = document.getElementById('alllevels-simple-table-head');
+            const allSimpleTbody = document.getElementById('alllevels-simple-table-body');
+            const regionSimpleThead = document.getElementById('regioncenter-simple-table-head');
+            const regionSimpleTbody = document.getElementById('regioncenter-simple-table-body');
 
-            if (!regionThead || !regionTbody || !allThead || !allTbody) return;
+            if (!allSimpleThead || !allSimpleTbody || !regionSimpleThead || !regionSimpleTbody) return;
 
-            const regionFrag = document.createDocumentFragment();
-            const allFrag = document.createDocumentFragment();
+            const simpleFrag = document.createDocumentFragment();
+            const regionSimpleFrag = document.createDocumentFragment();
 
             let summaryRowFromData = rows.find(r => r[0] === "ฝ่าย");
             let rawPVal = summaryRowFromData ? summaryRowFromData[15] : (dataObj && dataObj.summary ? dataObj.summary.p2 : undefined);
@@ -1778,7 +1875,7 @@
                 </tr>
                 <tr class="bg-[#0b2265] text-white text-center text-xs">
                     <th class="py-1.5 px-2">เบี้ยปีต่อ</th>
-                    <th class="py-1.5 px-2">ค่าบำเหน็จ</th>
+                    <th class="py-1.5 px-2">คอมมิชชั่น</th>
                     <th class="py-1.5 px-2">มี</th>
                     <th class="py-1.5 px-2">เต็ม</th>
                     <th class="py-1.5 px-2">ตก</th>
@@ -1789,8 +1886,8 @@
                     <th class="py-1.5 px-2">%</th>
                 </tr>
             `;
-            regionThead.innerHTML = theadHtml;
-            allThead.innerHTML = theadHtml;
+            if (allSimpleThead) allSimpleThead.innerHTML = theadHtml;
+            if (regionSimpleThead) regionSimpleThead.innerHTML = theadHtml;
 
             let regions = [];
             let allUnits = [], allCenters = [], allAgents = [];
@@ -1864,8 +1961,27 @@
                 return tr;
             };
 
-            regionFrag.appendChild(makeRow('bg-[#1558a2] text-white font-normal text-center', summaryTrHtml));
-            allFrag.appendChild(makeRow('bg-[#1558a2] text-white font-normal text-center', summaryTrHtml));
+            // ป้ายกลม (pill) ใช้แทนตัวเลข/ตัวหนังสือสีตรงๆ ในหน้า "ทุกระดับ (ง่าย)" ให้กวาดสายตาง่ายขึ้น
+            const pill = (val, kind) => `<span class="pill ${kind}">${val}</span>`;
+
+
+            let summaryPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${summaryPVal}</td>` : '';
+            const simpleSummaryTrHtml = `
+                <td class="py-3 px-3 text-left name-cell">ฝ่าย ${summaryN2.toFixed(2)}%</td>
+                <td class="py-3 px-2 text-right num">${i2Val.toLocaleString()}</td>
+                <td class="py-3 px-2 text-right num">${totalCommissionSummary.toLocaleString()}</td>
+                <td class="py-3 px-2 text-center num">${totalUnitMe}</td>
+                <td class="py-3 px-2 text-center num">${totalUnitTem}</td>
+                <td class="py-3 px-2 text-center">${pill(totalUnitTok, totalUnitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                <td class="py-3 px-2 text-center">${pill(totalUnitPct, parseFloat(totalUnitPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                <td class="py-3 px-2 text-center num">${totalCenMe}</td>
+                <td class="py-3 px-2 text-center num">${totalCenTem}</td>
+                <td class="py-3 px-2 text-center">${pill(totalCenTok, totalCenTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                <td class="py-3 px-2 text-center">${pill(totalCenPct, parseFloat(totalCenPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                ${summaryPCellSimple}
+            `;
+            if (allSimpleTbody) simpleFrag.appendChild(makeRow('lvl-summary text-center', simpleSummaryTrHtml));
+            if (regionSimpleTbody) regionSimpleFrag.appendChild(makeRow('lvl-summary text-center', simpleSummaryTrHtml));
 
             regions.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
@@ -1909,8 +2025,26 @@
                     <td class="py-2 px-2 text-center ${cenPctClass}">${cenPct}</td>
                     ${regPCell}
                 `;
-                regionFrag.appendChild(makeRow('bg-[#047dc2] text-white font-normal text-center', regTrHtml.replace('@@NAME@@', () => `${index + 1} ${regName}`)));
-                allFrag.appendChild(makeRow('bg-[#047dc2] text-white font-normal text-center', regTrHtml.replace('@@NAME@@', () => regName)));
+
+                if (allSimpleTbody) {
+                    let regPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${regPVal}</td>` : '';
+                    const regSimpleTrHtml = `
+                        <td class="py-3 px-3 text-left name-cell">${regName}</td>
+                        <td class="py-3 px-2 text-right num">${regPrem.toLocaleString()}</td>
+                        <td class="py-3 px-2 text-right num${regComm < 60000 ? ' text-red-600' : ''}">${regComm.toLocaleString()}</td>
+                        <td class="py-3 px-2 text-center num">${unitMe}</td>
+                        <td class="py-3 px-2 text-center num">${unitTem}</td>
+                        <td class="py-3 px-2 text-center">${pill(unitTok, unitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                        <td class="py-3 px-2 text-center">${pill(unitPct, parseFloat(unitPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                        <td class="py-3 px-2 text-center num">${cenMe}</td>
+                        <td class="py-3 px-2 text-center num">${cenTem}</td>
+                        <td class="py-3 px-2 text-center">${pill(cenTok, cenTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                        <td class="py-3 px-2 text-center">${pill(cenPct, parseFloat(cenPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                        ${regPCellSimple}
+                    `;
+                    simpleFrag.appendChild(makeRow('lvl-region text-center', regSimpleTrHtml));
+                    if (regionSimpleTbody) regionSimpleFrag.appendChild(makeRow('lvl-region text-center', regSimpleTrHtml));
+                }
 
                 centers.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
@@ -1959,9 +2093,26 @@
                             ${cenPCell}
                         `;
                     }
-                    const cenRowClass = 'hover:opacity-95 text-center font-normal text-gray-900';
-                    regionFrag.appendChild(makeRow(cenRowClass, cenBodyHtml.replace('@@NAME@@', () => `${cIdx + 1} ${cenName}`), '#ffffff'));
-                    allFrag.appendChild(makeRow(cenRowClass, cenBodyHtml.replace('@@NAME@@', () => cenName), '#7cbadf'));
+                    if (allSimpleTbody) {
+                        let cenPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${cenPVal}</td>` : '';
+                        let cenNote = commissionNote(cenComm, 15000, 'จะได้ค่าจัดงาน 15% (เต็มศูนย์)', CENTER_INCENTIVE_TIERS);
+                        let cenNoteSimple = cenNote
+                            ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${cenNote.cls}">${cenNote.text}</span></td>`
+                            : `<td colspan="4" class="py-2 px-2"></td>`;
+                        const cenSimpleTrHtml = `
+                            <td class="py-2 px-3 text-left name-cell">${cenName}</td>
+                            <td class="py-2 px-2 text-right num">${cenPrem.toLocaleString()}</td>
+                            <td class="py-2 px-2 text-right num${cenComm < 15000 ? ' text-red-600' : ''}">${cenComm.toLocaleString()}</td>
+                            <td class="py-2 px-2 text-center num">${cUnitMe}</td>
+                            <td class="py-2 px-2 text-center num">${cUnitTem}</td>
+                            <td class="py-2 px-2 text-center">${pill(cUnitTok, cUnitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                            <td class="py-2 px-2 text-center">${pill(cUnitPct, parseFloat(cUnitPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                            ${cenNoteSimple}
+                            ${cenPCellSimple}
+                        `;
+                        simpleFrag.appendChild(makeRow('lvl-center text-center', cenSimpleTrHtml));
+                        if (regionSimpleTbody) regionSimpleFrag.appendChild(makeRow('lvl-center text-center', cenSimpleTrHtml));
+                    }
 
                     let sortedUnitsInCen = unitsInCen.slice().sort((a, b) => cleanNumber(b[7]) - cleanNumber(a[7]));
                     sortedUnitsInCen.forEach((unit, uIdx) => {
@@ -1989,7 +2140,22 @@
                             <td colspan="4"></td>
                             ${unitPCell}
                         `;
-                        allFrag.appendChild(makeRow('hover:opacity-95 text-center font-normal text-gray-900', unitTrHtml, '#cce5f1'));
+                        if (allSimpleTbody) {
+                            let unitPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${unitPVal}</td>` : '';
+                            let unitNote = commissionNote(unitComm, 2500, 'จะได้ค่าจัดงาน 15% (เต็มหน่วย)', UNIT_INCENTIVE_TIERS);
+                            let unitNoteSimple = unitNote
+                                ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${unitNote.cls}">${unitNote.text}</span></td>`
+                                : `<td colspan="4" class="py-2 px-2"></td>`;
+                            const unitSimpleTrHtml = `
+                                <td class="py-2 px-3 text-left name-cell">${unitName}</td>
+                                <td class="py-2 px-2 text-right num">${unitPrem.toLocaleString()}</td>
+                                <td class="py-2 px-2 text-right num${unitComm < 2500 ? ' text-red-600' : ''}">${unitComm.toLocaleString()}</td>
+                                ${unitNoteSimple}
+                                <td colspan="4"></td>
+                                ${unitPCellSimple}
+                            `;
+                            simpleFrag.appendChild(makeRow('lvl-unit text-center', unitSimpleTrHtml));
+                        }
 
                         let agentsInUnit = (agentsByUnit.get(unitName) || []).slice()
                             .sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
@@ -2010,16 +2176,27 @@
                                 <td colspan="8"></td>
                                 ${agentPCell}
                             `;
-                            allFrag.appendChild(makeRow('bg-white hover:bg-gray-50 text-center font-normal text-gray-700', agentTrHtml));
+
+                            if (allSimpleTbody) {
+                                let agentPCellSimple = hasPCol ? `<td class="py-1.5 px-2 text-center">${agentPVal}</td>` : '';
+                                const agentSimpleTrHtml = `
+                                    <td class="py-1.5 px-3 text-left name-cell">${agentName}${isTrainee ? ' <span class="pill pill-neutral">ฝึกหัด</span>' : ''}</td>
+                                    <td class="py-1.5 px-2 text-right num">${agentPrem.toLocaleString()}</td>
+                                    <td class="py-1.5 px-2 text-right num">${agentComm.toLocaleString()}</td>
+                                    <td colspan="8"></td>
+                                    ${agentPCellSimple}
+                                `;
+                                simpleFrag.appendChild(makeRow('lvl-agent text-center', agentSimpleTrHtml));
+                            }
                         });
                     });
                 });
             });
 
-            regionTbody.innerHTML = '';
-            allTbody.innerHTML = '';
-            regionTbody.appendChild(regionFrag);
-            allTbody.appendChild(allFrag);
+            if (allSimpleTbody) allSimpleTbody.innerHTML = '';
+            if (regionSimpleTbody) regionSimpleTbody.innerHTML = '';
+            if (allSimpleTbody) allSimpleTbody.appendChild(simpleFrag);
+            if (regionSimpleTbody) regionSimpleTbody.appendChild(regionSimpleFrag);
         }
     </script>
 
