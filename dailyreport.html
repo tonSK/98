@@ -32,6 +32,7 @@
         }
         table.custom-horizontal-table th, 
         table.custom-horizontal-table td {
+            position: sticky;
             border-left: none !important;
             border-right: none !important;
             border-top: none !important;
@@ -44,21 +45,48 @@
             border-bottom: 2px solid #0b2265 !important;
         }
 
-        #page-allLevelsSimple .overflow-x-auto {
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
+        #page-allLevelsSimple .overflow-x-auto,
         #page-regionCenterSimple .overflow-x-auto {
             max-height: 90vh;
             overflow-y: auto;
         }
         
-        #page-allLevelsSimple thead,
-        #page-regionCenterSimple thead {
+        /* ตรึงหัวตารางทั้ง 2 แถว ให้อยู่ด้านบนสุดใต้ Header หลัก */
+        #page-allLevelsSimple thead tr,
+        #page-regionCenterSimple thead tr {
             position: sticky;
-            top: 0;
             z-index: 40;
+            background-color: #0b2265 !important;
+        }
+        #page-allLevelsSimple thead tr:nth-child(1),
+        #page-regionCenterSimple thead tr:nth-child(1) {
+            top: 0px;
+        }
+        #page-allLevelsSimple thead tr:nth-child(2),
+        #page-regionCenterSimple thead tr:nth-child(2) {
+            top: 37px; /* ปรับลดลงเหลือ 32px เพื่อให้แถวแนบชิดสนิทพอดีกับแถวแรก ไม่มีช่องว่าง */
+        }
+        #page-allLevelsSimple thead th,
+        #page-regionCenterSimple thead th {
+            background-color: #0b2265 !important;
+        }
+
+        /* ตรึงแถวภาคให้ติดอยู่ด้านบนถัดลงมาจากหัวตาราง เมื่อเลื่อนผ่าน */
+        #page-allLevelsSimple tr.lvl-region td,
+        #page-regionCenterSimple tr.lvl-region td {
+            position: sticky;
+            top: 65px;
+            z-index: 30;
+            background-color: #D4E7F3;
+        }
+
+        /* ตรึงแถวศูนย์ให้อยู่ถัดลงมาจากแถวภาค เมื่อเลื่อนผ่าน */
+        #page-allLevelsSimple tr.lvl-center td,
+        #page-regionCenterSimple tr.lvl-center td {
+            position: sticky;
+            top: 102px;
+            z-index: 20;
+            background-color: #E7F1F9 !important;
         }
 
         /* ===== หน้า "(ง่าย)" ทั้งหมด — ดีไซน์ที่เน้นความโล่ง อ่านง่าย ===== */
@@ -75,11 +103,10 @@
             border-bottom: 1px solid rgba(11, 34, 101, 0.2) !important;
         }
         .simple-page thead th {
-            background-color: #0b2265 !important;
             color: #fff !important;
             font-weight: 600;
-            border-bottom: 1px solid #dbe3ee !important;
-            box-shadow: inset 0 -1px 0 #dbe3ee, 0 1px 0 #dbe3ee !important;
+            border-bottom: 1px solid #0b2265 !important;
+            box-shadow: none !important;
         }
         .simple-page tbody tr {
             transition: background-color .12s ease;
@@ -99,17 +126,17 @@
             border-radius: 4px;
             background: var(--accent, transparent);
         }
-        .simple-page tr.lvl-summary td { background-color: rgba(11, 34, 101, 0.2) !important; color: #0b2265 !important; font-weight: 800; }
+        .simple-page tr.lvl-summary td { background-color: #D5D8E2 !important; color: #0b2265 !important; font-weight: 800; }
         .simple-page tr.lvl-summary td.name-cell { padding-left: 1rem !important; }
         .simple-page tr.lvl-summary td.name-cell::before { display: none; }
 
-        .simple-page tr.lvl-region td { background-color: rgba(4, 125, 194, 0.2) !important; padding-top: .7rem !important; padding-bottom: .7rem !important; }
+        .simple-page tr.lvl-region td { background-color: #D4E7F3 !important; padding-top: .7rem !important; padding-bottom: .7rem !important; }
         .simple-page tr.lvl-region td.name-cell { --accent: #047dc2; font-weight: 700; color: #0b2265; }
 
-        .simple-page tr.lvl-center td { background-color: rgba(124, 186, 223, 0.2) !important; }
+        .simple-page tr.lvl-center td { background-color: #E7F1F9 !important; }
         .simple-page tr.lvl-center td.name-cell { --accent: #7cbadf; padding-left: 2rem !important; font-weight: 600; color: #0b2265; }
 
-        .simple-page tr.lvl-unit td { background-color: rgba(203, 213, 225, 0.2) !important; }
+        .simple-page tr.lvl-unit td { background-color: #F5F6F9 !important; }
         .simple-page tr.lvl-unit td.name-cell { --accent: #CBD5E1; padding-left: 2.75rem !important; font-weight: 500; color: #0b2265; }
 
         .simple-page tr.lvl-agent td { background-color: #fff !important; }
@@ -119,15 +146,12 @@
             display: inline-block;
             padding: 1px 10px;
             border-radius: 9999px;
-            /*font-size: .75rem;*/
-            /*font-weight: 600;*/
             white-space: nowrap;
         }
         .simple-page .pill-ok { background: #ecfdf5; color: #047857; }
         .simple-page .pill-warn { background: #fef2f2; color: #b91c1c; }
         .simple-page .pill-neutral { background: #eff6ff; color: #1d4ed8; }
         .simple-page .note-warn {
-            /*font-size: .8rem;*/
             color: #b91c1c;
             background: #fef2f2;
             border-radius: 8px;
@@ -136,7 +160,6 @@
             white-space: nowrap !important;
         }
         .simple-page .note-info {
-            /*font-size: .8rem;*/
             color: #047857;
             background: #ecfdf5;
             border-radius: 8px;
@@ -146,78 +169,6 @@
         }
         .simple-page .num { font-variant-numeric: tabular-nums; }
 
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 5mm;
-            }
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            body { background: white !important; }
-            header, aside, .no-print, #open-sidebar-btn { display: none !important; }
-            main { padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
-            .shadow, .rounded-xl { box-shadow: none !important; border-radius: 0 !important; }
-            
-            #page-allLevelsSimple:not(.hidden) {
-                display: block !important;
-                width: 100% !important;
-                overflow: visible !important;
-            }
-            
-            #page-allLevelsSimple section {
-                padding: 1.25rem !important;
-                margin: 0 !important;
-                width: 100% !important;
-            }
-
-            #page-allLevelsSimple .overflow-x-auto {
-                overflow: visible !important;
-                width: 100% !important;
-                max-height: none !important;
-            }
-
-            /* หน้า "ทุกระดับ (ง่าย)" ตอนพิมพ์ ให้คงสี/ดีไซน์แบบเดียวกับที่เห็นบนจอ */
-            #page-allLevelsSimple table {
-                font-size: 9px !important;
-                width: 100% !important;
-                table-layout: auto !important;
-            }
-            #page-allLevelsSimple th, #page-allLevelsSimple td {
-                white-space: nowrap !important;
-                padding: 4px 6px !important;
-            }
-            #page-allLevelsSimple .pill,
-            #page-allLevelsSimple .note-warn,
-            #page-allLevelsSimple .note-info {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            #page-allLevelsSimple div[id*="title-print"] {
-                display: block !important;
-                font-size: 11px !important;
-                margin-bottom: 1rem !important;
-                text-align: left !important;
-            }
-
-            #page-ranking { display: none !important; }
-            thead { display: table-header-group !important; }
-            tr { page-break-inside: avoid !important; break-inside: avoid !important; }
-            
-            #page-ranking, #page-allLevelsSimple {
-                min-height: calc(100vh - 3rem);
-                display: flex;
-                flex-direction: column;
-            }
-            #page-ranking > div, 
-            #page-allLevelsSimple > section {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-            }
-        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex min-h-screen relative overflow-x-hidden">
@@ -830,28 +781,29 @@
             let hasPCol = rawPVal !== undefined && rawPVal !== null && String(rawPVal).trim() !== '';
             let summaryPVal = formatComplianceCell('division', rawPVal);
 
-            let colNameWidth = hasPCol ? 'w-[22%]' : 'w-[25%]';
-            let colPWidth = hasPCol ? `<th rowspan="2" class="py-3 px-2 w-[7%]">ผลบังคับ</th>` : '';
+            let colNameWidth = hasPCol ? 'w-[22%]' : 'w-[25%]' ;
+            let colPWidth = hasPCol ? `<th rowspan="2" class="py-3 px-2 w-[7%] align-middle border-l border-blue-900/40">ผลบังคับ</th>` : '';
 
+            /* โครงสร้างหัวตารางที่ปรับค่า top แถวที่ 2 เป็น 32px เรียบร้อยแล้ว */
             const theadHtml = `
-                <tr class="bg-[#0b2265] text-white text-center">
-                    <th rowspan="2" class="py-3 px-3 ${colNameWidth}">ชื่อ สกุล</th>
-                    <th colspan="2" class="py-1.5 px-2">ผลงาน</th>
-                    <th colspan="4" class="py-1.5 px-2">บริหารหน่วย</th>
-                    <th colspan="4" class="py-1.5 px-2">บริหารศูนย์</th>
+                <tr class="bg-[#0b2265] text-white text-center align-middle">
+                    <th rowspan="2" class="py-3 px-3 ${colNameWidth} align-middle border-r border-blue-900/40">ชื่อ สกุล</th>
+                    <th colspan="2" class="py-2 px-2 border-r border-blue-900/40">ผลงาน</th>
+                    <th colspan="4" class="py-2 px-2 border-r border-blue-900/40">บริหารหน่วย</th>
+                    <th colspan="4" class="py-2 px-2">บริหารศูนย์</th>
                     ${colPWidth}
                 </tr>
-                <tr class="bg-[#0b2265] text-white text-center text-xs">
-                    <th class="py-1.5 px-2">เบี้ยปีต่อ</th>
-                    <th class="py-1.5 px-2">คอมมิชชั่น</th>
-                    <th class="py-1.5 px-2">มี</th>
-                    <th class="py-1.5 px-2">เต็ม</th>
-                    <th class="py-1.5 px-2">ตก</th>
-                    <th class="py-1.5 px-2">เต็มโควต้า</th>
-                    <th class="py-1.5 px-2">มี</th>
-                    <th class="py-1.5 px-2">เต็ม</th>
-                    <th class="py-1.5 px-2">ตก</th>
-                    <th class="py-1.5 px-2">เต็มโควต้า</th>
+                <tr class="bg-[#0b2265] text-white text-center text-xs align-middle">
+                    <th class="py-2 px-2 border-t border-blue-900/40">เบี้ยปีแรก</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40 border-r border-blue-900/40">คอมมิชชั่น</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">มี</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">เต็ม</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">ตก</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40 border-r border-blue-900/40">เต็มโควต้า</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">มี</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">เต็ม</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">ตก</th>
+                    <th class="py-2 px-2 border-t border-blue-900/40">เต็มโควต้า</th>
                 </tr>
             `;
             if (allSimpleThead) allSimpleThead.innerHTML = theadHtml;
@@ -959,7 +911,7 @@
                     const regSimpleTrHtml = `
                         <td class="py-3 px-3 text-left name-cell">${regName}</td>
                         <td class="py-3 px-2 text-right num">${regPrem.toLocaleString()}</td>
-                        <td class="py-3 px-2 text-right num${regComm < 60000 ? ' text-red-600' : ''}">${regComm.toLocaleString()}</td>
+                        <td class="py-3 px-2 text-right num${regComm < 60000 ? ' text-red-200' : ''}">${regComm.toLocaleString()}</td>
                         <td class="py-3 px-2 text-center num">${unitMe}</td>
                         <td class="py-3 px-2 text-center num">${unitTem}</td>
                         <td class="py-3 px-2 text-center">${pill(unitTok, unitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
