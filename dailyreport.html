@@ -506,7 +506,7 @@
 
             if (gaugeChartInstance) gaugeChartInstance.destroy();
 
-            let activeColor = n2Val > 100 ? '#253487' : (n2Val <= 55 ? '#959ABE' : '#047dc2');
+            let activeColor = n2Val > 100 ? '#253487' : (n2Val < 55 ? '#E42113' : '#047dc2');
             let inactiveColor = '#e5e7eb';
 
             const gaugeNeedlePlugin = {
@@ -536,7 +536,7 @@
                     ctx.lineTo(innerR, 4);
                     ctx.closePath();
                     
-                    ctx.fillStyle = '#253487';
+                    ctx.fillStyle = '#000000';
                     ctx.fill();
                     ctx.restore();
                 }
