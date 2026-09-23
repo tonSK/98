@@ -17,8 +17,6 @@
         }
         
         /* ปรับลดขนาดตัวหนังสือป้ายพิลล์และข้อความแจ้งเตือนในหน้าศูนย์-ภาค และ ทุกระดับ เหลือ 75% */
-        #page-regionCenterSimple .pill,
-        #page-allLevelsSimple .pill,
         #page-regionCenterSimple .note-warn, 
         #page-regionCenterSimple .note-info,
         #page-allLevelsSimple .note-warn, 
@@ -127,13 +125,18 @@
             display: inline-block;
             padding: 1px 10px;
             border-radius: 9999px;
-            /*font-size: .75rem;*/
-            /*font-weight: 600;*/
             white-space: nowrap;
+            font-size: 0.875rem !important;
         }
         .simple-page .pill-ok { background: #ecfdf5; color: #047857; }
         .simple-page .pill-warn { background: #fef2f2; color: #b91c1c; }
-        .simple-page .pill-neutral { background: #eff6ff; color: #1d4ed8; }
+        .simple-page .pill-neutral {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-radius: 6px;
+            padding: 2px 4px;
+            font-size: 0.6rem !important;
+        }
         .simple-page .note-warn {
             /*font-size: .8rem;*/
             color: #b91c1c;
