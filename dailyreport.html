@@ -829,7 +829,7 @@
             let summaryPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${summaryPVal}</td>` : '';
             const simpleSummaryTrHtml = `
                 <td class="py-3 px-3 text-left name-cell">ฝ่าย ${summaryN2.toFixed(2)}%</td>
-                <td class="py-3 px-2 text-right num"><span class="pill ${i2Val < 3371500 ? 'pill-warn' : 'pill-ok'}">${i2Val.toLocaleString()}</span></td>
+                <td class="py-3 px-2 text-right num"><span class="pill ${i2Val < (valM2 * 55%) ? 'pill-warn' : 'pill-ok'}">${i2Val.toLocaleString()}</span></td>
                 <td class="py-3 px-2 text-right num">${totalCommissionSummary.toLocaleString()}</td>
                 <td class="py-3 px-2 text-center num">${totalUnitMe}</td>
                 <td class="py-3 px-2 text-center num">${totalUnitTem}</td>
