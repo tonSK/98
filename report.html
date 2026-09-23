@@ -130,6 +130,7 @@
         }
         .simple-page .pill-ok { background: #ecfdf5; color: #047857; }
         .simple-page .pill-warn { background: #fef2f2; color: #b91c1c; }
+        .simple-page .pill-red { color: #b91c1c; }
         .simple-page .pill-neutral {
             background: #eff6ff;
             color: #1d4ed8;
@@ -666,9 +667,9 @@
             let isRed = num < 75;
 
             if (isRed) {
-                return `<span class="text-red-600 font-normal">${formattedText}</span>`;
+                return `<span class="pill pill-warn ">${formattedText}</span>`;
             }
-            return formattedText;
+            return `<span class="pill pill-ok">${formattedText}</span>`;
         }
 
         function processData(data) {
@@ -1990,15 +1991,15 @@
             const simpleSummaryTrHtml = `
                 <td class="py-3 px-3 text-left name-cell">ฝ่าย ${summaryN2.toFixed(2)}%</td>
                 <td class="py-3 px-2 text-right num">${i2Val.toLocaleString()}</td>
-                <td class="py-3 px-2 text-right num">${totalCommissionSummary.toLocaleString()}</td>
+                <td class="py-3 px-2 text-right num"><span class="pill ${totalCommissionSummary < 500000 ? 'pill-warn' : 'pill-ok'}">${totalCommissionSummary.toLocaleString()}</span></td>
                 <td class="py-3 px-2 text-center num">${totalUnitMe}</td>
                 <td class="py-3 px-2 text-center num">${totalUnitTem}</td>
-                <td class="py-3 px-2 text-center">${pill(totalUnitTok, totalUnitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                <td class="py-3 px-2 text-center">${pill(totalUnitTok, totalUnitTok > 0 ? 'pill-red' : '')}</td>
                 <td class="py-3 px-2 text-center">${pill(totalUnitPct, parseFloat(totalUnitPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
                 <td class="py-3 px-2 text-center num">${totalCenMe}</td>
                 <td class="py-3 px-2 text-center num">${totalCenTem}</td>
-                <td class="py-3 px-2 text-center">${pill(totalCenTok, totalCenTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
-                <td class="py-3 px-2 text-center">${pill(totalCenPct, parseFloat(totalCenPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                <td class="py-3 px-2 text-center">${pill(totalCenTok, totalCenTok > 0 ? 'pill-red' : '')}</td>
+                <td class="py-3 px-2 text-center">${pill(totalCenPct, parseFloat(totalCenPct) < 40 ? 'pill-red' : '')}</td>
                 ${summaryPCellSimple}
             `;
             if (allSimpleTbody) simpleFrag.appendChild(makeRow('lvl-summary text-center', simpleSummaryTrHtml));
@@ -2052,15 +2053,15 @@
                     const regSimpleTrHtml = `
                         <td class="py-3 px-3 text-left name-cell">${regName}</td>
                         <td class="py-3 px-2 text-right num">${regPrem.toLocaleString()}</td>
-                        <td class="py-3 px-2 text-right num${regComm < 60000 ? ' text-red-600' : ''}">${regComm.toLocaleString()}</td>
+                        <td class="py-3 px-2 text-right num"><span class="pill ${regComm < 60000 ? 'pill-warn' : 'pill-ok'}">${regComm.toLocaleString()}</span></td>
                         <td class="py-3 px-2 text-center num">${unitMe}</td>
                         <td class="py-3 px-2 text-center num">${unitTem}</td>
-                        <td class="py-3 px-2 text-center">${pill(unitTok, unitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                        <td class="py-3 px-2 text-center ${unitTok > 0 ? ' text-red-600' : ''}">${unitTok}</td>
                         <td class="py-3 px-2 text-center">${pill(unitPct, parseFloat(unitPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
                         <td class="py-3 px-2 text-center num">${cenMe}</td>
                         <td class="py-3 px-2 text-center num">${cenTem}</td>
-                        <td class="py-3 px-2 text-center">${pill(cenTok, cenTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
-                        <td class="py-3 px-2 text-center">${pill(cenPct, parseFloat(cenPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
+                        <td class="py-3 px-2 text-center ${cenTok > 0 ? ' text-red-600' : ''}">${cenTok}</td>
+                        <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(cenPct) < 40 ? 'pill-red' : ''}">${cenPct}</span></td>
                         ${regPCellSimple}
                     `;
                     simpleFrag.appendChild(makeRow('lvl-region text-center', regSimpleTrHtml));
@@ -2123,10 +2124,10 @@
                         const cenSimpleTrHtml = `
                             <td class="py-2 px-3 text-left name-cell">${cenName}</td>
                             <td class="py-2 px-2 text-right num">${cenPrem.toLocaleString()}</td>
-                            <td class="py-2 px-2 text-right num${cenComm < 15000 ? ' text-red-600' : ''}">${cenComm.toLocaleString()}</td>
+                            <td class="py-3 px-2 text-right num"><span class="pill ${cenComm < 15000 ? 'pill-warn' : 'pill-ok'}">${cenComm.toLocaleString()}</span></td>
                             <td class="py-2 px-2 text-center num">${cUnitMe}</td>
                             <td class="py-2 px-2 text-center num">${cUnitTem}</td>
-                            <td class="py-2 px-2 text-center">${pill(cUnitTok, cUnitTok > 0 ? 'pill-warn' : 'pill-ok')}</td>
+                            <td class="py-3 px-2 text-center ${cUnitTok > 0 ? ' text-red-600' : ''}">${cUnitTok}</td>
                             <td class="py-2 px-2 text-center">${pill(cUnitPct, parseFloat(cUnitPct) < 40 ? 'pill-warn' : 'pill-ok')}</td>
                             ${cenNoteSimple}
                             ${cenPCellSimple}
@@ -2170,7 +2171,7 @@
                             const unitSimpleTrHtml = `
                                 <td class="py-2 px-3 text-left name-cell">${unitName}</td>
                                 <td class="py-2 px-2 text-right num">${unitPrem.toLocaleString()}</td>
-                                <td class="py-2 px-2 text-right num${unitComm < 2500 ? ' text-red-600' : ''}">${unitComm.toLocaleString()}</td>
+                                <td class="py-2 px-2 text-right num"><span class="pill ${unitComm < 2500 ? 'pill-warn' : 'pill-ok'}">${unitComm.toLocaleString()}</span></td>
                                 ${unitNoteSimple}
                                 <td colspan="4"></td>
                                 ${unitPCellSimple}
@@ -2203,7 +2204,7 @@
                                 const agentSimpleTrHtml = `
                                     <td class="py-1.5 px-3 text-left name-cell">${agentName}${isTrainee ? ' <span class="pill pill-neutral">ฝึกหัด</span>' : ''}</td>
                                     <td class="py-1.5 px-2 text-right num">${agentPrem.toLocaleString()}</td>
-                                    <td class="py-1.5 px-2 text-right num">${agentComm.toLocaleString()}</td>
+                                    <td class="py-1.5 px-2 text-right num"><span class="pill ${agentComm == 0 ? 'pill-warn' : 'pill-ok'}">${agentComm.toLocaleString()}</span></td>
                                     <td colspan="8"></td>
                                     ${agentPCellSimple}
                                 `;
