@@ -225,6 +225,7 @@
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                font-size: 10px !important;
             }
             body { background: white !important; }
             header, aside, .no-print, #open-sidebar-btn { display: none !important; }
@@ -251,23 +252,48 @@
 
             /* หน้า "ทุกระดับ (ง่าย)" ตอนพิมพ์ ให้คงสี/ดีไซน์แบบเดียวกับที่เห็นบนจอ */
             #page-allLevelsSimple table {
-                font-size: 9px !important;
                 width: 100% !important;
                 table-layout: auto !important;
             }
             #page-allLevelsSimple th, #page-allLevelsSimple td {
                 white-space: nowrap !important;
                 padding: 4px 6px !important;
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
             }
+
+            #page-allLevelsSimple th, 
+            #page-allLevelsSimple td {
+                white-space: nowrap !important;
+                padding: 6px 8px !important;
+            }
+
+            /* คงค่าความกว้างของการเยื้องซ้าย (padding-left) ให้ตรงกับหน้าจอ */
+            #page-allLevelsSimple .simple-page .name-cell {
+                position: relative !important;
+            }
+            #page-allLevelsSimple tr.lvl-region td.name-cell {
+                padding-left: 1.25rem !important;
+            }
+            #page-allLevelsSimple tr.lvl-center td.name-cell {
+                padding-left: 2rem !important;
+            }
+            #page-allLevelsSimple tr.lvl-unit td.name-cell {
+                padding-left: 2.75rem !important;
+            }
+            #page-allLevelsSimple tr.lvl-agent td.name-cell {
+                padding-left: 3.5rem !important;
+            }
+
             #page-allLevelsSimple .pill,
-            #page-allLevelsSimple .note-warn {
+            #page-allLevelsSimple .note-warn,
+            #page-allLevelsSimple .note-info {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
             
             #page-allLevelsSimple div[id*="title-print"] {
                 display: block !important;
-                font-size: 11px !important;
                 margin-bottom: 1rem !important;
                 text-align: left !important;
             }
