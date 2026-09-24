@@ -10,65 +10,53 @@
     <style> 
         body { font-family: 'Sarabun', sans-serif; } 
         
-        #page-regionCenterSimple table, 
         #page-allLevelsSimple table {
             font-size: 0.875rem !important;
         }
 
-        #page-regionCenterSimple .note-warn, 
-        #page-regionCenterSimple .note-info,
         #page-allLevelsSimple .note-warn, 
         #page-allLevelsSimple .note-info {
             font-size: 0.875rem !important;
         }
 
-        #page-allLevelsSimple .overflow-x-auto,
-        #page-regionCenterSimple .overflow-x-auto {
+        #page-allLevelsSimple .overflow-x-auto {
             max-height: 90vh;
             overflow-y: auto;
         }
         
-        #page-allLevelsSimple thead tr,
-        #page-regionCenterSimple thead tr {
+        #page-allLevelsSimple thead tr {
             position: sticky;
             z-index: 40;
             background-color: #0b2265 !important;
         }
-        #page-allLevelsSimple thead tr:nth-child(1),
-        #page-regionCenterSimple thead tr:nth-child(1) {
+        #page-allLevelsSimple thead tr:nth-child(1) {
             top: 0px;
         }
-        #page-allLevelsSimple thead tr:nth-child(2),
-        #page-regionCenterSimple thead tr:nth-child(2) {
+        #page-allLevelsSimple thead tr:nth-child(2) {
             top: 37px;
         }
-        #page-allLevelsSimple thead th,
-        #page-regionCenterSimple thead th {
+        #page-allLevelsSimple thead th {
             background-color: #0b2265 !important;
         }
 
-        #page-allLevelsSimple tr.lvl-region td,
-        #page-regionCenterSimple tr.lvl-region td {
+        #page-allLevelsSimple tr.lvl-region td {
             position: sticky;
             top: 70px;
             z-index: 30;
             background-color: #D4E7F3;
         }
 
-        #page-allLevelsSimple tr.lvl-center td,
-        #page-regionCenterSimple tr.lvl-center td {
+        #page-allLevelsSimple tr.lvl-center td {
             position: sticky;
             top: 108px;
             z-index: 20;
             background-color: #E7F1F9 !important;
         }
 
-        #page-allLevelsSimple tr.lvl-region:hover td,
-        #page-regionCenterSimple tr.lvl-region:hover td {
+        #page-allLevelsSimple tr.lvl-region:hover td {
             background-color: #c2dcf0 !important;
         }
-        #page-allLevelsSimple tr.lvl-center:hover td,
-        #page-regionCenterSimple tr.lvl-center:hover td {
+        #page-allLevelsSimple tr.lvl-center:hover td {
             background-color: #d3e5f5 !important;
         }
 
@@ -193,11 +181,8 @@
                     <button onclick="switchTab('ranking')" id="btn-ranking" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white">
                         จัดอันดับ
                     </button>
-                    <button onclick="switchTab('regionCenterSimple')" id="btn-regionCenterSimple" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
-                       ศูนย์-ภาค
-                    </button>
                     <button onclick="switchTab('allLevelsSimple')" id="btn-allLevelsSimple" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
-                        ทุกระดับ
+                        สรุปผลงาน
                     </button>
                     <button onclick="reloadData()" id="btn-reload" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/10">
                         <svg id="reload-icon" class="w-4 h-4 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,37 +280,34 @@
             </div>
         </div>
 
-        <!-- หน้า: ภาคศูนย์ -->
-        <div id="page-regionCenterSimple" class="simple-page hidden w-full flex-col min-h-[calc(100vh-3rem)]">
-            <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
-                <div class="flex justify-between items-center mb-4 no-print">
-                    <div class="flex items-center gap-3">
-                        <div id="regioncenter-simple-table-title" class="text-l font-bold text-[#273482]">
-                            สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
-                        </div>
-                    </div>
-                </div>
-                <div class="overflow-x-auto w-full flex-1">
-                    <table class="w-full text-sm simple-table min-w-[900px]">
-                        <thead id="regioncenter-simple-table-head"></thead>
-                        <tbody id="regioncenter-simple-table-body"></tbody>
-                    </table>
-                </div>
-            </section>
-        </div>
-
         <!-- หน้า: ทุกระดับ -->
         <div id="page-allLevelsSimple" class="simple-page hidden w-full flex-col min-h-[calc(100vh-3rem)]">
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
-                <div class="flex justify-between items-center mb-4 no-print">
-                    <div class="flex items-center gap-3">
-                        <div id="alllevels-simple-table-title" class="text-l font-bold text-[#273482]">
-                            สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3 no-print">
+                    <div id="alllevels-simple-table-title" class="text-l font-bold text-[#273482]">
+                        ฝ่ายขยายงานภูมิภาค 98 ( 23 ก.ย. 69 )
+                    </div>
+                    <!-- ส่วนค้นหาและฟิลเตอร์ตำแหน่ง (ทุกระดับ) -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <!-- ตัวเลือก สังกัด (เลือกภาค) -->
+                        <div class="relative">
+                            <select id="select-region-allLevelsSimple" onchange="handleFilterChange('allLevelsSimple')" class="py-1.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#047dc2] bg-white text-gray-700 font-medium">
+                                <option value="">ทุกสังกัด (ทุกภาค)</option>
+                            </select>
+                        </div>
+                        <div class="relative flex-1 md:w-50">
+                            <input type="text" id="search-allLevelsSimple" placeholder="ค้นหาจากชื่อ..." oninput="handleFilterChange('allLevelsSimple')" class="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#047dc2]">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <label class="inline-flex items-center text-xs font-medium cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"><input type="checkbox" value="center" checked onchange="handleFilterChange('allLevelsSimple')" class="al-filter-chk mr-1.5 rounded text-[#047dc2] focus:ring-0">ศูนย์</label>
+                            <label class="inline-flex items-center text-xs font-medium cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"><input type="checkbox" value="unit" checked onchange="handleFilterChange('allLevelsSimple')" class="al-filter-chk mr-1.5 rounded text-[#047dc2] focus:ring-0">หน่วย</label>
+                            <label class="inline-flex items-center text-xs font-medium cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"><input type="checkbox" value="agent" checked onchange="handleFilterChange('allLevelsSimple')" class="al-filter-chk mr-1.5 rounded text-[#047dc2] focus:ring-0">ตัวแทน</label>
                         </div>
                     </div>
                 </div>
                 <div id="alllevels-simple-table-title-print" class="text-l font-bold text-[#273482] mb-4 hidden">
-                    สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ -
+                    ฝ่ายขยายงานภูมิภาค 98 ( 23 ก.ย. 69 )
                 </div>
                 <div class="overflow-x-auto w-full flex-1">
                     <table class="w-full text-sm simple-table min-w-[900px]">
@@ -375,14 +357,10 @@
             document.getElementById('page-ranking').classList.add('hidden');
             document.getElementById('page-ranking').classList.remove('flex');
 
-            document.getElementById('page-regionCenterSimple').classList.add('hidden');
-            document.getElementById('page-regionCenterSimple').classList.remove('flex');
-
             document.getElementById('page-allLevelsSimple').classList.add('hidden');
             document.getElementById('page-allLevelsSimple').classList.remove('flex');
 
             document.getElementById('btn-ranking').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
-            document.getElementById('btn-regionCenterSimple').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             document.getElementById('btn-allLevelsSimple').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
             
             let activePage = document.getElementById('page-' + tabName);
@@ -403,6 +381,7 @@
         let gaugeChartInstance = null;
         let pieChartInstance = null;
         let i2Val = 0, j2Val = 0, k2Val = 0, m2Val = 0, n2Val = 0;
+        let globalLatestData = null;
 
         function cleanNumber(val) {
             if (typeof val === 'number') return val;
@@ -421,7 +400,7 @@
             let isRed = num < 75;
 
             if (isRed) {
-                return `<span class="pill pill-warn ">${formattedText}</span>`;
+                return `<span class="pill pill-warn">${formattedText}</span>`;
             }
             return `<span class="pill pill-ok">${formattedText}</span>`;
         }
@@ -448,11 +427,39 @@
             return null;
         }
 
+        function populateRegionDropdowns(rows) {
+            let regionNames = [];
+            rows.forEach(row => {
+                if (row[0] === "ภาค" || row[0] === "ภาค(GL)") {
+                    if (row[2] && !regionNames.includes(row[2])) {
+                        regionNames.push(row[2]);
+                    }
+                }
+            });
+            regionNames.sort((a, b) => a.localeCompare(b, 'th'));
+
+            let sel = document.getElementById('select-region-allLevelsSimple');
+            if (sel) {
+                let currentVal = sel.value;
+                sel.innerHTML = '<option value="">ทุกสังกัดภาค</option>';
+                regionNames.forEach(regName => {
+                    let opt = document.createElement('option');
+                    opt.value = regName;
+                    opt.textContent = regName;
+                    sel.appendChild(opt);
+                });
+                sel.value = currentVal;
+            }
+        }
+
         function processData(data) {
             if (!data) return;
+            globalLatestData = data;
             
             let summary = data.summary || {};
             let rows = data.rows || [];
+
+            populateRegionDropdowns(rows);
 
             let rawDate = summary.dateColumnHeader || '';
             let formattedDate = formatThaiDate(rawDate);
@@ -463,10 +470,7 @@
             const gaugeTitleEl = document.getElementById('gauge-title-date');
             if (gaugeTitleEl) gaugeTitleEl.innerText = `วันที่ ${formattedDate}`;
             
-            let titleText = `สรุปผลงานฝ่ายขยายงานภูมิภาค 98 ณ วันที่ ${formattedDate}`;
-            
-            const regSimpleTitleEl = document.getElementById('regioncenter-simple-table-title');
-            if (regSimpleTitleEl) regSimpleTitleEl.innerText = titleText;
+            let titleText = `ฝ่ายขยายงานภูมิภาค 98 ( 23 ก.ย. 69 )`;
 
             const allSimpleTitleEl = document.getElementById('alllevels-simple-table-title');
             if (allSimpleTitleEl) allSimpleTitleEl.innerText = titleText;
@@ -613,7 +617,7 @@
                 });
             }
 
-            buildBothRegionTables(rows, i2Val, n2Val, data);
+            buildAllLevelsTable(rows, i2Val, n2Val, data);
 
             function renderFilteredTable(containerId, targetPositions, valueIndex, color, limit, minThreshold) {
                 let containerEl = document.getElementById(containerId);
@@ -741,16 +745,34 @@
                 });
         }
 
-        function buildBothRegionTables(rows, summaryI2, summaryN2, dataObj) {
+        function handleFilterChange(tabType) {
+            if (!globalLatestData) return;
+            let rows = globalLatestData.rows || [];
+            let summary = globalLatestData.summary || {};
+            let sI2 = cleanNumber(summary.i2);
+            let sN2 = cleanNumber(summary.n2);
+
+            let selectedRegion = document.getElementById('select-region-allLevelsSimple').value;
+            let searchVal = document.getElementById('search-allLevelsSimple').value.toLowerCase().trim();
+            let checkboxes = document.querySelectorAll('.al-filter-chk');
+            let allowedPos = { region: true };
+            checkboxes.forEach(chk => { if (chk.checked) allowedPos[chk.value] = true; });
+            buildAllLevelsTable(rows, sI2, sN2, globalLatestData, searchVal, allowedPos, selectedRegion);
+        }
+
+        function buildAllLevelsTable(rows, summaryI2, summaryN2, dataObj, searchKeyword = '', allowedPositions = null, selectedRegion = '') {
             const allSimpleThead = document.getElementById('alllevels-simple-table-head');
             const allSimpleTbody = document.getElementById('alllevels-simple-table-body');
-            const regionSimpleThead = document.getElementById('regioncenter-simple-table-head');
-            const regionSimpleTbody = document.getElementById('regioncenter-simple-table-body');
 
             if (!allSimpleThead || !allSimpleTbody) return;
 
+            if (!allowedPositions) {
+                allowedPositions = { region: true, center: true, unit: true, agent: true };
+            } else {
+                allowedPositions.region = true;
+            }
+
             const simpleFrag = document.createDocumentFragment();
-            const regionSimpleFrag = document.createDocumentFragment();
 
             let summaryRowFromData = rows.find(r => r[0] === "ฝ่าย");
             let rawPVal = summaryRowFromData ? summaryRowFromData[15] : (dataObj && dataObj.summary ? dataObj.summary.p2 : undefined);
@@ -769,8 +791,8 @@
                     ${colPWidth}
                 </tr>
                 <tr class="bg-[#0b2265] text-white text-center text-xs align-middle">
-                    <th class="py-2 px-2 border-t border-blue-900/40">เบี้ยปีแรก</th>
-                    <th class="py-2 px-2 border-t border-blue-900/40 border-r border-blue-900/40">คอมมิชชั่น</th>
+                    <th class="py-2 px-5 border-t border-blue-900/40 text-right">เบี้ยปีแรก</th>
+                    <th class="py-2 px-5 border-t border-blue-900/40 border-r border-blue-900/40 text-right">คอมมิชชั่น</th>
                     <th class="py-2 px-2 border-t border-blue-900/40">มี</th>
                     <th class="py-2 px-2 border-t border-blue-900/40">เต็ม</th>
                     <th class="py-2 px-2 border-t border-blue-900/40">ตก</th>
@@ -782,7 +804,6 @@
                 </tr>
             `;
             if (allSimpleThead) allSimpleThead.innerHTML = theadHtml;
-            if (regionSimpleThead) regionSimpleThead.innerHTML = theadHtml;
 
             let regions = [];
             let allUnits = [], allCenters = [], allAgents = [];
@@ -828,8 +849,8 @@
 
             let summaryPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${summaryPVal}</td>` : '';
             const simpleSummaryTrHtml = `
-                <td class="py-3 px-3 text-left name-cell">ฝ่าย ${summaryN2.toFixed(2)}%</td>
-                <td class="py-3 px-2 text-right num"><span class="pill ${i2Val < (m2Val * 0.55) ? 'pill-warn' : 'pill-ok'}">${i2Val.toLocaleString()}</span></td>
+                <td class="py-3 px-3 text-left name-cell">ผลงานรวมฝ่าย ${summaryN2.toFixed(2)}%</td>
+                <td class="py-3 px-2 text-right num"><span class="pill ${summaryI2 < (m2Val * 0.55) ? 'pill-warn' : 'pill-ok'}">${summaryI2.toLocaleString()}</span></td>
                 <td class="py-3 px-2 text-right num">${totalCommissionSummary.toLocaleString()}</td>
                 <td class="py-3 px-2 text-center num">${totalUnitMe}</td>
                 <td class="py-3 px-2 text-center num">${totalUnitTem}</td>
@@ -849,13 +870,20 @@
                 return tr;
             };
 
-            if (allSimpleTbody) simpleFrag.appendChild(makeRow('lvl-summary text-center', simpleSummaryTrHtml));
-            if (regionSimpleTbody) regionSimpleFrag.appendChild(makeRow('lvl-summary text-center', simpleSummaryTrHtml));
+            let matchSummary = !selectedRegion && (!searchKeyword || "ฝ่าย".includes(searchKeyword));
+            if (matchSummary) {
+                if (allSimpleTbody) simpleFrag.appendChild(makeRow('lvl-summary text-center', simpleSummaryTrHtml));
+            }
 
             regions.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
             regions.forEach((reg) => {
                 let regName = reg[2];
+
+                if (selectedRegion && regName !== selectedRegion) {
+                    return;
+                }
+
                 let regPrem = cleanNumber(reg[8]);
                 let regComm = cleanNumber(reg[7]);
                 let regPVal = formatComplianceCell('region', reg[15]);
@@ -872,25 +900,22 @@
                 let unitTok = unitMe - unitTem;
                 let unitPct = unitMe > 0 ? ((unitTem / unitMe) * 100).toFixed(1) + '%' : '0.0%';
 
-                if (allSimpleTbody) {
-                    let regPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${regPVal}</td>` : '';
-                    let regSimpleTrHtml = `
-                        <td class="py-3 px-3 text-left name-cell">${regName}</td>
-                        <td class="py-3 px-2 text-right num">${regPrem.toLocaleString()}</td>
-                        <td class="py-2 px-2 text-right num"><span class="pill ${regComm < 60000 ? 'pill-warn' : 'pill-ok'}">${regComm.toLocaleString()}</span></td>
-                        <td class="py-3 px-2 text-center num">${unitMe}</td>
-                        <td class="py-3 px-2 text-center num">${unitTem}</td>
-                        <td class="py-3 px-2 text-center ${unitTok > 0 ? ' text-red-600' : ''}">${unitTok}</td>
-                        <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(unitPct) < 40 ? 'pill-warn' : 'pill-ok'}">${unitPct}</span></td>
-                        <td class="py-3 px-2 text-center num">${cenMe}</td>
-                        <td class="py-3 px-2 text-center num">${cenTem}</td>
-                        <td class="py-3 px-2 text-center ${cenTok > 0 ? ' text-red-600' : ''}">${cenTok}</td>
-                        <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(cenPct) < 40 ? 'pill-red' : ''}">${cenPct}</span></td>
-                        ${regPCellSimple}
-                    `;
-                    simpleFrag.appendChild(makeRow('lvl-region text-center', regSimpleTrHtml));
-                    if (regionSimpleTbody) regionSimpleFrag.appendChild(makeRow('lvl-region text-center', regSimpleTrHtml));
-                }
+                let regPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${regPVal}</td>` : '';
+                let regTrHtml = `
+                    <td class="py-3 px-3 text-left name-cell">${regName}</td>
+                    <td class="py-3 px-2 text-right num">${regPrem.toLocaleString()}</td>
+                    <td class="py-2 px-2 text-right num"><span class="pill ${regComm < 60000 ? 'pill-warn' : 'pill-ok'}">${regComm.toLocaleString()}</span></td>
+                    <td class="py-3 px-2 text-center num">${unitMe}</td>
+                    <td class="py-3 px-2 text-center num">${unitTem}</td>
+                    <td class="py-3 px-2 text-center ${unitTok > 0 ? ' text-red-600' : ''}">${unitTok}</td>
+                    <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(unitPct) < 40 ? 'pill-warn' : 'pill-ok'}">${unitPct}</span></td>
+                    <td class="py-3 px-2 text-center num">${cenMe}</td>
+                    <td class="py-3 px-2 text-center num">${cenTem}</td>
+                    <td class="py-3 px-2 text-center ${cenTok > 0 ? ' text-red-600' : ''}">${cenTok}</td>
+                    <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(cenPct) < 40 ? 'pill-red' : ''}">${cenPct}</span></td>
+                    ${regPCellSimple}
+                `;
+                if (allSimpleTbody) simpleFrag.appendChild(makeRow('lvl-region text-center', regTrHtml));
 
                 centers.sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
@@ -906,74 +931,89 @@
                     let cUnitTok = cUnitMe - cUnitTem;
                     let cUnitPct = cUnitMe > 0 ? ((cUnitTem / cUnitMe) * 100).toFixed(1) + '%' : '0.0%';
 
-                    if (allSimpleTbody) {
-                        let cenPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${cenPVal}</td>` : '';
-                        let cenNote = commissionNote(cenComm, 15000, '(เต็มศูนย์) → ค่าจัดงาน 15%', CENTER_INCENTIVE_TIERS);
-                        let cenNoteSimple = cenNote
-                            ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${cenNote.cls}">${cenNote.text}</span></td>`
-                            : `<td colspan="4" class="py-2 px-2"></td>`;
-                        let cenSimpleTrHtml = `
-                            <td class="py-2 px-3 text-left name-cell">${cenName}</td>
-                            <td class="py-2 px-2 text-right num">${cenPrem.toLocaleString()}</td>
-                            <td class="py-2 px-2 text-right num"><span class="pill ${cenComm < 15000 ? 'pill-warn' : 'pill-ok'}">${cenComm.toLocaleString()}</span></td>
-                            <td class="py-2 px-2 text-center num">${cUnitMe}</td>
-                            <td class="py-2 px-2 text-center num">${cUnitTem}</td>
-                            <td class="py-2 px-2 text-center ${cUnitTok > 0 ? ' text-red-600' : ''}">${cUnitTok}</td>
-                            <td class="py-2 px-2 text-center"><span class="pill ${parseFloat(cUnitPct) < 40 ? 'pill-warn' : 'pill-ok'}">${cUnitPct}</span></td>
-                            ${cenNoteSimple}
-                            ${cenPCellSimple}
-                        `;
-                        simpleFrag.appendChild(makeRow('lvl-center text-center', cenSimpleTrHtml));
-                        if (regionSimpleTbody) regionSimpleFrag.appendChild(makeRow('lvl-center text-center', cenSimpleTrHtml));
-                    }
-
-                    let sortedUnitsInCen = unitsInCen.slice().sort((a, b) => cleanNumber(b[7]) - cleanNumber(a[7]));
-                    sortedUnitsInCen.forEach((unit) => {
+                    let showCenterRow = allowedPositions.center && (!searchKeyword || String(cenName).toLowerCase().includes(searchKeyword));
+                    
+                    let unitsInCenSorted = unitsInCen.slice().sort((a, b) => cleanNumber(b[7]) - cleanNumber(a[7]));
+                    
+                    unitsInCenSorted.forEach((unit) => {
                         let unitName = unit[2];
                         let unitPrem = cleanNumber(unit[8]);
                         let unitComm = cleanNumber(unit[7]);
                         let unitPVal = formatComplianceCell('unit', unit[15]);
 
-                        if (allSimpleTbody) {
-                            let unitPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${unitPVal}</td>` : '';
-                            let unitNote = commissionNote(unitComm, 2500, '(เต็มหน่วย) → ค่าจัดงาน 15%', UNIT_INCENTIVE_TIERS);
-                            let unitNoteSimple = unitNote
-                                ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${unitNote.cls}">${unitNote.text}</span></td>`
-                                : `<td colspan="4" class="py-2 px-2"></td>`;
-                            let unitSimpleTrHtml = `
-                                <td class="py-2 px-3 text-left name-cell">${unitName}</td>
-                                <td class="py-2 px-2 text-right num">${unitPrem.toLocaleString()}</td>
-                                <td class="py-2 px-2 text-right num"><span class="pill ${unitComm < 2500 ? 'pill-warn' : 'pill-ok'}">${unitComm.toLocaleString()}</span></td>
-                                ${unitNoteSimple}
-                                <td colspan="4"></td>
-                                ${unitPCellSimple}
-                            `;
-                            simpleFrag.appendChild(makeRow('lvl-unit text-center', unitSimpleTrHtml));
-                        }
-
                         let agentsInUnit = (agentsByUnit.get(unitName) || []).slice()
                             .sort((a, b) => cleanNumber(b[8]) - cleanNumber(a[8]));
 
-                        agentsInUnit.forEach((agent) => {
-                            let rawAgentName = String(agent[2] || '');
-                            let isTrainee = rawAgentName.includes("แนะนำโดย");
-                            let agentName = rawAgentName.replace("แนะนำโดย", "").trim();
-                            let agentPrem = cleanNumber(agent[8]);
-                            let agentComm = cleanNumber(agent[7]);
-                            let agentPVal = formatComplianceCell('agent', agent[15]);
+                        let showUnitRow = allowedPositions.unit && (!searchKeyword || String(unitName).toLowerCase().includes(searchKeyword));
 
-                            if (allSimpleTbody) {
-                                let agentPCellSimple = hasPCol ? `<td class="py-1.5 px-2 text-center">${agentPVal}</td>` : '';
-                                let agentSimpleTrHtml = `
-                                    <td class="py-1.5 px-3 text-left name-cell">${agentName}${isTrainee ? ' <span class="pill pill-neutral">ฝึกหัด</span>' : ''}</td>
-                                    <td class="py-1.5 px-2 text-right num">${agentPrem.toLocaleString()}</td>
-                                    <td class="py-1.5 px-2 text-right num"><span class="pill ${agentComm == 0 ? 'pill-warn' : 'pill-ok'}">${agentComm.toLocaleString()}</span></td>
-                                    <td colspan="8"></td>
-                                    ${agentPCellSimple}
-                                `;
-                                simpleFrag.appendChild(makeRow('lvl-agent text-center', agentSimpleTrHtml));
-                            }
+                        let filteredAgents = agentsInUnit.filter(agent => {
+                            if (!allowedPositions.agent) return false;
+                            if (!searchKeyword) return true;
+                            let rawAgentName = String(agent[2] || '').toLowerCase();
+                            return rawAgentName.includes(searchKeyword);
                         });
+
+                        let matchUnitOrAgent = !searchKeyword || String(unitName).toLowerCase().includes(searchKeyword) || filteredAgents.length > 0 || (showCenterRow && String(cenName).toLowerCase().includes(searchKeyword));
+
+                        if (matchUnitOrAgent) {
+                            if (showCenterRow && allSimpleTbody) {
+                                let cenPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${cenPVal}</td>` : '';
+                                let cenNote = commissionNote(cenComm, 15000, '(เต็มศูนย์) → ค่าจัดงาน 15%', CENTER_INCENTIVE_TIERS);
+                                let cenNoteSimple = cenNote
+                                    ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${cenNote.cls}">${cenNote.text}</span></td>`
+                                    : `<td colspan="4" class="py-2 px-2"></td>`;
+                                let cenSimpleTrHtml = `
+                                    <td class="py-2 px-3 text-left name-cell">${cenName}</td>
+                                    <td class="py-2 px-2 text-right num">${cenPrem.toLocaleString()}</td>
+                                    <td class="py-2 px-2 text-right num"><span class="pill ${cenComm < 15000 ? 'pill-warn' : 'pill-ok'}">${cenComm.toLocaleString()}</span></td>
+                                    <td class="py-2 px-2 text-center num">${cUnitMe}</td>
+                                    <td class="py-2 px-2 text-center num">${cUnitTem}</td>
+                                    <td class="py-2 px-2 text-center ${cUnitTok > 0 ? ' text-red-600' : ''}">${cUnitTok}</td>
+                                    <td class="py-2 px-2 text-center"><span class="pill ${parseFloat(cUnitPct) < 40 ? 'pill-warn' : 'pill-ok'}">${cUnitPct}</span></td>
+                                    ${cenNoteSimple}
+                                    ${cenPCellSimple}
+                                `;
+                                simpleFrag.appendChild(makeRow('lvl-center text-center', cenSimpleTrHtml));
+                                showCenterRow = false; 
+                            }
+
+                            if (showUnitRow && allSimpleTbody) {
+                                let unitPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${unitPVal}</td>` : '';
+                                let unitNote = commissionNote(unitComm, 2500, '(เต็มหน่วย) → ค่าจัดงาน 15%', UNIT_INCENTIVE_TIERS);
+                                let unitNoteSimple = unitNote
+                                    ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${unitNote.cls}">${unitNote.text}</span></td>`
+                                    : `<td colspan="4" class="py-2 px-2"></td>`;
+                                let unitSimpleTrHtml = `
+                                    <td class="py-2 px-3 text-left name-cell">${unitName}</td>
+                                    <td class="py-2 px-2 text-right num">${unitPrem.toLocaleString()}</td>
+                                    <td class="py-2 px-2 text-right num"><span class="pill ${unitComm < 2500 ? 'pill-warn' : 'pill-ok'}">${unitComm.toLocaleString()}</span></td>
+                                    ${unitNoteSimple}
+                                    <td colspan="4"></td>
+                                    ${unitPCellSimple}
+                                `;
+                                simpleFrag.appendChild(makeRow('lvl-unit text-center', unitSimpleTrHtml));
+                            }
+
+                            filteredAgents.forEach((agent) => {
+                                let rawAgentName = String(agent[2] || '');
+                                let isTrainee = rawAgentName.includes("แนะนำโดย");
+                                let agentName = rawAgentName.replace("แนะนำโดย", "").trim();
+                                let agentPrem = cleanNumber(agent[8]);
+                                let agentComm = cleanNumber(agent[7]);
+
+                                if (allSimpleTbody) {
+                                    let agentPCellSimple = hasPCol ? `<td class="py-1.5 px-2 text-center">-</td>` : '';
+                                    let agentSimpleTrHtml = `
+                                        <td class="py-1.5 px-3 text-left name-cell">${agentName}${isTrainee ? ' <span class="pill pill-neutral">ฝึกหัด</span>' : ''}</td>
+                                        <td class="py-1.5 px-2 text-right num">${agentPrem.toLocaleString()}</td>
+                                        <td class="py-1.5 px-2 text-right num"><span class="pill ${agentComm == 0 ? 'pill-warn' : 'pill-ok'}">${agentComm.toLocaleString()}</span></td>
+                                        <td colspan="8"></td>
+                                        ${agentPCellSimple}
+                                    `;
+                                    simpleFrag.appendChild(makeRow('lvl-agent text-center', agentSimpleTrHtml));
+                                }
+                            });
+                        }
                     });
                 });
             });
@@ -981,10 +1021,6 @@
             if (allSimpleTbody) {
                 allSimpleTbody.innerHTML = '';
                 allSimpleTbody.appendChild(simpleFrag);
-            }
-            if (regionSimpleTbody) {
-                regionSimpleTbody.innerHTML = '';
-                regionSimpleTbody.appendChild(regionSimpleFrag);
             }
         }
     </script>
