@@ -341,23 +341,35 @@
 
             <div>
                 <div class="space-y-2">
-                    <button onclick="switchTab('ranking')" id="btn-ranking" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white">
-                        จัดอันดับ
+                    <button onclick="switchTab('ranking')" id="btn-ranking" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white border border-white/40">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>จัดอันดับ</span>
                     </button>
-                    <button onclick="switchTab('regionCenterSimple')" id="btn-regionCenterSimple" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
-                        ศูนย์-ภาค
+                    <button onclick="switchTab('regionCenterSimple')" id="btn-regionCenterSimple" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        <span>ศูนย์-ภาค</span>
                     </button>
-                    <button onclick="switchTab('allLevelsSimple')" id="btn-allLevelsSimple" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
-                        ทุกระดับ
+                    <button onclick="switchTab('allLevelsSimple')" id="btn-allLevelsSimple" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                        <span>ทุกระดับ</span>
                     </button>
-                    <button onclick="switchTab('team')" id="btn-team" class="w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
-                        ทีมงาน
+                    <button onclick="switchTab('team')" id="btn-team" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span>ทีมงาน</span>
                     </button>
-                    <a href="https://98report.streamlit.app" target="_blank" class="block w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30">
+                    <a href="https://98report.streamlit.app" target="_blank" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
                         📥 Import
                     </a>
-                    <button onclick="reloadData()" id="btn-reload" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/10">
-                        <svg id="reload-icon" class="w-4 h-4 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="reloadData()" id="btn-reload" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
+                        <svg id="reload-icon" class="w-4 h-4 transition-transform duration-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4.5 9A7.5 7.5 0 0119 7.5M19.5 15A7.5 7.5 0 015 16.5"/>
                         </svg>
                         <span id="reload-label">Reload</span>
@@ -600,16 +612,16 @@
             document.getElementById('page-team').classList.add('hidden');
             document.getElementById('page-team').classList.remove('flex');
 
-            document.getElementById('btn-ranking').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
-            document.getElementById('btn-regionCenterSimple').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
-            document.getElementById('btn-allLevelsSimple').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
-            document.getElementById('btn-team').className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30';
+            document.getElementById('btn-ranking').className = 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40';
+            document.getElementById('btn-regionCenterSimple').className = 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40';
+            document.getElementById('btn-allLevelsSimple').className = 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40';
+            document.getElementById('btn-team').className = 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40';
             
             let activePage = document.getElementById('page-' + tabName);
             activePage.classList.remove('hidden');
             activePage.classList.add('flex');
             
-            document.getElementById('btn-' + tabName).className = 'w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white';
+            document.getElementById('btn-' + tabName).className = 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white border border-white/40';
         }
 
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxYS9yPNhMDgJEpRxv4buuj9oYw4ZwRgvNJQHc-0hPfV3gKT5zxb3f_ehjwz5ce5F9v/exec';
