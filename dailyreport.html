@@ -195,8 +195,8 @@
         </div>
         
         <!-- ปุ่ม Reload ถูกย้ายมาไว้ด้านล่างสุดของ Sidebar -->
-        <div class="pt-2 mt-auto">
-            <button onclick="reloadData()" id="btn-reload" class="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/10">
+        <div class="pt-2 mb-auto">
+            <button onclick="reloadData()" id="btn-reload" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/10">
                 <svg id="reload-icon" class="w-4 h-4 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4.5 9A7.5 7.5 0 0119 7.5M19.5 15A7.5 7.5 0 015 16.5"/>
                 </svg>
@@ -968,7 +968,7 @@
                         if (matchUnitOrAgent) {
                             if (showCenterRow && allSimpleTbody) {
                                 let cenPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${cenPVal}</td>` : '';
-                                let cenNote = commissionNote(cenComm, 15000, '(เต็มศูนย์) → ค่าจัดงาน 15%', CENTER_INCENTIVE_TIERS);
+                                let cenNote = commissionNote(cenComm, 15000, ' → ค่าจัดงาน 15%', CENTER_INCENTIVE_TIERS);
                                 let cenNoteSimple = cenNote
                                     ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${cenNote.cls}">${cenNote.text}</span></td>`
                                     : `<td colspan="4" class="py-2 px-2"></td>`;
@@ -989,7 +989,7 @@
 
                             if (showUnitRow && allSimpleTbody) {
                                 let unitPCellSimple = hasPCol ? `<td class="py-2 px-2 text-center">${unitPVal}</td>` : '';
-                                let unitNote = commissionNote(unitComm, 2500, '(เต็มหน่วย) → ค่าจัดงาน 15%', UNIT_INCENTIVE_TIERS);
+                                let unitNote = commissionNote(unitComm, 2500, ' → ค่าจัดงาน 15%', UNIT_INCENTIVE_TIERS);
                                 let unitNoteSimple = unitNote
                                     ? `<td colspan="4" class="py-2 px-2 text-left"><span class="${unitNote.cls}">${unitNote.text}</span></td>`
                                     : `<td colspan="4" class="py-2 px-2"></td>`;
