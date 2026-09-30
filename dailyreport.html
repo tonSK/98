@@ -178,13 +178,13 @@
 
             <div>
                 <div class="space-y-2">
-                    <button onclick="switchTab('ranking')" id="btn-ranking" class="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white border border-white/40">
+                    <button onclick="switchTab('ranking')" id="btn-ranking" class="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                         </svg>
                         <span>จัดอันดับ</span>
                     </button>
-                    <button onclick="switchTab('allLevelsSimple')" id="btn-allLevelsSimple" class="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/40">
+                    <button onclick="switchTab('allLevelsSimple')" id="btn-allLevelsSimple" class="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-[#273482] text-white border border-white/40">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
@@ -194,7 +194,6 @@
             </div>
         </div>
         
-        <!-- ปุ่ม Reload ถูกย้ายมาไว้ด้านล่างสุดของ Sidebar -->
         <div class="pt-2 mb-auto">
             <button onclick="reloadData()" id="btn-reload" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors text-gray-300 hover:bg-[#273482]/30 border border-white/10">
                 <svg id="reload-icon" class="w-4 h-4 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +207,7 @@
     <main id="main-content" class="flex-1 p-6 transition-all duration-300 min-w-0">
 
         <!-- หน้า: จัดอันดับ -->
-        <div id="page-ranking" class="w-full flex flex-col min-h-[calc(100vh-3rem)]">
+        <div id="page-ranking" class="hidden w-full flex-col min-h-[calc(100vh-3rem)]">
             <div class="bg-white p-5 rounded-xl shadow space-y-6 flex-1 flex flex-col">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pb-6 border-b border-gray-100">
                     <div class="relative flex flex-col items-center justify-center md:col-span-4 border-b md:border-b-0 md:border-r border-gray-100 pb-4 md:pb-0">
@@ -290,16 +289,14 @@
             </div>
         </div>
 
-        <!-- หน้า: ทุกระดับ -->
-        <div id="page-allLevelsSimple" class="simple-page hidden w-full flex-col min-h-[calc(100vh-3rem)]">
+        <!-- หน้า: ทุกระดับ (สรุปผลงาน) -->
+        <div id="page-allLevelsSimple" class="simple-page flex w-full flex-col min-h-[calc(100vh-3rem)]">
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3 no-print">
                     <div id="alllevels-simple-table-title" class="text-l font-bold text-[#273482]">
-                        ฝ่ายขยายงานภูมิภาค 98 ( 23 ก.ย. 69 )
+                        ฝ่ายขยายงานภูมิภาค 98 -
                     </div>
-                    <!-- ส่วนค้นหาและฟิลเตอร์ตำแหน่ง (ทุกระดับ) -->
                     <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                        <!-- ตัวเลือก สังกัด (เลือกภาค) -->
                         <div class="relative">
                             <select id="select-region-allLevelsSimple" onchange="handleFilterChange('allLevelsSimple')" class="py-1.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#047dc2] bg-white text-gray-700 font-medium">
                                 <option value="">ทุกสังกัด (ทุกภาค)</option>
@@ -315,9 +312,6 @@
                             <label class="inline-flex items-center text-xs font-medium cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"><input type="checkbox" value="agent" checked onchange="handleFilterChange('allLevelsSimple')" class="al-filter-chk mr-1.5 rounded text-[#047dc2] focus:ring-0">ตัวแทน</label>
                         </div>
                     </div>
-                </div>
-                <div id="alllevels-simple-table-title-print" class="text-l font-bold text-[#273482] mb-4 hidden">
-                    ฝ่ายขยายงานภูมิภาค 98 ( 23 ก.ย. 69 )
                 </div>
                 <div class="overflow-x-auto w-full flex-1">
                     <table class="w-full text-sm simple-table min-w-[900px]">
@@ -353,6 +347,28 @@
             let year = parts[2];
             const thaiMonths = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             return (month >= 1 && month <= 12) ? `${day} ${thaiMonths[month]} ${year}` : dateStr;
+        }
+
+        function formatShortThaiDate(dateStr) {
+            if (!dateStr) return '-';
+            let parts = dateStr.split('/');
+            if (parts.length !== 3) return dateStr;
+            let day = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10);
+            let year = parseInt(parts[2], 10);
+            
+            // แปลงปี ค.ศ. หรือ พ.ศ. ให้เป็นปี พ.ศ. ย่อ 2 หลัก (เช่น 2026 หรือ 2569 -> 69)
+            let shortYear = year;
+            if (year > 2500) {
+                shortYear = year - 2500;
+            } else if (year > 2000) {
+                shortYear = (year + 543) - 2500;
+            } else if (year > 100) {
+                shortYear = year % 100;
+            }
+
+            const thaiMonthsShort = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return (month >= 1 && month <= 12) ? `${day} ${thaiMonthsShort[month]} ${shortYear}` : dateStr;
         }
 
         function getFirstName(fullName) {
@@ -473,6 +489,7 @@
 
             let rawDate = summary.dateColumnHeader || '';
             let formattedDate = formatThaiDate(rawDate);
+            let formattedShortDate = formatShortThaiDate(rawDate);
 
             const sidebarDateEl = document.getElementById('sidebar-date');
             if (sidebarDateEl) sidebarDateEl.innerText = formattedDate;
@@ -480,14 +497,11 @@
             const gaugeTitleEl = document.getElementById('gauge-title-date');
             if (gaugeTitleEl) gaugeTitleEl.innerText = `วันที่ ${formattedDate}`;
             
-            let titleText = `ฝ่ายขยายงานภูมิภาค 98 ( 23 ก.ย. 69 )`;
+            let titleText = `สรุปผลงานฝ่ายฯ 98 ( ${formattedShortDate} )`;
 
             const allSimpleTitleEl = document.getElementById('alllevels-simple-table-title');
             if (allSimpleTitleEl) allSimpleTitleEl.innerText = titleText;
-
-            const allSimpleTitlePrintEl = document.getElementById('alllevels-simple-table-title-print');
-            if (allSimpleTitlePrintEl) allSimpleTitlePrintEl.innerText = titleText;
-            
+           
             i2Val = cleanNumber(summary.i2);
             j2Val = cleanNumber(summary.j2);
             
@@ -869,7 +883,7 @@
                 <td class="py-3 px-2 text-center num">${totalCenMe}</td>
                 <td class="py-3 px-2 text-center num">${totalCenTem}</td>
                 <td class="py-3 px-2 text-center"><span class="pill ${totalCenTok > 0 ? 'pill-red' : ''}">${totalCenTok}</span></td>
-                <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(totalCenPct) < 40 ? 'pill-red' : ''}">${totalCenPct}</span></td>
+                <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(totalCenPct) < 40 ? 'pill-red' : 'pill-ok'}">${totalCenPct}</span></td>
                 ${summaryPCellSimple}
             `;
             
@@ -922,7 +936,7 @@
                     <td class="py-3 px-2 text-center num">${cenMe}</td>
                     <td class="py-3 px-2 text-center num">${cenTem}</td>
                     <td class="py-3 px-2 text-center ${cenTok > 0 ? ' text-red-600' : ''}">${cenTok}</td>
-                    <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(cenPct) < 40 ? 'pill-red' : ''}">${cenPct}</span></td>
+                    <td class="py-3 px-2 text-center"><span class="pill ${parseFloat(cenPct) < 40 ? 'pill-red' : 'pill-ok'}">${cenPct}</span></td>
                     ${regPCellSimple}
                 `;
                 if (allSimpleTbody) simpleFrag.appendChild(makeRow('lvl-region text-center', regTrHtml));
