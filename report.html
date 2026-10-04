@@ -139,7 +139,6 @@
             font-size: 0.6rem !important;
         }
         .simple-page .note-warn {
-            /*font-size: .8rem;*/
             color: #b91c1c;
             background: #fef2f2;
             border-radius: 8px;
@@ -148,7 +147,6 @@
             white-space: nowrap !important;
         }
         .simple-page .note-info {
-            /*font-size: .8rem;*/
             color: #047857;
             background: #ecfdf5;
             border-radius: 8px;
@@ -164,7 +162,7 @@
             background: #253487; color: #F2F7F9; border: 1px solid #F2F7F9; font-weight: 600;
         }
 
-        /* ตรึงแถว ภาค(GL)/ภาค ไว้ใต้หัวตาราง จนกว่าจะเลื่อนถึงภาคถัดไป (ภาคถัดไปจะมาทับที่เดิม) */
+        /* ตรึงแถว ภาค(GL)/ภาค ไว้ใต้หัวตาราง จนกว่าจะเลื่อนถึงภาคถัดไป */
         #page-team tr.region-sticky > td {
             position: sticky;
             top: var(--team-head-h, 44px);
@@ -172,18 +170,15 @@
             background-color: inherit;
             box-shadow: inset 0 -1px 0 rgba(15, 23, 42, .25), 0 2px 4px rgba(15, 23, 42, .18);
         }
-        /* โหมดค้นหา/กรอง เป็นรายการเรียบ ไม่ต้องตรึง */
         #page-team table.team-filtered tr.region-sticky > td {
             position: static;
             box-shadow: none;
         }
 
-        /* โหมดดูอย่างเดียว: ซ่อนคอลัมน์แก้ไข */
         #page-team.team-readonly .col-edit { display: none; }
         #page-team .team-edit-btn { cursor: pointer; opacity: .65; font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 6px; }
         #page-team .team-edit-btn:hover { opacity: 1; background: rgba(255,255,255,.35); }
 
-        /* ชิปตัวกรองด้านบนตาราง */
         #page-team .team-chip {
             background: #eff6ff; color: #273482; border: 1px solid #bfdbfe;
             font-size: .75rem; font-weight: 600; padding: 4px 10px; border-radius: 9999px;
@@ -198,7 +193,6 @@
         #page-team .team-chip.warn.active { background: #c2410c; color: #fff; border-color: #c2410c; }
         #page-team .team-chip.bday.active { background: #253487; color: #fff; border-color: #253487; }
 
-        /* โหมดกรอง: แสดงเป็นรายการเรียบ ไม่มีย่อหน้า/เส้นต้นไม้ แต่บอกสังกัดต่อท้ายชื่อ */
         #page-team .tree-parent { display: none; margin-left: 8px; font-size: 11px; opacity: .7; white-space: nowrap; }
         #page-team table.team-filtered .tree-indent { margin-left: 0 !important; }
         #page-team table.team-filtered .tree-toggle,
@@ -206,7 +200,6 @@
         #page-team table.team-filtered .tree-count { display: none !important; }
         #page-team table.team-filtered .tree-parent { display: inline; }
 
-        /* โครงสร้างสังกัด (tree) ในหน้าทีมงาน */
         #page-team tr.tree-hidden { display: none; }
         #page-team td.tree-name { padding-left: 8px; }
         #page-team .tree-toggle {
@@ -250,7 +243,6 @@
                 max-height: none !important;
             }
 
-            /* หน้า "ทุกระดับ (ง่าย)" ตอนพิมพ์ ให้คงสี/ดีไซน์แบบเดียวกับที่เห็นบนจอ */
             #page-allLevelsSimple table {
                 width: 100% !important;
                 table-layout: auto !important;
@@ -268,7 +260,6 @@
                 padding: 6px 8px !important;
             }
 
-            /* คงค่าความกว้างของการเยื้องซ้าย (padding-left) ให้ตรงกับหน้าจอ */
             #page-allLevelsSimple .simple-page .name-cell {
                 position: relative !important;
             }
@@ -515,9 +506,17 @@
             <section class="bg-white p-5 rounded-xl shadow w-full flex flex-col flex-1">
                 <div class="flex justify-between items-center mb-4 no-print flex-wrap gap-3">
                     <div class="flex items-center gap-3">
-                        <input id="team-search" type="search" placeholder="🔍 ค้นหาชื่อ-สกุล" autocomplete="off"
-                               oninput="syncTreeState()" onkeydown="if(event.key==='Escape'){this.value='';syncTreeState();}"
-                               class="border border-gray-300 rounded-full px-4 py-1.5 text-sm w-64 focus:outline-none focus:border-[#273482]">
+                        <!-- ช่องค้นหาแบบ type="text" และปรับแต่งให้แสดงปุ่มกากบาทอันขวาอันเดียว -->
+                        <div class="relative inline-block">
+                            <input id="team-search" type="text" placeholder="🔍 ค้นหาชื่อ-สกุล" autocomplete="off"
+                                   oninput="handleTeamSearchInput(); syncTreeState();" onkeydown="if(event.key==='Escape'){clearTeamSearch();}"
+                                   class="border border-gray-300 rounded-full pl-4 pr-8 py-1.5 text-sm w-64 focus:outline-none focus:border-[#273482]">
+                            <button type="button" id="team-search-clear" onclick="clearTeamSearch()" title="ล้างคำค้นหา"
+                                    style="display:none;"
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm font-bold leading-none px-1">
+                                &times;
+                            </button>
+                        </div>
                         <span id="team-mode-badge" class="text-xs text-gray-500" style="display:none">👁 โหมดดูอย่างเดียว</span>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap" id="team-counts-container">
@@ -672,7 +671,6 @@
             return (!isNaN(num) && num < 40) ? redClass : '';
         }
 
-        // ระดับ "ทำเพิ่ม X จะได้ค่าจัดงาน Y%" เมื่อคอมมิชชั่นพ้นเกณฑ์ขั้นต่ำแล้ว แต่ยังไม่ถึงขั้นถัดไป
         const CENTER_INCENTIVE_TIERS = [
             { min: 15000, max: 30000, target: 30000, pct: 20 },
             { min: 30000, max: 60000, target: 60000, pct: 25 },
@@ -739,7 +737,6 @@
             
             i2Val = cleanNumber(summary.i2);
             j2Val = cleanNumber(summary.j2);
-            
             
             let summaryRowFromData = rows.find(r => r[0] === "ฝ่าย");
             k2Val = cleanNumber(summary.k2);
@@ -1803,6 +1800,25 @@
             return window.teamLevels && window.teamLevels.has(key) ? window.teamLevels.get(key) : 3;
         }
 
+        function handleTeamSearchInput() {
+            const input = document.getElementById('team-search');
+            const clearBtn = document.getElementById('team-search-clear');
+            if (input && clearBtn) {
+                clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
+            }
+        }
+
+        function clearTeamSearch() {
+            const input = document.getElementById('team-search');
+            const clearBtn = document.getElementById('team-search-clear');
+            if (input) {
+                input.value = '';
+                if (clearBtn) clearBtn.style.display = 'none';
+                syncTreeState();
+                input.focus();
+            }
+        }
+
         function syncTreeState() {
             const tbody = document.getElementById('team-table-body');
             if (!tbody) return;
@@ -2022,9 +2038,7 @@
                 return tr;
             };
 
-            // ป้ายกลม (pill) ใช้แทนตัวเลข/ตัวหนังสือสีตรงๆ ในหน้า "ทุกระดับ (ง่าย)" ให้กวาดสายตาง่ายขึ้น
             const pill = (val, kind) => `<span class="pill ${kind}">${val}</span>`;
-
 
             let summaryPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${summaryPVal}</td>` : '';
             const simpleSummaryTrHtml = `
