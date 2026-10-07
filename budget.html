@@ -1528,9 +1528,9 @@
             else if (statusFilter === 'โอนแล้ว') filtered = filtered.filter(t => !!t.Transfer);
             filtered = filtered.slice().sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
-            const yearTransfers = (globalData.transfers || []).filter(t => getYearFromDate(t.Date) === selYear);
+            // ผลรวมในกรอบสีฟ้า: คำนวณเฉพาะรายการตามสถานะที่เลือก (filtered)
             const catSums = { 'ค่าบำเหน็จ/ค่าพาหนะ': 0, 'ค่าจัดงาน': 0, 'Com Plus': 0, 'อื่น ๆ': 0 };
-            yearTransfers.forEach(t => {
+            filtered.forEach(t => {
                 const amt = parseFloat(t.Amount) || 0;
                 if (catSums.hasOwnProperty(t.Note)) catSums[t.Note] += amt; else catSums['อื่น ๆ'] += amt;
             });
