@@ -391,6 +391,10 @@
                                     <option value="ทั้งหมด">ทั้งหมด</option>
                                 </select>
                             </div>
+                            <div id="transfer-date-filter-wrap" class="flex items-center gap-2" style="display:none;">
+                                <label class="text-xs text-slate-500 font-medium">วันที่โอน:</label>
+                                <select id="filter-transfer-date" onchange="renderTransfersTable()" class="rounded-xl px-3 py-2 text-xs focus:outline-[#253487] bg-white border border-slate-200"></select>
+                            </div>
                         </div>
                     </div>
 
@@ -1523,9 +1527,28 @@
                 actionContainer.style.display = (statusFilter === 'รอโอน') ? 'flex' : 'none';
             }
 
+            // ตัวกรองวันที่โอน: แสดงเฉพาะเมื่อเลือกสถานะ "โอนแล้ว"
+            const dateWrap = document.getElementById('transfer-date-filter-wrap');
+            const dateSel = document.getElementById('filter-transfer-date');
+            if (dateWrap) dateWrap.style.display = (statusFilter === 'โอนแล้ว') ? 'flex' : 'none';
+            if (dateSel && statusFilter === 'โอนแล้ว') {
+                const prevDate = dateSel.value || 'ทุกวันที่';
+                const dateKeys = [...new Set((globalData.transfers || [])
+                    .filter(t => getYearFromDate(t.Date) === selYear && t.Transfer)
+                    .map(t => formatDateForInput(t.Transfer))
+                    .filter(Boolean))].sort().reverse();
+                dateSel.innerHTML = '<option value="ทุกวันที่">ทุกวันที่</option>' +
+                    dateKeys.map(k => `<option value="${k}">${formatThaiDate(k)}</option>`).join('');
+                dateSel.value = dateKeys.includes(prevDate) ? prevDate : 'ทุกวันที่';
+            }
+            const transferDateFilter = (statusFilter === 'โอนแล้ว' && dateSel) ? dateSel.value : 'ทุกวันที่';
+
             let filtered = (globalData.transfers || []).filter(t => getYearFromDate(t.Date) === selYear);
             if (statusFilter === 'รอโอน') filtered = filtered.filter(t => !t.Transfer);
-            else if (statusFilter === 'โอนแล้ว') filtered = filtered.filter(t => !!t.Transfer);
+            else if (statusFilter === 'โอนแล้ว') {
+                filtered = filtered.filter(t => !!t.Transfer);
+                if (transferDateFilter !== 'ทุกวันที่') filtered = filtered.filter(t => formatDateForInput(t.Transfer) === transferDateFilter);
+            }
             filtered = filtered.slice().sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
             // ผลรวมในกรอบสีฟ้า: คำนวณเฉพาะรายการตามสถานะที่เลือก (filtered)
