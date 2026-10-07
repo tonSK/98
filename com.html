@@ -55,21 +55,9 @@
             word-break: break-word;
         }
 
-        .col-note {
-            max-width: 105px;
-            min-width: 105px;
-            width: 105px;
-            white-space: pre-line;
-            word-wrap: break-word;
-            word-break: break-word;
-            font-size: 0.9rem;
-            color: #000000 !important;
-        }
-        
         tr.row-no-credit td:not(.highlight-custom) { background-color: #f1f3f5 !important; }
         tr.row-non-med td.col-code-cell,
         tr.row-non-med td.col-name-cell { color: #dc3545 !important; }
-        tr.row-italic-note .col-note { font-style: italic; }
         
         tr.row-discount-green td:not(.col-code-cell):not(.col-name-cell):not(.highlight-custom) {
             color: green !important;
@@ -227,8 +215,7 @@
                     <span id="main-title-text">Commission</span>
                 </h1>
                 <div class="d-flex align-items-center flex-wrap gap-2">
-                  <span id="logged-in-user-display" class="me-2 text-white small fw-bold"><i class="bi bi-person-circle me-1"></i><span id="username-text"></span></span>
-                  <span id="last-update-display" class="me-2 text-white small fw-bold" style="display: none;">อัปเดต : -</span>
+                  <span class="me-2 text-white small fw-bold"><i class="bi bi-person-circle me-1"></i><span id="username-text"></span></span>
                   <button id="settings-btn" class="btn btn-warning btn-sm fw-bold text-dark d-none"><i class="bi bi-gear me-1"></i>ตั้งค่า</button>
                   <button id="logout-main-btn" class="btn btn-danger btn-sm fw-bold"><i class="bi bi-box-arrow-right me-1"></i>ออกจากระบบ</button>
                 </div>
@@ -276,7 +263,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table id="data-table" class="table table-bordered table-hover">
+                        <table class="table table-bordered table-hover">
                             <thead id="table-head"></thead>
                             <tbody id="table-body">
                                 <tr>
@@ -466,7 +453,6 @@
         const CONFIRM_DELETE_BTN = document.getElementById('confirm-delete-btn');
         const LOGOUT_MAIN_BTN = document.getElementById('logout-main-btn');
         const MAIN_TITLE_TEXT = document.getElementById('main-title-text');
-        const LAST_UPDATE_DISPLAY = document.getElementById('last-update-display');
         const USERNAME_TEXT = document.getElementById('username-text');
         const LOGIN_DATE_RANGE_TEXT = document.getElementById('login-date-range-text');
 
@@ -616,7 +602,7 @@
 
             try {
                 const email = toAuthEmail(user);
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+                const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
                 if (error) throw error;
 
                 const profile = await fetchUserProfileByUsername(user);
@@ -955,10 +941,6 @@
             if (LOGIN_DATE_RANGE_TEXT) {
                 LOGIN_DATE_RANGE_TEXT.innerText = dateRangeText;
             }
-
-            if (LAST_UPDATE_DISPLAY) {
-                LAST_UPDATE_DISPLAY.style.display = 'none';
-            }
         }
        
 
@@ -1129,6 +1111,21 @@
             document.getElementById('modal-form-fields').innerHTML = fieldsHtml;
         }
 
+        const CATEGORY_ORDER_RIDER = [
+            "เฮลท์ ฟิต สบ๊าบ สบาย", "อุบัติเหตุ ฆาตกรรมและจลาจล", "ชดเชยรายได้", "โรคร้ายแรง", "สุขภาพ",
+            "ชั่วระยะเวลา", "ไลฟ์เวิร์ส อุบัติเหตุ ฆาตกรรมและจลาจล", "ไลฟ์เวิร์ส ชดเชยรายได้", "ไลฟ์เวิร์ส โรคร้ายแรง", "ไลฟ์เวิร์ส สุขภาพ"
+        ];
+
+        const CATEGORY_ORDER_INSURANCE = [
+            "จำกัดระยะเวลาขาย", "ตลอดชีพ", "สะสมทรัพย์", "สะสมทรัพย์ (เงินคืนระหว่างปี)", "PAR Product",
+            "High Net Worth", "Life Verse", "ลดหย่อนบำนาญ", "กบข.", "ชีวิตหลังเกษียณ", "ผู้สูงอายุ", "คนพิการ", "อิสลาม"
+        ];
+
+        const toNumber = (v) => {
+            const n = parseFloat(String(v === undefined || v === null ? '' : v).replace(/,/g, '').trim());
+            return isNaN(n) ? Infinity : n;
+        };
+
         function populateCategoryDropdown() {
             const categories = new Set();
             allData.forEach(row => {
@@ -1136,26 +1133,16 @@
                 if (cat) categories.add(cat);
             });
 
-            const customRiderOrder = [
-                "เฮลท์ ฟิต สบ๊าบ สบาย", "อุบัติเหตุ ฆาตกรรมและจลาจล", "ชดเชยรายได้", "โรคร้ายแรง", "สุขภาพ", 
-                "ชั่วระยะเวลา", "ไลฟ์เวิร์ส อุบัติเหตุ ฆาตกรรมและจลาจล", "ไลฟ์เวิร์ส ชดเชยรายได้", "ไลฟ์เวิร์ส โรคร้ายแรง", "ไลฟ์เวิร์ส สุขภาพ"
-            ];
-
-            const customInsuranceOrder = [
-                "จำกัดระยะเวลาขาย", "ตลอดชีพ", "สะสมทรัพย์", "สะสมทรัพย์ (เงินคืนระหว่างปี)", "PAR Product", 
-                "High Net Worth", "Life Verse", "ลดหย่อนบำนาญ", "กบข.", "ชีวิตหลังเกษียณ", "ผู้สูงอายุ", "คนพิการ", "อิสลาม"
-            ];
-
             const sortedCategories = Array.from(categories).sort((a, b) => {
                 if (currentSheetName === 'Rider') {
-                    const indexA = customRiderOrder.indexOf(a);
-                    const indexB = customRiderOrder.indexOf(b);
+                    const indexA = CATEGORY_ORDER_RIDER.indexOf(a);
+                    const indexB = CATEGORY_ORDER_RIDER.indexOf(b);
                     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
                     if (indexA !== -1) return -1;
                     if (indexB !== -1) return 1;
                 } else {
-                    const indexA = customInsuranceOrder.indexOf(a);
-                    const indexB = customInsuranceOrder.indexOf(b);
+                    const indexA = CATEGORY_ORDER_INSURANCE.indexOf(a);
+                    const indexB = CATEGORY_ORDER_INSURANCE.indexOf(b);
                     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
                     if (indexA !== -1) return -1;
                     if (indexB !== -1) return 1;
@@ -1238,29 +1225,19 @@
                 filtered = newFiltered;
             }
 
-            const customRiderOrder = [
-                "เฮลท์ ฟิต สบ๊าบ สบาย", "อุบัติเหตุ ฆาตกรรมและจลาจล", "ชดเชยรายได้", "โรคร้ายแรง", "สุขภาพ", 
-                "ชั่วระยะเวลา", "ไลฟ์เวิร์ส อุบัติเหตุ ฆาตกรรมและจลาจล", "ไลฟ์เวิร์ส ชดเชยรายได้", "ไลฟ์เวิร์ส โรคร้ายแรง", "ไลฟ์เวิร์ส สุขภาพ"
-            ];
-
-            const customInsuranceOrder = [
-                "จำกัดระยะเวลาขาย", "ตลอดชีพ", "สะสมทรัพย์", "สะสมทรัพย์ (เงินคืนระหว่างปี)", "PAR Product", 
-                "High Net Worth", "Life Verse", "ลดหย่อนบำนาญ", "กบข.", "ชีวิตหลังเกษียณ", "ผู้สูงอายุ", "คนพิการ", "อิสลาม"
-            ];
-
             filtered.sort((a, b) => {
                 const catA = (a['ประเภท'] || 'อื่นๆ').trim();
                 const catB = (b['ประเภท'] || 'อื่นๆ').trim();
                 if (catA !== catB) {
                     if (currentSheetName === 'Rider') {
-                        const indexA = customRiderOrder.indexOf(catA);
-                        const indexB = customRiderOrder.indexOf(catB);
+                        const indexA = CATEGORY_ORDER_RIDER.indexOf(catA);
+                        const indexB = CATEGORY_ORDER_RIDER.indexOf(catB);
                         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
                         if (indexA !== -1) return -1;
                         if (indexB !== -1) return 1;
                     } else {
-                        const indexA = customInsuranceOrder.indexOf(catA);
-                        const indexBVal = customInsuranceOrder.indexOf(catB);
+                        const indexA = CATEGORY_ORDER_INSURANCE.indexOf(catA);
+                        const indexBVal = CATEGORY_ORDER_INSURANCE.indexOf(catB);
                         if (indexA !== -1 && indexBVal !== -1) return indexA - indexBVal;
                         if (indexA !== -1) return -1;
                         if (indexBVal !== -1) return 1;
@@ -1270,15 +1247,18 @@
                 const codeCompare = (a['รหัส'] || '').localeCompare(b['รหัส'] || '');
                 if (codeCompare !== 0) return codeCompare;
 
-                // หน้าสัญญาเพิ่มเติม: ถ้ารหัสซ้ำกัน ให้เรียงพิกัดอายุเริ่มจากน้อยไปมาก
-                if (currentSheetName === 'Rider') {
-                    const toAge = (v) => {
-                        const n = parseFloat(String(v === undefined || v === null ? '' : v).replace(/,/g, '').trim());
-                        return isNaN(n) ? Infinity : n;
-                    };
-                    const ageA = toAge(a['พิกัดเริ่ม']);
-                    const ageB = toAge(b['พิกัดเริ่ม']);
-                    if (ageA !== ageB) return ageA < ageB ? -1 : 1;
+                // รหัสซ้ำกัน: เรียงพิกัดอายุเริ่มจากน้อยไปมาก
+                const ageA = toNumber(a['พิกัดเริ่ม']);
+                const ageB = toNumber(b['พิกัดเริ่ม']);
+                if (ageA !== ageB) return ageA < ageB ? -1 : 1;
+
+                // หน้าแบบประกัน: พิกัดอายุเริ่มซ้ำกัน ให้เรียงเงื่อนไข (ทุน) จากน้อยไปมาก
+                // ตัวเลขมาก่อน ค่าที่ไม่ใช่ตัวเลข/ค่าว่างอยู่ท้าย
+                if (currentSheetName !== 'Rider') {
+                    const capA = toNumber(a['ทุน']);
+                    const capB = toNumber(b['ทุน']);
+                    if (capA !== capB) return capA < capB ? -1 : 1;
+                    if (capA === Infinity) return String(a['ทุน'] || '').localeCompare(String(b['ทุน'] || ''), 'th');
                 }
                 return 0;
             });
