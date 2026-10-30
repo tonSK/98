@@ -79,9 +79,65 @@
                 width: 100% !important;
             }
 
+            /* โหมดพิมพ์: ตัวหนังสือสีดำล้วน พื้นขาว ไม่มีสี/เงา/ไอคอน */
+            *, *::before, *::after {
+                color: #000 !important;
+                background: transparent !important;
+                background-image: none !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+
+            /* ป้ายคุณวุฒิ / ป้าย "ผูก" / กล่องเกณฑ์ ให้เป็นตัวหนังสือธรรมดา */
+            td span.inline-block,
+            td span.rounded,
+            #criteriaBadges span {
+                border: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                font-weight: 600 !important;
+            }
+
+            #criteriaBadges span {
+                margin-right: 8px;
+            }
+
+            .rounded-xl, .rounded-lg, .rounded-md {
+                border-radius: 0 !important;
+            }
+
+            /* ซ่อนไอคอน FontAwesome */
+            .fa-solid, .fa-regular {
+                display: none !important;
+            }
+
+            /* ข้อความกำกับชื่อที่ผูก ใช้ตัวเอียงเล็กน้อยแทนสี */
+            td .text-xs.flex {
+                font-style: italic;
+            }
+
+            /* body เป็น flex + min-h-screen ทำให้เบราว์เซอร์ตัดเนื้อหาแค่หน้าเดียว -> ใช้ block แทน */
+            body {
+                display: block !important;
+                min-height: 0 !important;
+                height: auto !important;
+            }
+
+            main, #contentArea {
+                display: block !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            /* ตัวห่อตารางที่มี overflow-hidden / overflow-auto ทำให้หัวตารางไม่ซ้ำหน้าถัดไป -> เปิดเป็น visible */
+            .table-wrap,
             .table-container {
                 max-height: none !important;
+                min-height: 0 !important;
+                height: auto !important;
                 overflow: visible !important;
+                border-radius: 0 !important;
+                border: none !important;
             }
 
             /* บังคับตารางให้อยู่ในหน้ากระดาษพอดี ไม่ล้นขอบขวา */
@@ -90,11 +146,27 @@
                 table-layout: fixed !important;
                 font-size: 7.5pt !important;
                 border-collapse: collapse !important;
+                border-spacing: 0 !important;
             }
+
+            /* กำหนดความกว้างคอลัมน์คงที่ เดือนจะแบ่งพื้นที่ที่เหลือเท่า ๆ กัน */
+            th.col-idx   { width: 8mm !important; }
+            th.col-name  { width: 38mm !important; }
+            th.col-total { width: 24mm !important; }
+            th.col-qual  { width: 15mm !important; }
+            th.col-next  { width: 30mm !important; }
 
             /* ให้หัวข้อตารางแสดงซ้ำในทุกหน้ากระดาษ */
             thead {
                 display: table-header-group !important;
+            }
+
+            tfoot {
+                display: table-footer-group !important;
+            }
+
+            tbody {
+                display: table-row-group !important;
             }
 
             tr {
@@ -103,12 +175,36 @@
             }
 
             /* ยกเลิก Sticky ขณะพิมพ์ */
+            thead tr th,
             th, td {
                 position: static !important;
+                top: auto !important;
+                left: auto !important;
                 padding: 3px 2px !important;
                 min-width: 0 !important;
                 word-wrap: break-word !important;
                 overflow-wrap: break-word !important;
+                box-shadow: none !important;
+                border: 0.5pt solid #cbd5e1 !important;
+            }
+
+            /* เส้นตารางสีเทาเข้มบาง ๆ อ่านง่ายบนกระดาษขาวดำ */
+            thead tr th,
+            th, td {
+                border: 0.4pt solid #666 !important;
+            }
+
+            thead tr th {
+                font-size: 7.5pt !important;
+                font-weight: 700 !important;
+                border-bottom: 1.2pt solid #000 !important;
+            }
+
+            /* ตัวเลขรายเดือนไม่ตัดบรรทัด และลดขนาดให้พอดีช่อง */
+            td.month-cell {
+                white-space: nowrap !important;
+                font-size: 6.5pt !important;
+                letter-spacing: -0.2px;
             }
 
             .sticky-col-1, .sticky-col-2 {
@@ -204,13 +300,13 @@
             </div>
 
             <!-- Table Container with Scroll and Sticky Properties -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
+            <div class="table-wrap bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
                 <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto table-container w-full">
                     <table class="w-full text-sm text-left text-slate-600 border-separate border-spacing-0">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                             <tr>
-                                <th class="px-3 py-3.5 text-center w-12 sticky-col-1 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ลำดับ</th>
-                                <th class="px-4 py-3.5 min-w-[220px] sticky-col-2 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ชื่อ นามสกุล</th>
+                                <th class="col-idx px-3 py-3.5 text-center w-12 sticky-col-1 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ลำดับ</th>
+                                <th class="col-name px-4 py-3.5 min-w-[220px] sticky-col-2 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ชื่อ นามสกุล</th>
                                 <!-- Months Header -->
                                 <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="1">ม.ค.</th>
                                 <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="2">ก.พ.</th>
@@ -224,9 +320,9 @@
                                 <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="10">ต.ค.</th>
                                 <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="11">พ.ย.</th>
                                 <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="12">ธ.ค.</th>
-                                <th class="px-4 py-3.5 text-right min-w-[130px] bg-slate-200/80 font-bold border-b border-slate-200">สะสมรวม</th>
-                                <th class="px-3 py-3.5 text-center min-w-[110px] border-b border-slate-200 bg-slate-100">คุณวุฒิ</th>
-                                <th class="px-4 py-3.5 min-w-[170px] border-b border-slate-200 bg-slate-100">คุณวุฒิถัดไป</th>
+                                <th class="col-total px-4 py-3.5 text-right min-w-[130px] bg-slate-200/80 font-bold border-b border-slate-200">สะสมรวม</th>
+                                <th class="col-qual px-3 py-3.5 text-center min-w-[110px] border-b border-slate-200 bg-slate-100">คุณวุฒิ</th>
+                                <th class="col-next px-4 py-3.5 min-w-[170px] border-b border-slate-200 bg-slate-100">คุณวุฒิถัดไป</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-200">
@@ -579,13 +675,13 @@
 
                     if (item.hasLink) {
                         monthCellsHTML += `
-                            <td class="px-2 py-2.5 text-right border-l border-slate-100 font-mono text-xs">
+                            <td class="month-cell px-2 py-2.5 text-right border-l border-slate-100 font-mono text-xs">
                                 <div class="text-blue-700 font-medium">${item.mainMonthly[m] > 0 ? formatNum(item.mainMonthly[m]) : '-'}</div>
                                 <div class="text-emerald-600">${item.linkedMonthly[m] > 0 ? formatNum(item.linkedMonthly[m]) : '-'}</div>
                             </td>`;
                     } else {
                         monthCellsHTML += `
-                            <td class="px-2 py-2.5 text-right border-l border-slate-100 font-mono text-xs">
+                            <td class="month-cell px-2 py-2.5 text-right border-l border-slate-100 font-mono text-xs">
                                 ${item.mainMonthly[m] > 0 ? formatNum(item.mainMonthly[m]) : '-'}
                             </td>`;
                     }
