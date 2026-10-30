@@ -62,8 +62,8 @@
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-md no-print">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+    <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-md no-print w-full">
+        <div class="w-full px-4 sm:px-6 lg:px-8 py-5">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
@@ -86,21 +86,21 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Main Content (Full Width Expanded) -->
+    <main class="flex-grow w-full px-3 sm:px-6 lg:px-8 py-6">
 
         <!-- Loading State -->
-        <div id="loadingState" class="bg-white rounded-xl shadow-sm p-12 text-center my-8">
+        <div id="loadingState" class="bg-white rounded-xl shadow-sm p-12 text-center my-8 w-full">
             <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
             <h3 class="text-lg font-medium text-slate-700">กำลังดึงข้อมูลเรียลไทม์จาก Google Sheets...</h3>
             <p class="text-slate-400 text-sm mt-1">กำลังประมวลผลชีต FYP, MDRT และ Link</p>
         </div>
 
         <!-- Content Area (Hidden initially) -->
-        <div id="contentArea" class="hidden space-y-6">
+        <div id="contentArea" class="hidden space-y-6 w-full">
 
             <!-- Dynamic Criteria Info & Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">เครดิตผลงานเบี้ยปีแรกรวม</div>
                     <div class="text-2xl font-bold text-slate-900" id="statTotalFYP">0 บาท</div>
@@ -120,7 +120,7 @@
             </div>
 
             <!-- Controls / Filters -->
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4 no-print">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4 no-print w-full">
                 <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
                     <!-- Search Input -->
                     <div class="relative w-full lg:w-80 flex-shrink-0">
@@ -145,8 +145,8 @@
             </div>
 
             <!-- Table Container with Scroll and Sticky Properties -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto table-container">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
+                <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto table-container w-full">
                     <table class="w-full text-sm text-left text-slate-600 border-separate border-spacing-0">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                             <tr>
@@ -372,15 +372,13 @@
             return { currentQual, nextQual, missingAmount };
         }
 
-        // Render Filter Buttons with Counts & Multi-select Support
         function renderQualificationButtons() {
             const btnGroup = document.getElementById("qualButtonGroup");
             btnGroup.innerHTML = "";
 
-            // Calculate counts for each qualification
             const qualCounts = {};
             mdrtCriteria.forEach(c => qualCounts[c.name] = 0);
-            qualCounts["NONE"] = 0; // ยังไม่ได้คุณวุฒิ
+            qualCounts["NONE"] = 0;
 
             processedData.forEach(item => {
                 if (item.qualification === "-") {
@@ -392,7 +390,6 @@
 
             const allQualKeys = [...mdrtCriteria.map(c => c.name), "NONE"];
 
-            // List of buttons to create
             const buttonsData = [
                 { key: "ALL", label: "ทั้งหมด", count: processedData.length },
                 ...mdrtCriteria.map(c => ({ key: c.name, label: c.name, count: qualCounts[c.name] || 0 })),
@@ -416,7 +413,6 @@
 
                 btn.className = baseClasses;
                 
-                // Count Badge styling inside button
                 const countBadgeClass = isSelected 
                     ? "bg-white/25 text-white px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                     : "bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold";
@@ -442,7 +438,6 @@
                     }
                 }
 
-                // If all individual keys are selected or none is selected, switch back to ALL
                 const allSelected = allKeys.every(k => selectedQualifications.has(k));
                 if (allSelected || selectedQualifications.size === 0) {
                     selectedQualifications.clear();
@@ -458,12 +453,10 @@
             const search = document.getElementById("searchInput").value.trim().toLowerCase();
 
             filteredData = processedData.filter(item => {
-                // Search filter
                 const matchSearch = item.mainName.toLowerCase().includes(search) || 
                                     item.code.toLowerCase().includes(search) ||
                                     (item.hasLink && item.linkedName.toLowerCase().includes(search));
 
-                // Multi-select Qualification Filter
                 let matchQual = false;
                 if (selectedQualifications.has("ALL")) {
                     matchQual = true;
@@ -596,7 +589,6 @@
             scrollToRight();
         }
 
-        // Helper function to auto scroll table container to the rightmost side
         function scrollToRight() {
             requestAnimationFrame(() => {
                 const container = document.getElementById("tableScrollContainer");
