@@ -70,7 +70,7 @@
                         <i class="fa-solid fa-award text-yellow-400 text-3xl"></i>
                         ติดตามผลงานคุณวุฒิ MDRT
                     </h1>
-                    <p class="text-blue-200 text-sm mt-1">รายงานสรุปผลงาน FYP ตำแหน่ง "หน่วย" และการผูกผลงานทีม</p>
+                    <p class="text-blue-200 text-sm mt-1">รายงานสรุปผลงานเบี้ยปีแรกระดับหน่วย</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="fetchData()" id="btnReload" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm active:scale-95">
@@ -546,13 +546,13 @@
                     missingText = `<span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุคุณวุฒิสูงสุด</span>`;
                 }
 
-                let nameHTML = `<div class="font-medium text-slate-900">${item.mainName}</div>`;
+                let nameHTML = `<div class="font-semibold text-slate-900">${item.mainName}</div>`;
                 let totalHTML = `<div class="font-bold text-slate-900 font-mono text-sm">${formatNum(item.combinedTotal)}</div>`;
 
                 if (item.hasLink) {
                     nameHTML = `
                         <div>
-                            <div class="font-semibold text-blue-900 flex items-center gap-1.5">
+                            <div class="font-semibold text-slate-900 flex items-center gap-1.5">
                                 ${item.mainName}
                             </div>
                             <div class="text-xs text-emerald-700 flex items-center gap-1.5 mt-1">
@@ -565,7 +565,7 @@
                         <div class="font-mono text-xs">
                             <div class="text-blue-700 font-medium">${formatNum(item.mainTotal)}</div>
                             <div class="text-emerald-600">${formatNum(item.linkedTotal)}</div>
-                            <div class="text-slate-900 font-bold text-sm border-t border-slate-200/80 mt-0.5 pt-0.5">รวม: ${formatNum(item.combinedTotal)}</div>
+                            <div class="text-slate-900 font-bold text-sm border-t border-slate-200/80 mt-0.5 pt-0.5">${formatNum(item.combinedTotal)}</div>
                         </div>`;
                 }
 
