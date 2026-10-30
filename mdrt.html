@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ติดตามผลงานคุณวุฒิ MDRT</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Kanit) -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Sticky header & column styling rules */
+        .table-container {
+            max-height: calc(100vh - 280px);
+            min-height: 400px;
+        }
+
+        /* Sticky positioning helpers */
+        .sticky-col-1 {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+        }
+
+        .sticky-col-2 {
+            position: sticky;
+            left: 48px; /* Width of column 1 */
+            z-index: 20;
+        }
+
+        /* Sticky Headers require higher Z-Index */
+        thead th.sticky-col-1,
+        thead th.sticky-col-2 {
+            z-index: 40 !important;
+        }
+
+        thead tr th {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        /* Print mode custom layout */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
+            .table-container { max-height: none !important; overflow: visible !important; }
+            table { font-size: 11px; }
+            th, td { position: static !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
+                        <i class="fa-solid fa-award text-yellow-400 text-3xl"></i>
+                        ติดตามผลงานคุณวุฒิ MDRT
+                    </h1>
+                    <p class="text-blue-200 text-sm mt-1">รายงานสรุปผลงาน FYP ตำแหน่ง "หน่วย" และการผูกผลงานทีม</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="fetchData()" id="btnReload" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm active:scale-95">
+                        <i class="fa-solid fa-rotate" id="reloadIcon"></i>
+                        <span>โหลดข้อมูลใหม่</span>
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-print"></i>
+                        <span>พิมพ์รายงาน</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-xl shadow-sm p-12 text-center my-8">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+            <h3 class="text-lg font-medium text-slate-700">กำลังดึงข้อมูลเรียลไทม์จาก Google Sheets...</h3>
+            <p class="text-slate-400 text-sm mt-1">กำลังประมวลผลชีต FYP, MDRT และ Link</p>
+        </div>
+
+        <!-- Content Area (Hidden initially) -->
+        <div id="contentArea" class="hidden space-y-6">
+
+            <!-- Dynamic Criteria Info & Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">เครดิตผลงานเบี้ยปีแรกรวม</div>
+                    <div class="text-2xl font-bold text-slate-900" id="statTotalFYP">0 บาท</div>
+                    <div class="text-xs text-slate-400 mt-1" id="statCount">จำนวน 0 หน่วย</div>
+                </div>
+                
+                <!-- Qualification Rules Box (Dynamic from MDRT) -->
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-200 shadow-sm md:col-span-2 lg:col-span-3">
+                    <div class="text-amber-900 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info text-amber-600"></i>
+                        <span>เกณฑ์คุณวุฒิปัจจุบัน</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs" id="criteriaBadges">
+                        <!-- Badges rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls / Filters -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4 no-print">
+                <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                    <!-- Search Input -->
+                    <div class="relative w-full lg:w-80 flex-shrink-0">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="ค้นหาชื่อ หรือ รหัสตัวแทน..." 
+                               class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    <!-- Multi-Select Qualification Filter Buttons Container -->
+                    <div class="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center justify-between lg:justify-end gap-3">
+                        <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 w-full sm:w-auto" id="qualButtonGroup">
+                            <!-- Dynamic Multi-Select Filter Buttons rendered here -->
+                        </div>
+
+                        <!-- Hide Empty Months Toggle -->
+                        <label class="inline-flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none whitespace-nowrap pt-1 sm:pt-0">
+                            <input type="checkbox" id="hideEmptyMonths" onchange="renderTable()" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            <span>ซ่อนเดือนที่ยังไม่ถึง</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container with Scroll and Sticky Properties -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto table-container">
+                    <table class="w-full text-sm text-left text-slate-600 border-separate border-spacing-0">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                            <tr>
+                                <th class="px-3 py-3.5 text-center w-12 sticky-col-1 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ลำดับ</th>
+                                <th class="px-4 py-3.5 min-w-[220px] sticky-col-2 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ชื่อ นามสกุล</th>
+                                <!-- Months Header -->
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="1">ม.ค.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="2">ก.พ.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="3">มี.ค.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="4">เม.ย.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="5">พ.ค.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="6">มิ.ย.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="7">ก.ค.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="8">ส.ค.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="9">ก.ย.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="10">ต.ค.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="11">พ.ย.</th>
+                                <th class="px-2 py-3.5 text-right month-col border-b border-slate-200 bg-slate-100 min-w-[85px]" data-m="12">ธ.ค.</th>
+                                <th class="px-4 py-3.5 text-right min-w-[130px] bg-slate-200/80 font-bold border-b border-slate-200">สะสมรวม</th>
+                                <th class="px-3 py-3.5 text-center min-w-[110px] border-b border-slate-200 bg-slate-100">คุณวุฒิ</th>
+                                <th class="px-4 py-3.5 min-w-[170px] border-b border-slate-200 bg-slate-100">คุณวุฒิถัดไป</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-200">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxt9bz5vRmMtYyHx8MmNQre-7mQJoULEb-17_EPSxdj2Rt9_pvzue0aTtyLK_57RcvA/exec";
+
+        let rawFYP = [];
+        let rawMDRT = [];
+        let rawLink = [];
+
+        let mdrtCriteria = [];
+        let processedData = [];
+        let filteredData = [];
+        
+        // Track selected qualifications for multi-select filter
+        let selectedQualifications = new Set(["ALL"]);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchData();
+        });
+
+        async function fetchData() {
+            showLoading(true);
+            try {
+                const [fypRes, mdrtRes, linkRes] = await Promise.all([
+                    fetch(`${API_URL}?sheet=FYP`).then(r => r.json()),
+                    fetch(`${API_URL}?sheet=MDRT`).then(r => r.json()),
+                    fetch(`${API_URL}?sheet=Link`).then(r => r.json())
+                ]);
+
+                rawFYP = fypRes.rows || [];
+                rawMDRT = mdrtRes.rows || [];
+                rawLink = linkRes.rows || [];
+
+                parseMDRTCriteria();
+                processData();
+                showLoading(false);
+            } catch (err) {
+                console.error(err);
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูลจาก Google Sheets");
+                showLoading(false);
+            }
+        }
+
+        function parseMDRTCriteria() {
+            mdrtCriteria = [];
+            rawMDRT.forEach(row => {
+                const name = String(row[0] || '').trim();
+                const num = parseNum(row[1]);
+                if (name && !isNaN(num) && num > 0) {
+                    mdrtCriteria.push({ name: name, fyp: num });
+                }
+            });
+
+            mdrtCriteria.sort((a, b) => a.fyp - b.fyp);
+
+            const container = document.getElementById("criteriaBadges");
+            container.innerHTML = "";
+
+            if (mdrtCriteria.length === 0) {
+                container.innerHTML = '<span class="text-slate-500">ไม่พบข้อมูลในชีต MDRT</span>';
+                return;
+            }
+
+            mdrtCriteria.forEach(c => {
+                const badge = document.createElement("span");
+                badge.className = "px-2.5 py-1 bg-white border border-amber-300 text-amber-800 rounded-md font-medium shadow-2xs";
+                badge.innerHTML = `<b>${c.name}:</b> ${formatNum(c.fyp)} บาท`;
+                container.appendChild(badge);
+            });
+        }
+
+        function parseNum(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            const cleaned = String(val).replace(/,/g, '').trim();
+            const n = parseFloat(cleaned);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function formatNum(num) {
+            if (!num || num === 0) return "-";
+            return num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function processData() {
+            const unitFYPRows = rawFYP.filter(row => String(row[1] || '').trim() === "หน่วย");
+
+            const unitAgentMap = new Map();
+            unitFYPRows.forEach(row => {
+                const code = String(row[2] || '').trim();
+                const name = String(row[0] || '').trim();
+                
+                const monthly = [];
+                for (let i = 3; i <= 14; i++) {
+                    monthly.push(parseNum(row[i]));
+                }
+                const total = parseNum(row[14]) || monthly.reduce((a, b) => a + b, 0);
+
+                unitAgentMap.set(code, { code, name, monthly, total });
+            });
+
+            const linkPairs = [];
+            const linkedCodesSet = new Set();
+
+            rawLink.forEach(row => {
+                const mCode = String(row[0] || '').trim();
+                const lCode = String(row[2] || '').trim();
+                if (mCode && lCode) {
+                    linkPairs.push({ mainCode: mCode, linkedCode: lCode });
+                    linkedCodesSet.add(lCode);
+                }
+            });
+
+            processedData = [];
+
+            unitAgentMap.forEach((mainData, code) => {
+                if (linkedCodesSet.has(code)) return;
+
+                const pair = linkPairs.find(p => p.mainCode === code);
+                let linkedData = pair ? (unitAgentMap.get(pair.linkedCode) || null) : null;
+
+                const combinedMonthly = [];
+                for (let i = 0; i < 12; i++) {
+                    const mVal = mainData.monthly[i] || 0;
+                    const lVal = linkedData ? (linkedData.monthly[i] || 0) : 0;
+                    combinedMonthly.push(mVal + lVal);
+                }
+
+                const mainTotal = mainData.total;
+                const linkedTotal = linkedData ? linkedData.total : 0;
+                const combinedTotal = mainTotal + linkedTotal;
+
+                const qualInfo = getQualificationInfo(combinedTotal);
+
+                processedData.push({
+                    code: code,
+                    mainName: mainData.name,
+                    mainMonthly: mainData.monthly,
+                    mainTotal: mainTotal,
+                    hasLink: !!linkedData,
+                    linkedCode: pair ? pair.linkedCode : '',
+                    linkedName: linkedData ? linkedData.name : (pair ? pair.linkedCode : ''),
+                    linkedMonthly: linkedData ? linkedData.monthly : Array(12).fill(0),
+                    linkedTotal: linkedTotal,
+                    combinedMonthly: combinedMonthly,
+                    combinedTotal: combinedTotal,
+                    qualification: qualInfo.currentQual,
+                    nextQual: qualInfo.nextQual,
+                    missingAmount: qualInfo.missingAmount
+                });
+            });
+
+            processedData.sort((a, b) => b.combinedTotal - a.combinedTotal);
+
+            const totalSum = processedData.reduce((acc, curr) => acc + curr.combinedTotal, 0);
+            document.getElementById("statTotalFYP").textContent = `${formatNum(totalSum)} บาท`;
+            document.getElementById("statCount").textContent = `จำนวน ${processedData.length} หน่วย`;
+
+            renderQualificationButtons();
+            applyFilters();
+        }
+
+        function getQualificationInfo(total) {
+            if (mdrtCriteria.length === 0) {
+                return { currentQual: "-", nextQual: null, missingAmount: 0 };
+            }
+
+            let currentQual = "-";
+            let nextQual = null;
+            let missingAmount = 0;
+
+            for (let i = mdrtCriteria.length - 1; i >= 0; i--) {
+                if (total >= mdrtCriteria[i].fyp) {
+                    currentQual = mdrtCriteria[i].name;
+                    if (i + 1 < mdrtCriteria.length) {
+                        nextQual = mdrtCriteria[i + 1].name;
+                        missingAmount = mdrtCriteria[i + 1].fyp - total;
+                    } else {
+                        nextQual = "บรรลุสูงสุด";
+                        missingAmount = 0;
+                    }
+                    break;
+                }
+            }
+
+            if (currentQual === "-") {
+                nextQual = mdrtCriteria[0].name;
+                missingAmount = mdrtCriteria[0].fyp - total;
+            }
+
+            return { currentQual, nextQual, missingAmount };
+        }
+
+        // Render Filter Buttons with Counts & Multi-select Support
+        function renderQualificationButtons() {
+            const btnGroup = document.getElementById("qualButtonGroup");
+            btnGroup.innerHTML = "";
+
+            // Calculate counts for each qualification
+            const qualCounts = {};
+            mdrtCriteria.forEach(c => qualCounts[c.name] = 0);
+            qualCounts["NONE"] = 0; // ยังไม่ได้คุณวุฒิ
+
+            processedData.forEach(item => {
+                if (item.qualification === "-") {
+                    qualCounts["NONE"]++;
+                } else if (qualCounts[item.qualification] !== undefined) {
+                    qualCounts[item.qualification]++;
+                }
+            });
+
+            const allQualKeys = [...mdrtCriteria.map(c => c.name), "NONE"];
+
+            // List of buttons to create
+            const buttonsData = [
+                { key: "ALL", label: "ทั้งหมด", count: processedData.length },
+                ...mdrtCriteria.map(c => ({ key: c.name, label: c.name, count: qualCounts[c.name] || 0 })),
+                { key: "NONE", label: "ยังไม่ได้คุณวุฒิ", count: qualCounts["NONE"] || 0 }
+            ];
+
+            buttonsData.forEach(b => {
+                const isSelected = selectedQualifications.has("ALL") || selectedQualifications.has(b.key);
+                
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.onclick = () => toggleQualificationFilter(b.key, allQualKeys);
+
+                let baseClasses = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer select-none border active:scale-95 ";
+                
+                if (isSelected) {
+                    baseClasses += "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-sm";
+                } else {
+                    baseClasses += "bg-slate-100 text-slate-600 border-slate-200/80 hover:bg-slate-200/80 hover:text-slate-800";
+                }
+
+                btn.className = baseClasses;
+                
+                // Count Badge styling inside button
+                const countBadgeClass = isSelected 
+                    ? "bg-white/25 text-white px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                    : "bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold";
+
+                btn.innerHTML = `<span>${b.label}</span> <span class="${countBadgeClass}">(${b.count})</span>`;
+                btnGroup.appendChild(btn);
+            });
+        }
+
+        function toggleQualificationFilter(key, allKeys) {
+            if (key === "ALL") {
+                selectedQualifications.clear();
+                selectedQualifications.add("ALL");
+            } else {
+                if (selectedQualifications.has("ALL")) {
+                    selectedQualifications.clear();
+                    selectedQualifications.add(key);
+                } else {
+                    if (selectedQualifications.has(key)) {
+                        selectedQualifications.delete(key);
+                    } else {
+                        selectedQualifications.add(key);
+                    }
+                }
+
+                // If all individual keys are selected or none is selected, switch back to ALL
+                const allSelected = allKeys.every(k => selectedQualifications.has(k));
+                if (allSelected || selectedQualifications.size === 0) {
+                    selectedQualifications.clear();
+                    selectedQualifications.add("ALL");
+                }
+            }
+
+            renderQualificationButtons();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const search = document.getElementById("searchInput").value.trim().toLowerCase();
+
+            filteredData = processedData.filter(item => {
+                // Search filter
+                const matchSearch = item.mainName.toLowerCase().includes(search) || 
+                                    item.code.toLowerCase().includes(search) ||
+                                    (item.hasLink && item.linkedName.toLowerCase().includes(search));
+
+                // Multi-select Qualification Filter
+                let matchQual = false;
+                if (selectedQualifications.has("ALL")) {
+                    matchQual = true;
+                } else {
+                    if (selectedQualifications.has("NONE") && item.qualification === "-") {
+                        matchQual = true;
+                    }
+                    if (selectedQualifications.has(item.qualification)) {
+                        matchQual = true;
+                    }
+                }
+
+                return matchSearch && matchQual;
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById("tableBody");
+            const hideEmpty = document.getElementById("hideEmptyMonths").checked;
+            tbody.innerHTML = "";
+
+            const hasMonthData = Array(12).fill(false);
+            if (hideEmpty) {
+                filteredData.forEach(item => {
+                    for (let m = 0; m < 12; m++) {
+                        if (item.combinedMonthly[m] > 0) hasMonthData[m] = true;
+                    }
+                });
+
+                document.querySelectorAll(".month-col").forEach(th => {
+                    const monthIdx = parseInt(th.getAttribute("data-m")) - 1;
+                    th.style.display = hasMonthData[monthIdx] ? "" : "none";
+                });
+            } else {
+                document.querySelectorAll(".month-col").forEach(th => th.style.display = "");
+            }
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="17" class="py-12 text-center text-slate-400">
+                            <i class="fa-regular fa-folder-open text-4xl mb-3 block opacity-60"></i>
+                            ไม่พบข้อมูลที่ตรงกับเงื่อนไข
+                        </td>
+                    </tr>`;
+                scrollToRight();
+                return;
+            }
+
+            filteredData.forEach((item, index) => {
+                const tr = document.createElement("tr");
+                const rowBg = index % 2 === 0 ? "bg-white hover:bg-blue-50/30" : "bg-slate-50/60 hover:bg-blue-50/40";
+                const stickyBg = index % 2 === 0 ? "bg-white" : "bg-slate-50";
+
+                tr.className = `${rowBg} transition-colors`;
+
+                let monthCellsHTML = "";
+                for (let m = 0; m < 12; m++) {
+                    if (hideEmpty && !hasMonthData[m]) continue;
+
+                    if (item.hasLink) {
+                        monthCellsHTML += `
+                            <td class="px-2 py-2.5 text-right border-l border-slate-100 font-mono text-xs">
+                                <div class="text-blue-700 font-medium">${item.mainMonthly[m] > 0 ? formatNum(item.mainMonthly[m]) : '-'}</div>
+                                <div class="text-emerald-600">${item.linkedMonthly[m] > 0 ? formatNum(item.linkedMonthly[m]) : '-'}</div>
+                            </td>`;
+                    } else {
+                        monthCellsHTML += `
+                            <td class="px-2 py-2.5 text-right border-l border-slate-100 font-mono text-xs">
+                                ${item.mainMonthly[m] > 0 ? formatNum(item.mainMonthly[m]) : '-'}
+                            </td>`;
+                    }
+                }
+
+                let qualBadgeClass = "bg-slate-100 text-slate-600 border-slate-200";
+                if (item.qualification === "TOT") qualBadgeClass = "bg-purple-100 text-purple-800 border-purple-300 font-bold";
+                else if (item.qualification === "COT") qualBadgeClass = "bg-indigo-100 text-indigo-800 border-indigo-300 font-bold";
+                else if (item.qualification === "MDRT") qualBadgeClass = "bg-amber-100 text-amber-800 border-amber-300 font-bold";
+                else if (item.qualification === "MBRT") qualBadgeClass = "bg-blue-100 text-blue-800 border-blue-300 font-bold";
+
+                let missingText = "-";
+                if (item.missingAmount > 0 && item.nextQual) {
+                    missingText = `<span class="text-xs text-rose-600 font-medium">ทำเพิ่ม ${formatNum(item.missingAmount)} (${item.nextQual})</span>`;
+                } else if (item.nextQual === "บรรลุสูงสุด") {
+                    missingText = `<span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุคุณวุฒิสูงสุด</span>`;
+                }
+
+                let nameHTML = `<div class="font-medium text-slate-900">${item.mainName}</div>`;
+                let totalHTML = `<div class="font-bold text-slate-900 font-mono text-sm">${formatNum(item.combinedTotal)}</div>`;
+
+                if (item.hasLink) {
+                    nameHTML = `
+                        <div>
+                            <div class="font-semibold text-blue-900 flex items-center gap-1.5">
+                                <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded">หลัก</span>
+                                ${item.mainName}
+                            </div>
+                            <div class="text-xs text-emerald-700 flex items-center gap-1.5 mt-1">
+                                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded">ผูก</span>
+                                ${item.linkedName}
+                            </div>
+                        </div>`;
+
+                    totalHTML = `
+                        <div class="font-mono text-xs">
+                            <div class="text-blue-700 font-medium">${formatNum(item.mainTotal)}</div>
+                            <div class="text-emerald-600">${formatNum(item.linkedTotal)}</div>
+                            <div class="text-slate-900 font-bold text-sm border-t border-slate-200/80 mt-0.5 pt-0.5">รวม: ${formatNum(item.combinedTotal)}</div>
+                        </div>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="px-3 py-3 text-center text-slate-400 font-mono text-xs sticky-col-1 ${stickyBg} border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">${index + 1}</td>
+                    <td class="px-4 py-3 sticky-col-2 ${stickyBg} border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">${nameHTML}</td>
+                    ${monthCellsHTML}
+                    <td class="px-4 py-3 text-right bg-slate-100/60 border-l border-slate-200">${totalHTML}</td>
+                    <td class="px-3 py-3 text-center">
+                        <span class="inline-block px-2.5 py-1 text-xs rounded-md border ${qualBadgeClass}">
+                            ${item.qualification}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">${missingText}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            scrollToRight();
+        }
+
+        // Helper function to auto scroll table container to the rightmost side
+        function scrollToRight() {
+            requestAnimationFrame(() => {
+                const container = document.getElementById("tableScrollContainer");
+                if (container) {
+                    container.scrollLeft = container.scrollWidth;
+                }
+            });
+        }
+
+        function showLoading(isLoading) {
+            document.getElementById("loadingState").style.display = isLoading ? "block" : "none";
+            document.getElementById("contentArea").style.display = isLoading ? "none" : "block";
+            
+            const reloadIcon = document.getElementById("reloadIcon");
+            if (isLoading) reloadIcon.classList.add("fa-spin");
+            else reloadIcon.classList.remove("fa-spin");
+        }
+    </script>
+</body>
+</html>
