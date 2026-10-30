@@ -541,7 +541,7 @@
 
                 let missingText = "-";
                 if (item.missingAmount > 0 && item.nextQual) {
-                    missingText = `<span class="text-xs text-rose-600 font-medium">ทำเพิ่ม ${formatNum(item.missingAmount)} (${item.nextQual})</span>`;
+                    missingText = `<span class="text-xs text-rose-600 font-medium">${item.nextQual} ทำเพิ่ม ${formatNum(item.missingAmount)}</span>`;
                 } else if (item.nextQual === "บรรลุสูงสุด") {
                     missingText = `<span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุคุณวุฒิสูงสุด</span>`;
                 }
