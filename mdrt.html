@@ -47,15 +47,74 @@
             z-index: 30;
         }
 
-        /* Print mode custom layout */
+        /* ==========================================
+           Print Mode (ปรับให้แสดงข้อมูลครบเต็มหน้า A4 แนวนอน)
+           ========================================== */
         @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body { background: white; color: black; }
-            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
-            .table-container { max-height: none !important; overflow: visible !important; }
-            table { font-size: 11px; }
-            th, td { position: static !important; }
+            @page {
+                size: A4 landscape;
+                margin: 5mm 5mm;
+            }
+
+            html, body {
+                background: white !important;
+                color: black !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 8.5pt !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl {
+                box-shadow: none !important;
+            }
+
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+
+            .table-container {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            /* บังคับตารางให้อยู่ในหน้ากระดาษพอดี ไม่ล้นขอบขวา */
+            table {
+                width: 100% !important;
+                table-layout: fixed !important;
+                font-size: 7.5pt !important;
+                border-collapse: collapse !important;
+            }
+
+            /* ให้หัวข้อตารางแสดงซ้ำในทุกหน้ากระดาษ */
+            thead {
+                display: table-header-group !important;
+            }
+
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            /* ยกเลิก Sticky ขณะพิมพ์ */
+            th, td {
+                position: static !important;
+                padding: 3px 2px !important;
+                min-width: 0 !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+
+            .sticky-col-1, .sticky-col-2 {
+                position: static !important;
+                box-shadow: none !important;
+            }
         }
     </style>
 </head>
@@ -192,7 +251,6 @@
         let processedData = [];
         let filteredData = [];
         
-        // Track selected qualifications for multi-select filter
         let selectedQualifications = new Set(["ALL"]);
 
         document.addEventListener("DOMContentLoaded", () => {
