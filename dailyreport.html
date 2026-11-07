@@ -441,6 +441,19 @@
             { min: 5000, max: 10000, target: 10000, pct: 35 },
         ];
 
+        // จำนวนหน่วยขั้นต่ำของแต่ละ "ภาค" (ไม่รวม ภาค(GL)) ที่ใช้เป็นตัวหารคำนวณ % เต็มโควต้า
+        const REGION_MIN_UNITS = 13;
+
+        // คืนค่าตัวหารสำหรับ % เต็มโควต้าบริหารหน่วย
+        // - ภาค (ที่ไม่ใช่ GL): ใช้ max(จำนวนหน่วยจริง, 13)
+        // - ภาค(GL) หรืออื่นๆ: ใช้จำนวนหน่วยจริง
+        function getUnitQuotaDivisor(regionPosition, unitCount) {
+            if (regionPosition === "ภาค") {
+                return Math.max(unitCount, REGION_MIN_UNITS);
+            }
+            return unitCount;
+        }
+
         function commissionNote(comm, minThreshold, shortLabel, tiers) {
             if (comm < minThreshold) {
                 return { cls: 'note-warn', text: `เพิ่มคอม ${(minThreshold - comm).toLocaleString()} ${shortLabel}` };
@@ -864,7 +877,15 @@
             let totalUnitMe = allUnits.length;
             let totalUnitTem = allUnits.filter(r => cleanNumber(r[7]) >= 2500).length;
             let totalUnitTok = totalUnitMe - totalUnitTem;
-            let totalUnitPct = totalUnitMe > 0 ? ((totalUnitTem / totalUnitMe) * 100).toFixed(1) + '%' : '0.0%';
+            // ตัวหารรวมระดับฝ่าย = จำนวนหน่วยทั้งหมด + ส่วนที่ขาดไม่ถึง 13 ของแต่ละภาค (ไม่รวม ภาค(GL))
+            let totalUnitDivisor = totalUnitMe;
+            regions.forEach(reg => {
+                if (reg[0] === "ภาค") {
+                    let regUnitCount = (unitsByRegion.get(reg[2]) || []).length;
+                    totalUnitDivisor += Math.max(0, REGION_MIN_UNITS - regUnitCount);
+                }
+            });
+            let totalUnitPct = totalUnitDivisor > 0 ? ((totalUnitTem / totalUnitDivisor) * 100).toFixed(1) + '%' : '0.0%';
 
             let totalCenMe = allCenters.length;
             let totalCenTem = allCenters.filter(r => cleanNumber(r[7]) >= 15000).length;
@@ -922,7 +943,8 @@
                 let unitMe = unitsInReg.length;
                 let unitTem = unitsInReg.filter(r => cleanNumber(r[7]) >= 2500).length;
                 let unitTok = unitMe - unitTem;
-                let unitPct = unitMe > 0 ? ((unitTem / unitMe) * 100).toFixed(1) + '%' : '0.0%';
+                let unitDivisor = getUnitQuotaDivisor(reg[0], unitMe);
+                let unitPct = unitDivisor > 0 ? ((unitTem / unitDivisor) * 100).toFixed(1) + '%' : '0.0%';
 
                 let regPCellSimple = hasPCol ? `<td class="py-3 px-2 text-center">${regPVal}</td>` : '';
                 let regTrHtml = `
