@@ -22,7 +22,7 @@
             min-height: 400px;
         }
 
-        /* Sticky positioning helpers */z
+        /* Sticky positioning helpers */
         .sticky-col-1 {
             position: sticky;
             left: 0;
@@ -677,21 +677,19 @@
                 return;
             }
 
-            // Render Table Header
+            // Render Table Header (Reordered: Month columns moved to the end)
             let thHTML = `
                 <tr>
                     <th class="px-4 py-3.5 min-w-[180px] sticky-col-1 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] text-left">${dl}</th>
-            `;
-            showMonths.forEach(i => {
-                thHTML += `<th class="px-3 py-3.5 text-right border-b border-slate-200 min-w-[85px]">${esc(f.mcols[i].label)}</th>`;
-            });
-            thHTML += `
                     <th class="px-4 py-3.5 text-right min-w-[110px] bg-slate-200/80 font-bold border-b border-slate-200">สะสมรวม</th>
                     ${isMg ? '<th class="px-4 py-3.5 text-right min-w-[110px] border-b border-slate-200">ค่าบริหาร</th>' : '<th class="px-3 py-3.5 text-center min-w-[90px] border-b border-slate-200">%โบนัส</th><th class="px-4 py-3.5 text-right min-w-[110px] border-b border-slate-200">โบนัส</th>'}
                     ${isRegion ? '<th class="px-4 py-3.5 text-right min-w-[120px] border-b border-slate-200 text-amber-700">จ่าย 50%</th>' : ''}
                     <th class="px-4 py-3.5 text-left min-w-[170px] border-b border-slate-200">ขั้นถัดไป</th>
-                </tr>
             `;
+            showMonths.forEach(i => {
+                thHTML += `<th class="px-3 py-3.5 text-right border-b border-slate-200 min-w-[85px]">${esc(f.mcols[i].label)}</th>`;
+            });
+            thHTML += `</tr>`;
             document.getElementById('tableHead').innerHTML = thHTML;
 
             // Render Table Body
@@ -702,10 +700,6 @@
 
                 tbodyHTML += `<tr class="${rowBg} transition-colors">`;
                 tbodyHTML += `<td class="px-4 py-3 sticky-col-1 ${stickyBg} font-semibold text-slate-900 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">${esc(o.name)}</td>`;
-
-                showMonths.forEach(i => {
-                    tbodyHTML += `<td class="px-3 py-2.5 text-right border-l border-slate-100 font-mono text-xs">${fmt(o.vals[i])}</td>`;
-                });
 
                 tbodyHTML += `<td class="px-4 py-3 text-right bg-slate-100/60 border-l border-slate-200 font-bold font-mono text-slate-900">${fmt(o.cum)}</td>`;
 
@@ -728,7 +722,13 @@
                     nx = `<span class="text-xs text-slate-500">เพิ่ม <b class="text-slate-800 font-mono">${fmt(diff)}</b> รับ <b class="text-blue-600 font-semibold">${nextValLabel}</b></span>`;
                 }
 
-                tbodyHTML += `<td class="px-4 py-3">${nx}</td></tr>`;
+                tbodyHTML += `<td class="px-4 py-3">${nx}</td>`;
+
+                showMonths.forEach(i => {
+                    tbodyHTML += `<td class="px-3 py-2.5 text-right border-l border-slate-100 font-mono text-xs">${fmt(o.vals[i])}</td>`;
+                });
+
+                tbodyHTML += `</tr>`;
             });
             document.getElementById('tableBody').innerHTML = tbodyHTML;
 
@@ -736,20 +736,18 @@
             let tfootHTML = `
                 <tr>
                     <td class="px-4 py-3 sticky-col-1 bg-slate-100 font-bold border-r border-slate-200 text-slate-900">รวมทั้งหมด</td>
+                    <td class="px-4 py-3 text-right font-bold font-mono text-blue-900 bg-slate-200/80">${fmt(totCum)}</td>
+                    ${!isMg ? '<td></td>' : ''}
+                    <td class="px-4 py-3 text-right font-bold font-mono text-emerald-700">${fmt(totBonus)}</td>
+                    ${isRegion ? `<td class="px-4 py-3 text-right font-bold font-mono text-amber-700">${fmt(totBonus / 2)}</td>` : ''}
+                    <td></td>
             `;
             showMonths.forEach(i => {
                 let s = 0;
                 list.forEach(o => { s += o.vals[i]; });
                 tfootHTML += `<td class="px-3 py-3 text-right font-mono text-xs font-bold text-slate-800">${fmt(s)}</td>`;
             });
-            tfootHTML += `
-                    <td class="px-4 py-3 text-right font-bold font-mono text-blue-900 bg-slate-200/80">${fmt(totCum)}</td>
-                    ${!isMg ? '<td></td>' : ''}
-                    <td class="px-4 py-3 text-right font-bold font-mono text-emerald-700">${fmt(totBonus)}</td>
-                    ${isRegion ? `<td class="px-4 py-3 text-right font-bold font-mono text-amber-700">${fmt(totBonus / 2)}</td>` : ''}
-                    <td></td>
-                </tr>
-            `;
+            tfootHTML += `</tr>`;
             document.getElementById('tableFoot').innerHTML = tfootHTML;
 
             renderTiersTable();
