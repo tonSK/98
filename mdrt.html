@@ -254,23 +254,15 @@
         <!-- Content Area (Hidden initially) -->
         <div id="contentArea" class="hidden space-y-6 w-full">
 
-            <!-- Dynamic Criteria Info & Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">เครดิตผลงานเบี้ยปีแรกรวม</div>
-                    <div class="text-2xl font-bold text-slate-900" id="statTotalFYP">0 บาท</div>
-                    <div class="text-xs text-slate-400 mt-1" id="statCount">จำนวน 0 หน่วย</div>
-                </div>
-                
-                <!-- Qualification Rules Box (Dynamic from MDRT) -->
-                <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-200 shadow-sm md:col-span-2 lg:col-span-3">
-                    <div class="text-amber-900 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-info text-amber-600"></i>
-                        <span>เกณฑ์คุณวุฒิปัจจุบัน</span>
-                    </div>
-                    <div class="flex flex-wrap gap-2 text-xs" id="criteriaBadges">
-                        <!-- Badges rendered dynamically -->
-                    </div>
+            <!-- View Switch (Mini MBRT / MDRT) -->
+            <div class="no-print">
+                <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 w-full sm:w-auto overflow-x-auto" id="viewGroup">
+                    <button type="button" data-view="mini" onclick="setView('mini')" class="view-btn px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
+                        <i class="fa-solid fa-calendar-check mr-1.5"></i>Mini MBRT
+                    </button>
+                    <button type="button" data-view="mdrt" onclick="setView('mdrt')" class="view-btn px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-200/60">
+                        <i class="fa-solid fa-award mr-1.5"></i>MDRT
+                    </button>
                 </div>
             </div>
 
@@ -284,23 +276,45 @@
                                class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
 
+                    <!-- Mini MBRT: quarter sub-buttons -->
+                    <div id="miniControls" class="w-full lg:w-auto">
+                        <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 w-full sm:w-auto" id="miniChips"></div>
+                    </div>
+
                     <!-- Multi-Select Qualification Filter Buttons Container -->
-                    <div class="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center justify-between lg:justify-end gap-3">
+                    <div id="mdrtControls" class="hidden w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center justify-between lg:justify-end gap-3">
                         <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 w-full sm:w-auto" id="qualButtonGroup">
                             <!-- Dynamic Multi-Select Filter Buttons rendered here -->
                         </div>
-
-                        <!-- Hide Empty Months Toggle -->
-                        <label class="inline-flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none whitespace-nowrap pt-1 sm:pt-0">
-                            <input type="checkbox" id="hideEmptyMonths" onchange="renderTable()" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                            <span>ซ่อนเดือนที่ยังไม่ถึง</span>
-                        </label>
                     </div>
                 </div>
             </div>
 
-            <!-- Table Container with Scroll and Sticky Properties -->
-            <div class="table-wrap bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
+            <!-- Dynamic Criteria Info & Summary Stats (MDRT view) -->
+            <div id="mdrtStats" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">เครดิตผลงานเบี้ยปีแรกรวม</div>
+                    <div class="text-2xl font-bold text-slate-900" id="statTotalFYP">0 บาท</div>
+                    <div class="text-xs text-slate-400 mt-1" id="statCount">จำนวน 0 หน่วย</div>
+                </div>
+
+                <!-- Qualification Rules Box (Dynamic from MDRT) -->
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-200 shadow-sm md:col-span-2 lg:col-span-3">
+                    <div class="text-amber-900 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info text-amber-600"></i>
+                        <span>เกณฑ์คุณวุฒิปัจจุบัน</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs" id="criteriaBadges">
+                        <!-- Badges rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini MBRT Section -->
+            <div id="miniSection" class="space-y-6 w-full"></div>
+
+            <!-- Table Container with Scroll and Sticky Properties (MDRT view) -->
+            <div id="mdrtTableWrap" class="hidden table-wrap bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
                 <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto table-container w-full">
                     <table class="w-full text-sm text-left text-slate-600 border-separate border-spacing-0">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
@@ -337,7 +351,7 @@
     </main>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxt9bz5vRmMtYyHx8MmNQre-7mQJoULEb-17_EPSxdj2Rt9_pvzue0aTtyLK_57RcvA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzuEabtW0KQKIuQppvSF4D_JWAGz3oYP62UddfWW5aP6vUTqaDB0OYSokJvTi8VhTcY/exec";
 
         let rawFYP = [];
         let rawMDRT = [];
@@ -604,10 +618,14 @@
         }
 
         function applyFilters() {
+            if (currentView === 'mini') {
+                renderMini();
+                return;
+            }
             const search = document.getElementById("searchInput").value.trim().toLowerCase();
 
             filteredData = processedData.filter(item => {
-                const matchSearch = item.mainName.toLowerCase().includes(search) || 
+                const matchSearch = item.mainName.toLowerCase().includes(search) ||
                                     item.code.toLowerCase().includes(search) ||
                                     (item.hasLink && item.linkedName.toLowerCase().includes(search));
 
@@ -631,7 +649,7 @@
 
         function renderTable() {
             const tbody = document.getElementById("tableBody");
-            const hideEmpty = document.getElementById("hideEmptyMonths").checked;
+            const hideEmpty = true; // ซ่อนเดือนที่ยังไม่มีข้อมูลเสมอ
             tbody.innerHTML = "";
 
             const hasMonthData = Array(12).fill(false);
@@ -737,6 +755,204 @@
 
                 tbody.appendChild(tr);
             });
+        }
+
+        // ==========================================
+        // Mini MBRT: ผลงานแยกรายไตรมาส (ข้อมูลชุดเดียวกับ MDRT, รวมหน่วยที่ผูกกัน)
+        // ==========================================
+        const MINI_TARGET = 400000;
+        const MONTH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        let currentView = 'mini';
+        let miniQ = null; // null = ทุกไตรมาส, 0-3 = ไตรมาสที่เลือก
+
+        function escHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function viewBtnClass(active) {
+            return 'view-btn px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap ' +
+                (active ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60');
+        }
+
+        function setView(v) {
+            currentView = v;
+            const mini = (v === 'mini');
+            document.querySelectorAll('.view-btn').forEach(b => { b.className = viewBtnClass(b.dataset.view === v); });
+            ['miniSection', 'miniControls'].forEach(id => document.getElementById(id).classList.toggle('hidden', !mini));
+            ['mdrtStats', 'mdrtTableWrap', 'mdrtControls'].forEach(id => document.getElementById(id).classList.toggle('hidden', mini));
+            applyFilters();
+        }
+
+        function setMiniQ(q) {
+            miniQ = q;
+            renderMini();
+        }
+
+        function renderMini() {
+            const sec = document.getElementById('miniSection');
+            const chipsEl = document.getElementById('miniChips');
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            // เดือนที่มีข้อมูลในแต่ละไตรมาส
+            const qMonths = [[], [], [], []];
+            for (let m = 0; m < 12; m++) {
+                if (processedData.some(it => it.combinedMonthly[m] > 0)) qMonths[Math.floor(m / 3)].push(m);
+            }
+            const allQ = [0, 1, 2, 3].filter(q => qMonths[q].length > 0);
+
+            if (!allQ.length) {
+                chipsEl.innerHTML = '';
+                sec.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400">ยังไม่มีข้อมูลผลงาน</div>';
+                return;
+            }
+            if (miniQ !== null && !allQ.includes(miniQ)) miniQ = null;
+            const activeQ = miniQ !== null ? [miniQ] : allQ;
+            const single = miniQ !== null;
+
+            // ปุ่มย่อยเลือกไตรมาส
+            const chipCls = sel => 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer select-none border active:scale-95 ' +
+                (sel ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-sm'
+                     : 'bg-slate-100 text-slate-600 border-slate-200/80 hover:bg-slate-200/80 hover:text-slate-800');
+            const badgeCls = sel => (sel ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-600') + ' px-1.5 py-0.5 rounded-full text-[10px] font-bold';
+            let chips = `<button type="button" onclick="setMiniQ(null)" class="${chipCls(!single)}"><span>ทุกไตรมาส</span><span class="${badgeCls(!single)}">${allQ.length}</span></button>`;
+            allQ.forEach(q => {
+                const sel = miniQ === q;
+                chips += `<button type="button" onclick="setMiniQ(${q})" class="${chipCls(sel)}"><span>ไตรมาส ${q + 1}</span><span class="${badgeCls(sel)}">${qMonths[q].length}/3 เดือน</span></button>`;
+            });
+            chipsEl.innerHTML = chips;
+
+            // เตรียมข้อมูลรายหน่วย (รวมยอดหน่วยที่ผูก)
+            let list = processedData.filter(it =>
+                it.mainName.toLowerCase().includes(search) ||
+                it.code.toLowerCase().includes(search) ||
+                (it.hasLink && it.linkedName.toLowerCase().includes(search))
+            ).map(it => {
+                const qv = [0, 1, 2, 3].map(q => it.combinedMonthly.slice(q * 3, q * 3 + 3).reduce((a, b) => a + b, 0));
+                const total = activeQ.reduce((s, q) => s + qv[q], 0);
+                const passCount = activeQ.filter(q => qv[q] >= MINI_TARGET).length;
+                return { it, qv, total, passCount };
+            });
+
+            if (single) list.sort((a, b) => b.qv[miniQ] - a.qv[miniQ]);
+            else list.sort((a, b) => b.total - a.total);
+
+            const qText = q => {
+                const full = qMonths[q].length >= 3;
+                return { full, text: full ? 'ครบ 3 เดือน' : `ข้อมูล ${qMonths[q].length}/3 เดือน (${qMonths[q].map(m => MONTH_SHORT[m]).join(', ')})` };
+            };
+
+            // การ์ดสรุปรายไตรมาส
+            let cards = '';
+            activeQ.forEach(q => {
+                const passN = list.filter(o => o.qv[q] >= MINI_TARGET).length;
+                const sumV = list.reduce((s, o) => s + o.qv[q], 0);
+                const lb = qText(q);
+                cards += `
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-slate-700 text-sm font-bold">ไตรมาส ${q + 1}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full ${lb.full ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${lb.full ? 'ครบไตรมาส' : 'ยังไม่ครบ'}</span>
+                        </div>
+                        <div class="text-xs text-slate-400 mb-2">${escHtml(lb.text)}</div>
+                        <div class="text-xl font-bold text-blue-700 font-mono">${formatNum(sumV)} <span class="text-xs font-normal text-slate-500">บาท</span></div>
+                        <div class="text-xs mt-1 text-slate-600">Mini MBRT <b class="text-emerald-600">${passN}</b> / ${list.length} หน่วย</div>
+                    </div>`;
+            });
+
+            // หัวตาราง
+            let th = `<tr>
+                <th class="col-idx px-3 py-3.5 text-center w-12 sticky-col-1 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ลำดับ</th>
+                <th class="col-name px-4 py-3.5 min-w-[220px] sticky-col-2 bg-slate-100 border-b border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">ชื่อ นามสกุล</th>`;
+            activeQ.forEach(q => {
+                const lb = qText(q);
+                th += `<th class="px-3 py-3.5 text-right min-w-[140px] border-b border-slate-200 bg-slate-100">ไตรมาส ${q + 1}<div class="normal-case font-normal text-[10px] ${lb.full ? 'text-slate-400' : 'text-amber-600'}">${lb.full ? 'ครบ 3 เดือน' : escHtml(qMonths[q].length + '/3 เดือน')}</div></th>`;
+            });
+            if (!single) {
+                th += `<th class="px-3 py-3.5 text-center min-w-[100px] border-b border-slate-200 bg-slate-100">ไตรมาสที่ผ่าน</th>
+                       <th class="px-4 py-3.5 text-right min-w-[120px] bg-slate-200/80 font-bold border-b border-slate-200">สะสมรวม</th>`;
+            } else {
+                qMonths[miniQ].forEach(m => {
+                    th += `<th class="px-2 py-3.5 text-right border-b border-slate-200 bg-slate-100 min-w-[95px]">${MONTH_SHORT[m]}</th>`;
+                });
+            }
+            th += `</tr>`;
+
+            // เนื้อตาราง
+            let tb = '';
+            list.forEach((o, idx) => {
+                const it = o.it;
+                const bg = idx % 2 === 0 ? 'bg-white hover:bg-blue-50/30' : 'bg-slate-50/60 hover:bg-blue-50/40';
+                const sbg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+                let nameHTML = `<div class="font-semibold text-slate-900">${escHtml(it.mainName)}</div>`;
+                if (it.hasLink) {
+                    nameHTML = `<div>
+                        <div class="font-semibold text-slate-900">${escHtml(it.mainName)}</div>
+                        <div class="text-xs text-emerald-700 flex items-center gap-1.5 mt-1">
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded">ผูก</span>
+                            ${escHtml(it.linkedName)}
+                        </div></div>`;
+                }
+                tb += `<tr class="${bg} transition-colors">
+                    <td class="px-3 py-3 text-center text-slate-400 font-mono text-xs sticky-col-1 ${sbg} border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">${idx + 1}</td>
+                    <td class="px-4 py-3 sticky-col-2 ${sbg} border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">${nameHTML}</td>`;
+                activeQ.forEach(q => {
+                    const v = o.qv[q];
+                    const ok = v >= MINI_TARGET;
+                    const status = ok
+                        ? '<span class="inline-block mt-0.5 px-2 py-0.5 text-[11px] rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 font-bold">Mini MBRT</span>'
+                        : `<span class="text-[11px] text-rose-500">ขาดอีก ${formatNum(MINI_TARGET - v)}</span>`;
+                    tb += `<td class="px-3 py-2.5 text-right border-l border-slate-100">
+                        <div class="font-mono font-semibold ${ok ? 'text-emerald-700' : 'text-slate-800'}">${formatNum(v)}</div>${status}</td>`;
+                });
+                if (!single) {
+                    tb += `<td class="px-3 py-3 text-center"><span class="inline-block px-2.5 py-0.5 text-xs rounded-full border ${o.passCount > 0 ? 'bg-blue-100 text-blue-800 border-blue-200 font-bold' : 'bg-slate-100 text-slate-500 border-slate-200'}">${o.passCount}/${activeQ.length}</span></td>
+                        <td class="px-4 py-3 text-right bg-slate-100/60 border-l border-slate-200 font-bold font-mono text-slate-900">${formatNum(o.total)}</td>`;
+                } else {
+                    qMonths[miniQ].forEach(m => {
+                        tb += `<td class="month-cell px-2 py-3 text-right border-l border-slate-100 font-mono text-xs">${formatNum(it.combinedMonthly[m])}</td>`;
+                    });
+                }
+                tb += `</tr>`;
+            });
+            if (!list.length) {
+                tb = `<tr><td colspan="100%" class="py-12 text-center text-slate-400">
+                    <i class="fa-regular fa-folder-open text-4xl mb-3 block opacity-60"></i>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</td></tr>`;
+            }
+
+            // ท้ายตาราง
+            let tf = `<tr><td colspan="2" class="px-4 py-3 bg-slate-100 font-bold border-r border-slate-200 text-slate-900">รวมทั้งหมด</td>`;
+            activeQ.forEach(q => {
+                tf += `<td class="px-3 py-3 text-right font-mono font-bold text-slate-800">${formatNum(list.reduce((s, o) => s + o.qv[q], 0))}</td>`;
+            });
+            if (!single) {
+                tf += `<td></td><td class="px-4 py-3 text-right font-bold font-mono text-blue-900 bg-slate-200/80">${formatNum(list.reduce((s, o) => s + o.total, 0))}</td>`;
+            } else {
+                qMonths[miniQ].forEach(m => {
+                    tf += `<td class="px-2 py-3 text-right font-mono text-xs font-bold text-slate-800">${formatNum(list.reduce((s, o) => s + o.it.combinedMonthly[m], 0))}</td>`;
+                });
+            }
+            tf += `</tr>`;
+
+            sec.innerHTML = `
+                <div class="flex flex-wrap items-center gap-3">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-blue-600"></i>
+                        Mini MBRT${single ? ' ไตรมาส ' + (miniQ + 1) : ' ทุกไตรมาส'}
+                    </h2>
+                    <span class="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full font-semibold">เกณฑ์: ผลงานตั้งแต่ ${formatNum(MINI_TARGET)} บาท/ไตรมาส</span>
+                    <span class="text-xs text-slate-400">ทั้งหมด ${processedData.length} หน่วย</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">${cards}</div>
+                <div class="table-wrap bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
+                    <div class="overflow-x-auto overflow-y-auto table-container w-full">
+                        <table class="w-full text-sm text-left text-slate-600 border-separate border-spacing-0">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">${th}</thead>
+                            <tbody class="divide-y divide-slate-200">${tb}</tbody>
+                            <tfoot class="bg-slate-100 font-semibold text-slate-800">${tf}</tfoot>
+                        </table>
+                    </div>
+                </div>`;
         }
 
         function showLoading(isLoading) {
