@@ -340,6 +340,7 @@
                 if (!btn) return;
                 state.level = btn.dataset.lv;
                 state.tier = null;
+                state.qInit = false; // กลับมาหน้าไตรมาสแล้วเริ่มที่ไตรมาสปัจจุบันใหม่
 
                 document.querySelectorAll('.seg-btn').forEach(x => {
                     if (x === btn) {
@@ -568,6 +569,18 @@
                 document.getElementById('chipsContainer').innerHTML = '';
                 sec.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400">ยังไม่มีข้อมูลผลงาน</div>';
                 return;
+            }
+
+            // เริ่มที่ไตรมาสปัจจุบัน (ถ้าไตรมาสนั้นยังไม่มีข้อมูล ใช้ไตรมาสล่าสุดที่มีข้อมูลก่อนหน้า)
+            if (!state.qInit) {
+                state.qInit = true;
+                const curQ = Math.floor(new Date().getMonth() / 3);
+                let pick = null;
+                for (let qi = curQ; qi >= 0; qi--) {
+                    if (allActiveQ.includes(qi)) { pick = qi; break; }
+                }
+                if (pick === null) pick = allActiveQ[allActiveQ.length - 1];
+                state.tier = String(pick);
             }
 
             // ปุ่มย่อยเลือกไตรมาส (ใช้ state.tier เก็บเลขไตรมาส 0-3)
