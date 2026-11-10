@@ -764,6 +764,7 @@
         const MONTH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
         let currentView = 'mini';
         let miniQ = null; // null = ทุกไตรมาส, 0-3 = ไตรมาสที่เลือก
+        let miniInit = false; // false = ยังไม่ได้ตั้งต้นที่ไตรมาสปัจจุบัน
 
         function escHtml(s) {
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -778,6 +779,7 @@
         function setView(v) {
             currentView = v;
             const mini = (v === 'mini');
+            if (mini) miniInit = false; // กลับมาหน้า Mini MBRT แล้วเริ่มที่ไตรมาสปัจจุบันใหม่
             document.querySelectorAll('.view-btn').forEach(b => { b.className = viewBtnClass(b.dataset.view === v); });
             ['miniSection', 'miniControls'].forEach(id => document.getElementById(id).classList.toggle('hidden', !mini));
             ['mdrtStats', 'mdrtTableWrap', 'mdrtControls'].forEach(id => document.getElementById(id).classList.toggle('hidden', mini));
@@ -805,6 +807,16 @@
                 chipsEl.innerHTML = '';
                 sec.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400">ยังไม่มีข้อมูลผลงาน</div>';
                 return;
+            }
+            // เริ่มที่ไตรมาสปัจจุบัน (ถ้าไตรมาสนั้นยังไม่มีข้อมูล ใช้ไตรมาสล่าสุดที่มีข้อมูลก่อนหน้า)
+            if (!miniInit) {
+                miniInit = true;
+                const curQ = Math.floor(new Date().getMonth() / 3);
+                let pick = null;
+                for (let q = curQ; q >= 0; q--) {
+                    if (allQ.includes(q)) { pick = q; break; }
+                }
+                miniQ = pick !== null ? pick : allQ[allQ.length - 1];
             }
             if (miniQ !== null && !allQ.includes(miniQ)) miniQ = null;
             const activeQ = miniQ !== null ? [miniQ] : allQ;
