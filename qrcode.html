@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Studio - URL QR Code Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Prompt (for crisp Thai typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QR Code Styling Library -->
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for smooth aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.7);
+        }
+        /* Ensure QR canvas scales responsively inside preview container */
+        #qr-preview canvas, #qr-preview svg {
+            max-width: 100%;
+            height: auto !important;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-primary-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/20">
+                    <i data-lucide="qr-code" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight leading-none">QR Studio</h1>
+                    <span class="text-xs text-slate-500 dark:text-slate-400" data-i18n="subtitle">สร้าง QR Code จาก URL</span>
+                </div>
+            </div>
+
+            <!-- Controls: Language & Dark Mode -->
+            <div class="flex items-center gap-2">
+                <!-- Language Switcher -->
+                <button id="lang-toggle" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5" aria-label="Switch Language">
+                    <i data-lucide="languages" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                    <span id="lang-label">TH / EN</span>
+                </button>
+
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition" aria-label="Toggle Theme">
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            
+            <!-- Left Column: Input & Customization (7 cols on desktop) -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                
+                <!-- Card 1: URL Input -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <label for="url-input" class="font-semibold text-base flex items-center gap-2">
+                            <i data-lucide="link" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                            <span data-i18n="urlLabel">ลิงก์เว็บไซต์ (URL)</span>
+                        </label>
+                        <span id="url-status-badge" class="text-xs px-2 py-0.5 rounded-full hidden font-medium"></span>
+                    </div>
+
+                    <div class="relative flex items-center">
+                        <input type="text" id="url-input" 
+                            placeholder="https://example.com" 
+                            value="https://google.com"
+                            class="w-full pl-4 pr-24 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-slate-900 dark:text-white transition text-sm sm:text-base"
+                        >
+                        <!-- Action Buttons inside Input -->
+                        <div class="absolute right-2 flex items-center gap-1">
+                            <button id="paste-btn" type="button" title="Paste" class="p-2 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" data-i18n-title="paste">
+                                <i data-lucide="clipboard-paste" class="w-4 h-4"></i>
+                            </button>
+                            <button id="clear-btn" type="button" title="Clear" class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" data-i18n-title="clear">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Auto-protocol Helper / Validation Message -->
+                    <div id="url-helper" class="mt-2.5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <span id="url-message" data-i18n="urlHint">ระบบจะเติม https:// ให้อัตโนมัติหากคุณไม่ได้ระบุ</span>
+                        <button id="fix-url-btn" class="hidden text-primary-600 dark:text-primary-400 font-medium hover:underline" data-i18n="fixUrl">เติม https:// ทันที</button>
+                    </div>
+                </section>
+
+                <!-- Card 2: Customization Options -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col gap-6">
+                    <h2 class="font-semibold text-base flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <i data-lucide="sliders" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                        <span data-i18n="customizeTitle">ปรับแต่งรูปแบบ QR Code</span>
+                    </h2>
+
+                    <!-- Colors & Presets -->
+                    <div class="flex flex-col gap-3">
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300" data-i18n="colorPresets">ชุดสีแนะนำ (Color Presets)</label>
+                        <div class="flex flex-wrap gap-2.5" id="color-presets">
+                            <!-- Presets injected via JS -->
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                            <!-- Foreground Color -->
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                                <span class="text-sm font-medium" data-i18n="fgColor">สีจุด QR</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="fg-hex" class="text-xs font-mono text-slate-500 uppercase">#0f172a</span>
+                                    <input type="color" id="fg-color" value="#0f172a" class="w-8 h-8 rounded cursor-pointer border-0 bg-transparent p-0">
+                                </div>
+                            </div>
+
+                            <!-- Background Color -->
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                                <span class="text-sm font-medium" data-i18n="bgColor">สีพื้นหลัง</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="bg-hex" class="text-xs font-mono text-slate-500 uppercase">#ffffff</span>
+                                    <input type="color" id="bg-color" value="#ffffff" class="w-8 h-8 rounded cursor-pointer border-0 bg-transparent p-0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dot Style & Corner Style -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="dot-style" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="dotStyle">รูปแบบจุด (Dots Style)</label>
+                            <select id="dot-style" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="square" data-i18n="styleSquare">สี่เหลี่ยมมาตรฐาน (Square)</option>
+                                <option value="rounded" selected data-i18n="styleRounded">สี่เหลี่ยมมุมมน (Rounded)</option>
+                                <option value="dots" data-i18n="styleDots">จุดวงกลม (Dots)</option>
+                                <option value="classy" data-i18n="styleClassy">คลาสสิก (Classy)</option>
+                                <option value="extra-rounded" data-i18n="styleExtraRounded">มนพิเศษ (Extra Rounded)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="ecc-level" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="eccLevel">ระดับการกู้คืนข้อมูล (Error Correction)</label>
+                            <select id="ecc-level" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="L">L - Low (7%)</option>
+                                <option value="M" selected>M - Medium (15%)</option>
+                                <option value="Q">Q - Quartile (25%)</option>
+                                <option value="H">H - High (30% - แนะนำเมื่อใส่โลโก้)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300" data-i18n="sizeLabel">ขนาดไฟล์ดาวน์โหลด (Resolution)</label>
+                            <span id="size-display" class="text-xs font-semibold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/60 px-2.5 py-0.5 rounded-full">512 x 512 px</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2" id="size-buttons">
+                            <button type="button" data-size="128" class="size-btn py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-800 hover:border-primary-500 transition">128px</button>
+                            <button type="button" data-size="256" class="size-btn py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-800 hover:border-primary-500 transition">256px</button>
+                            <button type="button" data-size="512" class="size-btn py-2 rounded-xl text-xs sm:text-sm font-medium border-2 border-primary-600 bg-primary-50/50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 transition">512px</button>
+                            <button type="button" data-size="1024" class="size-btn py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-800 hover:border-primary-500 transition">1024px</button>
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload & Size -->
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                <i data-lucide="image" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                                <span data-i18n="logoLabel">เพิ่มโลโก้ตรงกลาง (ไม่บังคับ)</span>
+                            </label>
+                            <button id="remove-logo-btn" type="button" class="hidden text-xs text-rose-600 hover:underline font-medium" data-i18n="removeLogo">ลบโลโก้</button>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <label for="logo-upload" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-primary-500 dark:hover:border-primary-500 bg-slate-50/50 dark:bg-slate-950/50 cursor-pointer transition text-sm text-slate-600 dark:text-slate-300">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span id="logo-filename" class="truncate max-w-[200px]" data-i18n="uploadLogo">อัปโหลดรูปภาพ (PNG, JPG, SVG)</span>
+                            </label>
+                            <input type="file" id="logo-upload" accept="image/*" class="hidden">
+                        </div>
+
+                        <!-- Logo Size Slider (Visible when logo is uploaded) -->
+                        <div id="logo-controls" class="hidden flex-col gap-1.5 mt-1 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                            <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                                <span data-i18n="logoSize">ขนาดโลโก้</span>
+                                <span id="logo-size-val">35%</span>
+                            </div>
+                            <input type="range" id="logo-size" min="0.15" max="0.45" step="0.05" value="0.35" class="w-full accent-primary-600 cursor-pointer">
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Real-time Preview, Download & History (5 cols on desktop) -->
+            <div class="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24">
+                
+                <!-- Preview Card -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-4">
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span data-i18n="livePreview">ตัวอย่างแบบเรียลไทม์</span>
+                        </span>
+                        <span id="preview-ecc-badge" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">ECC: M</span>
+                    </div>
+
+                    <!-- QR Container with subtle checkered pattern to show transparency if any -->
+                    <div class="w-full aspect-square max-w-[280px] sm:max-w-[300px] rounded-2xl bg-slate-100/70 dark:bg-slate-950/70 border border-slate-200/60 dark:border-slate-800 p-5 flex items-center justify-center relative overflow-hidden">
+                        <div id="qr-preview" class="flex items-center justify-center w-full h-full transition-transform duration-200"></div>
+                        
+                        <!-- Empty State Overlay -->
+                        <div id="empty-state" class="hidden absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center">
+                            <i data-lucide="qr-code" class="w-12 h-12 text-slate-300 dark:text-slate-700 mb-2"></i>
+                            <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="emptyPrompt">กรุณากรอก URL เพื่อสร้าง QR Code</p>
+                        </div>
+                    </div>
+
+                    <!-- Active URL Display -->
+                    <p id="active-url-text" class="mt-4 text-xs text-slate-500 dark:text-slate-400 truncate max-w-full px-2 font-mono">https://google.com</p>
+
+                    <!-- Action Buttons: Download & Copy -->
+                    <div class="w-full grid grid-cols-2 gap-3 mt-5">
+                        <button id="download-png-btn" type="button" class="py-3 px-4 rounded-xl bg-primary-600 hover:bg-primary-700 active:scale-[0.99] text-white font-medium text-sm shadow-md shadow-primary-600/20 flex items-center justify-center gap-2 transition">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>PNG</span>
+                        </button>
+                        <button id="download-svg-btn" type="button" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.99] text-white font-medium text-sm flex items-center justify-center gap-2 transition">
+                            <i data-lucide="file-code" class="w-4 h-4"></i>
+                            <span>SVG</span>
+                        </button>
+                    </div>
+
+                    <button id="copy-img-btn" type="button" class="w-full mt-3 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 font-medium text-sm flex items-center justify-center gap-2 transition">
+                        <i data-lucide="copy" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                        <span data-i18n="copyImage">คัดลอกรูปภาพลง Clipboard</span>
+                    </button>
+                </section>
+
+                <!-- History Section -->
+                <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-sm flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                            <i data-lucide="history" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                            <span data-i18n="historyTitle">ประวัติล่าสุด (History)</span>
+                        </h3>
+                        <button id="clear-history-btn" type="button" class="text-xs text-slate-400 hover:text-rose-500 transition" data-i18n="clearHistory">ล้างประวัติ</button>
+                    </div>
+
+                    <div id="history-list" class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                        <!-- History items injected via JS -->
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200/80 dark:border-slate-800/80 py-6 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <p>© 2026 QR Studio. <span data-i18n="footerNote">ประมวลผลบนเบราว์เซอร์ 100% ปลอดภัย ไม่ส่งข้อมูลออกนอกเครื่อง</span></p>
+            <p>Client-Side High-Resolution QR Generator</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // ==========================================
+        // 1. Translations (Thai & English)
+        // ==========================================
+        const i18n = {
+            th: {
+                subtitle: "สร้าง QR Code จาก URL",
+                urlLabel: "ลิงก์เว็บไซต์ (URL)",
+                urlHint: "ระบบจะเติม https:// ให้อัตโนมัติหากคุณไม่ได้ระบุ",
+                fixUrl: "เติม https:// ทันที",
+                urlValid: "URL ถูกต้อง",
+                urlAutoFixed: "เติม https:// อัตโนมัติแล้ว",
+                urlInvalid: "รูปแบบ URL ไม่ถูกต้อง",
+                customizeTitle: "ปรับแต่งรูปแบบ QR Code",
+                colorPresets: "ชุดสีแนะนำ (Color Presets)",
+                fgColor: "สีจุด QR",
+                bgColor: "สีพื้นหลัง",
+                dotStyle: "รูปแบบจุด (Dots Style)",
+                styleSquare: "สี่เหลี่ยมมาตรฐาน (Square)",
+                styleRounded: "สี่เหลี่ยมมุมมน (Rounded)",
+                styleDots: "จุดวงกลม (Dots)",
+                styleClassy: "คลาสสิก (Classy)",
+                styleExtraRounded: "มนพิเศษ (Extra Rounded)",
+                eccLevel: "ระดับการกู้คืนข้อมูล (Error Correction)",
+                sizeLabel: "ขนาดไฟล์ดาวน์โหลด (Resolution)",
+                logoLabel: "เพิ่มโลโก้ตรงกลาง (ไม่บังคับ)",
+                removeLogo: "ลบโลโก้",
+                uploadLogo: "อัปโหลดรูปภาพ (PNG, JPG, SVG)",
+                logoSize: "ขนาดโลโก้",
+                livePreview: "ตัวอย่างแบบเรียลไทม์",
+                emptyPrompt: "กรุณากรอก URL เพื่อสร้าง QR Code",
+                copyImage: "คัดลอกรูปภาพลง Clipboard",
+                historyTitle: "ประวัติล่าสุด (History)",
+                clearHistory: "ล้างประวัติ",
+                noHistory: "ยังไม่มีประวัติการสร้าง",
+                footerNote: "ประมวลผลบนเบราว์เซอร์ 100% ปลอดภัย ไม่ส่งข้อมูลออกนอกเครื่อง",
+                toastPasted: "วางลิงก์จาก Clipboard แล้ว",
+                toastPasteErr: "ไม่สามารถเข้าถึง Clipboard ได้ กรุณากด Ctrl+V",
+                toastCopied: "คัดลอกรูปภาพ QR Code ลง Clipboard แล้ว!",
+                toastCopyErr: "เบราว์เซอร์ไม่รองรับการคัดลอกรูปภาพโดยตรง",
+                toastDownloaded: "ดาวน์โหลดไฟล์สำเร็จ!",
+                toastHistoryLoaded: "โหลดการตั้งค่าจากประวัติแล้ว"
+            },
+            en: {
+                subtitle: "URL QR Code Generator",
+                urlLabel: "Website Link (URL)",
+                urlHint: "https:// will be automatically prepended if omitted.",
+                fixUrl: "Add https:// now",
+                urlValid: "Valid URL",
+                urlAutoFixed: "Auto-added https://",
+                urlInvalid: "Invalid URL format",
+                customizeTitle: "Customize QR Code",
+                colorPresets: "Color Presets",
+                fgColor: "Foreground Color",
+                bgColor: "Background Color",
+                dotStyle: "Dots Style",
+                styleSquare: "Standard Square",
+                styleRounded: "Rounded",
+                styleDots: "Circle Dots",
+                styleClassy: "Classy",
+                styleExtraRounded: "Extra Rounded",
+                eccLevel: "Error Correction Level",
+                sizeLabel: "Download Resolution",
+                logoLabel: "Center Logo (Optional)",
+                removeLogo: "Remove Logo",
+                uploadLogo: "Upload Image (PNG, JPG, SVG)",
+                logoSize: "Logo Size",
+                livePreview: "Real-time Preview",
+                emptyPrompt: "Enter a URL to generate QR Code",
+                copyImage: "Copy Image to Clipboard",
+                historyTitle: "Recent History",
+                clearHistory: "Clear",
+                noHistory: "No recent history yet",
+                footerNote: "100% Client-side processing. Your URLs never leave your device.",
+                toastPasted: "Pasted URL from clipboard",
+                toastPasteErr: "Clipboard access denied. Please paste manually.",
+                toastCopied: "QR Code image copied to clipboard!",
+                toastCopyErr: "Direct image copy not supported in this browser.",
+                toastDownloaded: "File downloaded successfully!",
+                toastHistoryLoaded: "Restored from history"
+            }
+        };
+
+        // ==========================================
+        // 2. Application State
+        // ==========================================
+        const state = {
+            lang: localStorage.getItem('qr_lang') || 'th',
+            theme: localStorage.getItem('qr_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+            rawUrl: 'https://google.com',
+            formattedUrl: 'https://google.com',
+            size: 512,
+            fgColor: '#0f172a',
+            bgColor: '#ffffff',
+            dotStyle: 'rounded',
+            eccLevel: 'M',
+            logoDataUrl: null,
+            logoSize: 0.35,
+            history: JSON.parse(localStorage.getItem('qr_history') || '[]')
+        };
+
+        const colorPresets = [
+            { name: 'Classic Dark', fg: '#0f172a', bg: '#ffffff' },
+            { name: 'Indigo Vibe', fg: '#4f46e5', bg: '#eef2ff' },
+            { name: 'Emerald', fg: '#059669', bg: '#ecfdf5' },
+            { name: 'Crimson', fg: '#e11d48', bg: '#fff1f2' },
+            { name: 'Oceanic', fg: '#0284c7', bg: '#f0f9ff' },
+            { name: 'Inverted Dark', fg: '#f8fafc', bg: '#0f172a' }
+        ];
+
+        // ==========================================
+        // 3. Initialize QRCodeStyling Instance
+        // ==========================================
+        let qrCode = new QRCodeStyling({
+            width: 280,
+            height: 280,
+            type: "canvas",
+            data: state.formattedUrl,
+            image: "",
+            margin: 10,
+            qrOptions: {
+                typeNumber: 0,
+                mode: "Byte",
+                errorCorrectionLevel: state.eccLevel
+            },
+            imageOptions: {
+                hideBackgroundDots: true,
+                imageSize: state.logoSize,
+                margin: 6,
+                crossOrigin: "anonymous"
+            },
+            dotsOptions: {
+                color: state.fgColor,
+                type: state.dotStyle
+            },
+            backgroundOptions: {
+                color: state.bgColor
+            },
+            cornersSquareOptions: {
+                type: "extra-rounded",
+                color: state.fgColor
+            },
+            cornersDotOptions: {
+                type: "dot",
+                color: state.fgColor
+            }
+        });
+
+        // ==========================================
+        // 4. DOM Elements Reference
+        // ==========================================
+        const els = {
+            html: document.documentElement,
+            langToggle: document.getElementById('lang-toggle'),
+            themeToggle: document.getElementById('theme-toggle'),
+            urlInput: document.getElementById('url-input'),
+            pasteBtn: document.getElementById('paste-btn'),
+            clearBtn: document.getElementById('clear-btn'),
+            urlStatusBadge: document.getElementById('url-status-badge'),
+            urlMessage: document.getElementById('url-message'),
+            fixUrlBtn: document.getElementById('fix-url-btn'),
+            presetsContainer: document.getElementById('color-presets'),
+            fgColor: document.getElementById('fg-color'),
+            fgHex: document.getElementById('fg-hex'),
+            bgColor: document.getElementById('bg-color'),
+            bgHex: document.getElementById('bg-hex'),
+            dotStyle: document.getElementById('dot-style'),
+            eccLevel: document.getElementById('ecc-level'),
+            sizeBtns: document.querySelectorAll('.size-btn'),
+            sizeDisplay: document.getElementById('size-display'),
+            logoUpload: document.getElementById('logo-upload'),
+            logoFilename: document.getElementById('logo-filename'),
+            removeLogoBtn: document.getElementById('remove-logo-btn'),
+            logoControls: document.getElementById('logo-controls'),
+            logoSize: document.getElementById('logo-size'),
+            logoSizeVal: document.getElementById('logo-size-val'),
+            qrPreview: document.getElementById('qr-preview'),
+            emptyState: document.getElementById('empty-state'),
+            activeUrlText: document.getElementById('active-url-text'),
+            previewEccBadge: document.getElementById('preview-ecc-badge'),
+            downloadPngBtn: document.getElementById('download-png-btn'),
+            downloadSvgBtn: document.getElementById('download-svg-btn'),
+            copyImgBtn: document.getElementById('copy-img-btn'),
+            historyList: document.getElementById('history-list'),
+            clearHistoryBtn: document.getElementById('clear-history-btn'),
+            toastContainer: document.getElementById('toast-container')
+        };
+
+        // ==========================================
+        // 5. Core Functions: Validation, Rendering & Helpers
+        // ==========================================
+
+        // Show Toast Message
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'error' 
+                ? 'bg-rose-600 text-white' 
+                : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900';
+            
+            toast.className = `${bgClass} px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transform transition-all duration-300 translate-y-4 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle-2'}" class="w-4 h-4 shrink-0"></i>
+                <span>${message}</span>
+            `;
+            els.toastContainer.appendChild(toast);
+            lucide.createIcons({ root: toast });
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            });
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Validate and Auto-format URL
+        function processUrl(input) {
+            const trimmed = input.trim();
+            if (!trimmed) {
+                return { valid: false, empty: true, formatted: '', autoFixed: false };
+            }
+
+            let candidate = trimmed;
+            let autoFixed = false;
+
+            // Check if protocol is missing (e.g., example.com or www.example.com)
+            if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(candidate)) {
+                candidate = 'https://' + candidate;
+                autoFixed = true;
+            }
+
+            try {
+                const urlObj = new URL(candidate);
+                // Ensure hostname has at least one dot or is localhost
+                const hasValidHost = urlObj.hostname.includes('.') || urlObj.hostname === 'localhost';
+                return {
+                    valid: hasValidHost,
+                    empty: false,
+                    formatted: candidate,
+                    autoFixed: autoFixed
+                };
+            } catch (e) {
+                return { valid: false, empty: false, formatted: candidate, autoFixed: false };
+            }
+        }
+
+        // Update UI validation indicators & QR Code
+        function handleUrlChange() {
+            state.rawUrl = els.urlInput.value;
+            const res = processUrl(state.rawUrl);
+            const t = i18n[state.lang];
+
+            if (res.empty) {
+                els.emptyState.classList.remove('hidden');
+                els.urlStatusBadge.classList.add('hidden');
+                els.fixUrlBtn.classList.add('hidden');
+                els.urlMessage.textContent = t.urlHint;
+                els.activeUrlText.textContent = '';
+                return;
+            }
+
+            els.emptyState.classList.add('hidden');
+            els.urlStatusBadge.classList.remove('hidden');
+
+            if (res.valid) {
+                state.formattedUrl = res.formatted;
+                els.activeUrlText.textContent = res.formatted;
+
+                if (res.autoFixed) {
+                    els.urlStatusBadge.textContent = t.urlAutoFixed;
+                    els.urlStatusBadge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                    els.fixUrlBtn.classList.remove('hidden');
+                } else {
+                    els.urlStatusBadge.textContent = t.urlValid;
+                    els.urlStatusBadge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+                    els.fixUrlBtn.classList.add('hidden');
+                }
+            } else {
+                // Still encode raw input so user can generate custom text/links if desired, but warn
+                state.formattedUrl = state.rawUrl.trim();
+                els.activeUrlText.textContent = state.formattedUrl;
+                els.urlStatusBadge.textContent = t.urlInvalid;
+                els.urlStatusBadge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
+                els.fixUrlBtn.classList.add('hidden');
+            }
+
+            updateQRCode();
+        }
+
+        // Sync QRCodeStyling instance with current state
+        function updateQRCode() {
+            const cornerSquareType = state.dotStyle === 'square' ? 'square' : 
+                                     state.dotStyle === 'dots' ? 'dot' : 'extra-rounded';
+            const cornerDotType = state.dotStyle === 'square' ? 'square' : 'dot';
+
+            qrCode.update({
+                data: state.formattedUrl || 'https://google.com',
+                image: state.logoDataUrl || "",
+                qrOptions: {
+                    errorCorrectionLevel: state.eccLevel
+                },
+                imageOptions: {
+                    hideBackgroundDots: true,
+                    imageSize: parseFloat(state.logoSize),
+                    margin: 6
+                },
+                dotsOptions: {
+                    color: state.fgColor,
+                    type: state.dotStyle
+                },
+                backgroundOptions: {
+                    color: state.bgColor
+                },
+                cornersSquareOptions: {
+                    type: cornerSquareType,
+                    color: state.fgColor
+                },
+                cornersDotOptions: {
+                    type: cornerDotType,
+                    color: state.fgColor
+                }
+            });
+
+            els.previewEccBadge.textContent = `ECC: ${state.eccLevel}`;
+        }
+
+        // ==========================================
+        // 6. Export & History Management
+        // ==========================================
+
+        // Generate a high-res QR instance for exporting at exact chosen size
+        function createExportQRInstance() {
+            const cornerSquareType = state.dotStyle === 'square' ? 'square' : 
+                                     state.dotStyle === 'dots' ? 'dot' : 'extra-rounded';
+            const cornerDotType = state.dotStyle === 'square' ? 'square' : 'dot';
+
+            return new QRCodeStyling({
+                width: state.size,
+                height: state.size,
+                type: "canvas",
+                data: state.formattedUrl,
+                image: state.logoDataUrl || "",
+                margin: Math.round(state.size * 0.04),
+                qrOptions: {
+                    errorCorrectionLevel: state.eccLevel
+                },
+                imageOptions: {
+                    hideBackgroundDots: true,
+                    imageSize: parseFloat(state.logoSize),
+                    margin: Math.round(state.size * 0.02),
+                    crossOrigin: "anonymous"
+                },
+                dotsOptions: {
+                    color: state.fgColor,
+                    type: state.dotStyle
+                },
+                backgroundOptions: {
+                    color: state.bgColor
+                },
+                cornersSquareOptions: {
+                    type: cornerSquareType,
+                    color: state.fgColor
+                },
+                cornersDotOptions: {
+                    type: cornerDotType,
+                    color: state.fgColor
+                }
+            });
+        }
+
+        // Save to LocalStorage History
+        function saveToHistory() {
+            if (!state.formattedUrl) return;
+            
+            const newEntry = {
+                id: Date.now(),
+                url: state.formattedUrl,
+                fgColor: state.fgColor,
+                bgColor: state.bgColor,
+                dotStyle: state.dotStyle,
+                eccLevel: state.eccLevel,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            // Remove duplicate URL if exists
+            state.history = state.history.filter(item => item.url !== newEntry.url);
+            state.history.unshift(newEntry);
+            
+            // Keep max 10 items
+            if (state.history.length > 10) state.history.pop();
+            
+            localStorage.setItem('qr_history', JSON.stringify(state.history));
+            renderHistory();
+        }
+
+        // Render History List
+        function renderHistory() {
+            const t = i18n[state.lang];
+            if (state.history.length === 0) {
+                els.historyList.innerHTML = `<p class="text-xs text-slate-400 dark:text-slate-500 text-center py-4">${t.noHistory}</p>`;
+                return;
+            }
+
+            els.historyList.innerHTML = state.history.map(item => `
+                <div class="group flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 hover:bg-primary-50/60 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800 transition cursor-pointer" onclick="loadHistoryItem(${item.id})">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-4 h-4 rounded-full shrink-0 border border-slate-300 dark:border-slate-700" style="background-color: ${item.fgColor}"></span>
+                        <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">${item.url}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 ml-2">
+                        <span class="text-[10px] text-slate-400">${item.timestamp}</span>
+                        <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-primary-600 transition"></i>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons({ root: els.historyList });
+        }
+
+        // Load item from history
+        window.loadHistoryItem = function(id) {
+            const item = state.history.find(h => h.id === id);
+            if (!item) return;
+
+            els.urlInput.value = item.url;
+            state.fgColor = item.fgColor;
+            state.bgColor = item.bgColor;
+            state.dotStyle = item.dotStyle || 'rounded';
+            state.eccLevel = item.eccLevel || 'M';
+
+            els.fgColor.value = state.fgColor;
+            els.fgHex.textContent = state.fgColor;
+            els.bgColor.value = state.bgColor;
+            els.bgHex.textContent = state.bgColor;
+            els.dotStyle.value = state.dotStyle;
+            els.eccLevel.value = state.eccLevel;
+
+            handleUrlChange();
+            showToast(i18n[state.lang].toastHistoryLoaded);
+        };
+
+        // ==========================================
+        // 7. Localization & Theme Management
+        // ==========================================
+        function applyLanguage() {
+            const t = i18n[state.lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (t[key]) el.setAttribute('title', t[key]);
+            });
+            handleUrlChange();
+            renderHistory();
+        }
+
+        function applyTheme() {
+            if (state.theme === 'dark') {
+                els.html.classList.add('dark');
+            } else {
+                els.html.classList.remove('dark');
+            }
+            localStorage.setItem('qr_theme', state.theme);
+        }
+
+        // Render Color Presets
+        function initColorPresets() {
+            els.presetsContainer.innerHTML = colorPresets.map((preset, idx) => `
+                <button type="button" data-idx="${idx}" title="${preset.name}"
+                    class="preset-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-primary-500 bg-slate-50 dark:bg-slate-950 transition text-xs">
+                    <span class="w-3.5 h-3.5 rounded-full border border-slate-300" style="background:${preset.fg}"></span>
+                    <span class="w-3.5 h-3.5 rounded-full border border-slate-300 -ml-2" style="background:${preset.bg}"></span>
+                    <span class="text-slate-600 dark:text-slate-300 hidden sm:inline">${preset.name}</span>
+                </button>
+            `).join('');
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const preset = colorPresets[btn.dataset.idx];
+                    state.fgColor = preset.fg;
+                    state.bgColor = preset.bg;
+                    els.fgColor.value = preset.fg;
+                    els.fgHex.textContent = preset.fg;
+                    els.bgColor.value = preset.bg;
+                    els.bgHex.textContent = preset.bg;
+                    updateQRCode();
+                });
+            });
+        }
+
+        // ==========================================
+        // 8. Event Listeners Setup
+        // ==========================================
+        function bindEvents() {
+            // Theme & Language
+            els.themeToggle.addEventListener('click', () => {
+                state.theme = state.theme === 'light' ? 'dark' : 'light';
+                applyTheme();
+            });
+
+            els.langToggle.addEventListener('click', () => {
+                state.lang = state.lang === 'th' ? 'en' : 'th';
+                localStorage.setItem('qr_lang', state.lang);
+                applyLanguage();
+            });
+
+            // URL Input & Helpers
+            els.urlInput.addEventListener('input', handleUrlChange);
+
+            els.fixUrlBtn.addEventListener('click', () => {
+                const res = processUrl(els.urlInput.value);
+                if (res.formatted) {
+                    els.urlInput.value = res.formatted;
+                    handleUrlChange();
+                }
+            });
+
+            els.pasteBtn.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        els.urlInput.value = text;
+                        handleUrlChange();
+                        showToast(i18n[state.lang].toastPasted);
+                    }
+                } catch (err) {
+                    els.urlInput.focus();
+                    showToast(i18n[state.lang].toastPasteErr, 'error');
+                }
+            });
+
+            els.clearBtn.addEventListener('click', () => {
+                els.urlInput.value = '';
+                els.urlInput.focus();
+                handleUrlChange();
+            });
+
+            // Colors
+            els.fgColor.addEventListener('input', (e) => {
+                state.fgColor = e.target.value;
+                els.fgHex.textContent = state.fgColor;
+                updateQRCode();
+            });
+
+            els.bgColor.addEventListener('input', (e) => {
+                state.bgColor = e.target.value;
+                els.bgHex.textContent = state.bgColor;
+                updateQRCode();
+            });
+
+            // Dot Style & ECC
+            els.dotStyle.addEventListener('change', (e) => {
+                state.dotStyle = e.target.value;
+                updateQRCode();
+            });
+
+            els.eccLevel.addEventListener('change', (e) => {
+                state.eccLevel = e.target.value;
+                updateQRCode();
+            });
+
+            // Resolution Size Buttons
+            els.sizeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.size = parseInt(btn.dataset.size, 10);
+                    els.sizeDisplay.textContent = `${state.size} x ${state.size} px`;
+                    
+                    els.sizeBtns.forEach(b => {
+                        b.className = 'size-btn py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-800 hover:border-primary-500 transition';
+                    });
+                    btn.className = 'size-btn py-2 rounded-xl text-xs sm:text-sm font-medium border-2 border-primary-600 bg-primary-50/50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 transition';
+                });
+            });
+
+            // Logo Upload & Removal
+            els.logoUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    state.logoDataUrl = event.target.result;
+                    els.logoFilename.textContent = file.name;
+                    els.removeLogoBtn.classList.remove('hidden');
+                    els.logoControls.classList.remove('hidden');
+                    els.logoControls.classList.add('flex');
+
+                    // Automatically bump ECC to High (H) when logo is added for reliable scanning
+                    if (state.eccLevel === 'L' || state.eccLevel === 'M') {
+                        state.eccLevel = 'H';
+                        els.eccLevel.value = 'H';
+                    }
+                    updateQRCode();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            els.removeLogoBtn.addEventListener('click', () => {
+                state.logoDataUrl = null;
+                els.logoUpload.value = '';
+                els.logoFilename.textContent = i18n[state.lang].uploadLogo;
+                els.removeLogoBtn.classList.add('hidden');
+                els.logoControls.classList.add('hidden');
+                els.logoControls.classList.remove('flex');
+                updateQRCode();
+            });
+
+            els.logoSize.addEventListener('input', (e) => {
+                state.logoSize = parseFloat(e.target.value);
+                els.logoSizeVal.textContent = `${Math.round(state.logoSize * 100)}%`;
+                updateQRCode();
+            });
+
+            // Download PNG
+            els.downloadPngBtn.addEventListener('click', async () => {
+                if (!state.formattedUrl) return;
+                const exportQR = createExportQRInstance();
+                await exportQR.download({ name: `qrcode-${Date.now()}`, extension: "png" });
+                saveToHistory();
+                showToast(i18n[state.lang].toastDownloaded);
+            });
+
+            // Download SVG
+            els.downloadSvgBtn.addEventListener('click', async () => {
+                if (!state.formattedUrl) return;
+                const exportQR = createExportQRInstance();
+                await exportQR.download({ name: `qrcode-${Date.now()}`, extension: "svg" });
+                saveToHistory();
+                showToast(i18n[state.lang].toastDownloaded);
+            });
+
+            // Copy Image to Clipboard
+            els.copyImgBtn.addEventListener('click', async () => {
+                if (!state.formattedUrl) return;
+                try {
+                    const exportQR = createExportQRInstance();
+                    const blob = await exportQR.getRawData("png");
+                    if (blob && navigator.clipboard && window.ClipboardItem) {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]);
+                        saveToHistory();
+                        showToast(i18n[state.lang].toastCopied);
+                    } else {
+                        throw new Error('ClipboardItem unsupported');
+                    }
+                } catch (err) {
+                    showToast(i18n[state.lang].toastCopyErr, 'error');
+                }
+            });
+
+            // Clear History
+            els.clearHistoryBtn.addEventListener('click', () => {
+                state.history = [];
+                localStorage.removeItem('qr_history');
+                renderHistory();
+            });
+        }
+
+        // ==========================================
+        // 9. Bootstrap Application
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            applyTheme();
+            initColorPresets();
+            qrCode.append(els.qrPreview);
+            bindEvents();
+            applyLanguage();
+        });
+    </script>
+</body>
+</html>
